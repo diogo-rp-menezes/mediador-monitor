@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Entrar — Mediador Monitor</title><link rel="stylesheet" href="/auth-ui.css"><script defer src="/auth-ui.js"></script></head>
+<body data-page="login"><main class="auth-card">
+  <div class="auth-brand">Mediador Monitor</div>
+  <section id="entrar"><h1>Acesse sua conta</h1><p>Entre para acompanhar os documentos e gerenciar seu acesso.</p>
+    <form id="login-form"><label for="login-email">E-mail</label><input id="login-email" type="email" autocomplete="username" required maxlength="254">
+      <label for="login-senha">Senha</label><input id="login-senha" type="password" autocomplete="current-password" required maxlength="128">
+      <button type="submit">Entrar</button></form><button type="button" class="link" id="esqueci">Esqueci minha senha</button>
+  </section>
+  <section id="solicitar" hidden><h1>Recuperar acesso</h1><p>Informe seu e-mail para receber as instruções.</p><form id="recuperacao-form">
+    <label for="recuperacao-email">E-mail</label><input id="recuperacao-email" type="email" autocomplete="email" required maxlength="254"><button type="submit">Enviar instruções</button>
+  </form><button type="button" class="link voltar">Voltar para entrar</button></section>
+  <section id="redefinir" hidden><h1>Defina uma nova senha</h1><p>Use pelo menos 15 caracteres. Suas sessões anteriores serão encerradas.</p><form id="redefinir-form">
+    <label for="nova-senha">Nova senha</label><input id="nova-senha" type="password" autocomplete="new-password" required minlength="15" maxlength="128">
+    <label for="confirmar-senha">Confirme a senha</label><input id="confirmar-senha" type="password" autocomplete="new-password" required minlength="15" maxlength="128"><button type="submit">Salvar nova senha</button>
+  </form><button type="button" class="link voltar">Voltar para entrar</button></section>
+  <p id="auth-mensagem" role="status" aria-live="polite"></p>
+  <p id="auth-inicial" hidden>A instalação ainda precisa de um administrador inicial. Consulte o responsável pela instalação para configurar o acesso.</p>
+</main></body></html>

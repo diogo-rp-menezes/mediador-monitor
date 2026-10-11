@@ -1,0 +1,33 @@
+import { afterEach, expect, it } from 'vitest';
+import { criarSindicato, openDb, type Db } from '../src/db.js';
+import { salvarEscritorio } from '../src/organizacoes.js';
+import { salvarCliente } from '../src/cadastros.js';
+import { listarMonitoramentos, migrarMonitoramentosEscritorio, salvarMonitoramento } from '../src/monitoramentos-escritorio.js';
+const bancos:Db[]=[];afterEach(()=>{for(const db of bancos.splice(0))db.close();});
+it('migra filtros legados sem alterar sindicatos, clientes ou vínculos; reexecução é idempotente',()=>{
+  const db=openDb(':memory:');bancos.push(db);const b=salvarEscritorio(db,null,{nome:'Escritório B',cnpj:'04252011000110'});
+  const sid=criarSindicato(db,{nome:'Sindicato legado',cnpj:'04252011000110',categoria:'Categoria antiga',uf:'DF',tipo:'Acordo Coletivo',tipos:['Acordo Coletivo','Termo Aditivo de Acordo Coletivo'],vigencia:'Vigentes',titulo:'Palavra antiga',ativo:false});
+  const cid=salvarCliente(db,null,{razao_social:'Empresa B',cnpj:'11222333000181'},b);
+  db.prepare('INSERT INTO clientes_sindicatos(cliente_id,sindicato_id,principal) VALUES (?,?,1)').run(cid,sid);
+  const antes=db.prepare('SELECT * FROM sindicatos').all(),vinculos=db.prepare('SELECT * FROM clientes_sindicatos').all();
+  db.exec("DROP TABLE monitoramentos_escritorios;DELETE FROM migracoes_aplicadas WHERE chave='004-monitoramentos-por-escritorio';");
+  migrarMonitoramentosEscritorio(db);migrarMonitoramentosEscritorio(db);
+  expect(db.prepare('SELECT * FROM sindicatos').all()).toEqual(antes);expect(db.prepare('SELECT * FROM clientes_sindicatos').all()).toEqual(vinculos);
+  const a=listarMonitoramentos(db,1),outro=listarMonitoramentos(db,b);
+  expect(a).toHaveLength(1);expect(outro).toHaveLength(1);
+  expect(a[0]).toMatchObject({categoria:'Categoria antiga',titulo:'Palavra antiga',tipos:['Acordo Coletivo','Termo Aditivo de Acordo Coletivo'],ativo:false});
+  expect(db.pragma('foreign_key_check')).toEqual([]);
+  expect(()=>db.prepare('UPDATE monitoramentos_escritorios SET escritorio_id=? WHERE id=?').run(b,a[0].id)).toThrow(/imutável/);
+});
+it('normaliza todos os tipos, valida filtros e impede mudar a identidade do sindicato',()=>{
+  const db=openDb(':memory:');bancos.push(db);
+  const s={nome:'Sindicato teste',cnpj:'',categoria:'Categoria',uf:'DF',tipo:'Convenção Coletiva',vigencia:'Vigentes',titulo:'',ativo:true};
+  const sid=criarSindicato(db,s),sid2=criarSindicato(db,{...s,nome:'Outro sindicato'});
+  const dados={sindicato_id:sid,nome:'Consulta',categoria:'Categoria',tipos:['Todos os tipos','Acordo Coletivo'],uf:'df'};
+  const id=salvarMonitoramento(db,1,null,dados);
+  expect(listarMonitoramentos(db,1)[0]).toMatchObject({tipos:['Todos os tipos'],uf:'DF'});
+  expect(()=>salvarMonitoramento(db,1,id,{...dados,sindicato_id:sid2})).toThrow(/não pode ser alterado/);
+  expect(()=>salvarMonitoramento(db,1,id,{...dados,tipos:['Inventado']})).toThrow();
+  expect(()=>salvarMonitoramento(db,1,id,{...dados,cnpj_filtro:'00000000000000'})).toThrow();
+  expect(()=>salvarMonitoramento(db,1,id,{...dados,categoria:''})).toThrow();
+});

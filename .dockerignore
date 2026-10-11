@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-historico
+data
+downloads
+docs
+test
+.env
+.env.*
+*.db
+*.sqlite*
+*.pem
+*.key
+*.log
+.git

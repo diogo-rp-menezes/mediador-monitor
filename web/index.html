@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mediador Monitor</title>
+<link rel="stylesheet" href="/clientes-ui.css">
+<script src="/auth-client.js"></script>
+<script src="/theme-ui.js"></script>
+<style>
+:root{--bg:#f1f1ef;--t:#fff;--ink:#0a0a0a;--muted:#71717a;--line:#e4e4e7;--soft:#f6f6f5;--acc:#4f46e5;--acc-s:#eef2ff;--ok:#16a34a;--ok-s:#dcfce7;--warn:#b45309;--warn-s:#fef3c7;--err:#dc2626;--err-s:#fee2e2;--r:26px}
+:root:not([data-theme=light]){color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#09090b;--t:#141416;--ink:#fafafa;--muted:#8e8e99;--line:#26262b;--soft:#1c1c20;--acc:#818cf8;--acc-s:#1e1b4b;--ok:#4ade80;--ok-s:#0d2a18;--warn:#fbbf24;--warn-s:#2b1f06;--err:#f87171;--err-s:#2d1010}}
+:root[data-theme=dark]{--bg:#09090b;--t:#141416;--ink:#fafafa;--muted:#8e8e99;--line:#26262b;--soft:#1c1c20;--acc:#818cf8;--acc-s:#1e1b4b;--ok:#4ade80;--ok-s:#0d2a18;--warn:#fbbf24;--warn-s:#2b1f06;--err:#f87171;--err-s:#2d1010;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:none;width:100%;margin:0 auto;padding:0 20px 72px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 0 18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.02em}
+.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#4f46e5,#c026d3);display:grid;place-items:center;color:#fff;font-size:15px}
+nav{display:flex;gap:2px;background:var(--t);border:1px solid var(--line);border-radius:99px;padding:4px;overflow-x:auto;max-width:100%}
+nav button{border:0;background:none;color:var(--muted);padding:7px 15px;border-radius:99px;white-space:nowrap;box-shadow:none}
+nav button:hover{color:var(--ink)}nav button[aria-selected=true]{background:var(--ink);color:var(--bg);font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--t);color:var(--ink);border-radius:99px;padding:8px 16px;transition:.15s}
+button:hover:not(:disabled){border-color:var(--muted)}button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+button.sm{padding:4px 12px;font-size:13px}button.danger{color:var(--err)}button.ghost{border:0;background:none;color:var(--acc);padding:0;font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select{font:inherit;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(132px,auto);gap:14px}
+.t{background:var(--t);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;min-width:0;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.t:hover{border-color:var(--muted)}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c12{grid-column:span 12}.r2{grid-row:span 2}
+.anim .t{animation:in .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--n,0)*45ms)}@keyframes in{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.lbl{font-size:12.5px;color:var(--muted);font-weight:500}.big{font-size:clamp(46px,5.4vw,68px);font-weight:700;letter-spacing:-.05em;line-height:1;margin-top:auto}
+.hero{background:radial-gradient(120% 90% at 100% 0,#c026d3 0,transparent 55%),linear-gradient(135deg,#4338ca,#6d28d9);border:0;color:#fff}
+.hero .lbl{color:rgba(255,255,255,.75)}.hero .big{font-size:clamp(72px,10vw,128px)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:76px;margin-top:18px}.bars i{flex:1;background:rgba(255,255,255,.28);border-radius:7px;min-height:6px}.bars i:last-child{background:#fff}
+.tint-ok{background:var(--ok-s);border-color:transparent}.tint-ok .big{color:var(--ok)}
+.tint-warn{background:var(--warn-s);border-color:transparent}.tint-warn .big{color:var(--warn)}
+.runs{display:flex;gap:4px;margin-top:14px}.runs i{width:9px;height:24px;border-radius:4px;background:var(--ok)}.runs i.e{background:var(--err)}.runs i.n{background:var(--line)}
+.h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}.h b{font-size:15px;letter-spacing:-.01em}
+.li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}.li:first-of-type{border-top:0}
+.li:hover .mono{color:var(--acc)}.mono{font-variant-numeric:tabular-nums;font-weight:600}.muted{color:var(--muted)}
+.clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;background:var(--acc-s);color:var(--acc);white-space:nowrap;font-weight:500}
+.badge.ok{background:var(--ok-s);color:var(--ok)}.badge.warn{background:var(--warn-s);color:var(--warn)}.badge.err{background:var(--err-s);color:var(--err)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chip{font-size:12px;background:var(--soft);border-radius:8px;padding:2px 9px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--line);margin-right:8px}.dot.on{background:var(--ok);box-shadow:0 0 0 4px var(--ok-s)}
+.flush{padding:0}.tbl{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--muted);padding:14px 20px 10px;white-space:nowrap}
+td{padding:13px 20px;border-top:1px solid var(--line);vertical-align:top}tbody tr.item{cursor:pointer}tbody tr.item:hover{background:var(--soft)}
+.det td{background:var(--soft);padding:18px 24px}.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.dl dt{font-size:12px;color:var(--muted)}.dl dd{margin:2px 0 0}
+.tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}input[type=search]{flex:1;min-width:200px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;flex-wrap:wrap}
+.empty{padding:56px 20px;text-align:center;color:var(--muted)}.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.add{border-style:dashed;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--muted);background:none}.add:hover{color:var(--ink)}.add b{font-size:28px;font-weight:400;line-height:1}
+.sw{appearance:none;width:36px;height:21px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;border:0;padding:0;transition:.15s;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}.sw:checked{background:var(--ok)}.sw:checked::after{left:17px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:16px}
+dialog{border:1px solid var(--line);border-radius:28px;background:var(--t);color:var(--ink);padding:0;width:min(610px,calc(100vw - 24px));max-height:calc(100dvh - 30px);overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.35)}dialog::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.form{display:grid;gap:14px;padding:26px}.t .form{padding:0}.form h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.f{display:grid;gap:5px}.f label{font-size:12.5px;color:var(--muted)}.f input,.f select{width:100%}.f small{color:var(--muted);font-size:12px}
+.tipos-title{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--muted);gap:8px}
+.tipos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tipo-option{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;padding:10px 11px;cursor:pointer;font-size:12.5px;line-height:1.3;background:var(--soft);min-width:0}
+.tipo-option:has(input:checked){background:var(--acc-s);border-color:var(--acc);color:var(--acc);font-weight:600}
+.tipo-option input{accent-color:var(--acc);padding:0;width:16px;height:16px;flex:none}
+.tipo-option.wide{grid-column:1/-1}
+.tipos-advanced{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tipos-advanced summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.tipos-advanced .tipos-grid{margin-top:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.check{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.err{color:var(--err);font-size:13px;min-height:18px}.ok-t{color:var(--ok)}.presets{display:flex;gap:6px;flex-wrap:wrap}.presets button{padding:3px 12px;font-size:12.5px}
+.status{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;max-width:min(560px,calc(100vw - 24px));padding:11px 20px;background:var(--ink);color:var(--bg);border-radius:99px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:5}
+.status[hidden]{display:none}
+.status{border-radius:14px;min-width:0;max-width:min(570px,calc(100vw - 24px));flex-wrap:nowrap;justify-content:center}
+.status .stage{font-weight:600;max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.status button{background:#fff;color:#191423;border:none;font-weight:700}.status button.danger{background:#fee2e2;color:#991b1b}
+.download-link{display:inline-flex;gap:6px;align-items:center;color:var(--acc);font-weight:600;text-decoration:none}
+.download-link:hover{text-decoration:underline}
+.status i{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none;animation:pl 1.2s infinite}@keyframes pl{50%{opacity:.25}}
+.ana{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.topico{background:var(--t);border:1px solid var(--line);border-radius:16px;padding:14px 16px}.topico p{margin:4px 0 0}.topico.dest{background:var(--acc-s);border-color:transparent}.topico.nc{opacity:.5}
+.topico details{margin-top:8px;font-size:12.5px;color:var(--muted)}.topico summary{cursor:pointer}.topico q{display:block;margin-top:6px;font-style:italic}
+.obs{margin-top:14px;background:var(--warn-s);color:var(--warn);border-radius:16px;padding:14px 18px}.obs ul{margin:6px 0 0;padding-left:18px}.obs .lbl{color:var(--warn)}
+.toast{position:fixed;right:18px;bottom:18px;max-width:320px;padding:12px 18px;background:var(--ink);color:var(--bg);border-radius:16px;font-weight:500}
+@media(max-width:960px){.c3,.c4,.c5,.c7{grid-column:span 6}.hero{grid-column:span 12}}
+@media(max-width:620px){.tipos-grid{grid-template-columns:1fr}.bento{grid-template-columns:1fr}.bento>.t{grid-column:auto!important;grid-row:auto!important}.hide-s{display:none}.wrap{padding:0 12px 56px}.g2{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Configuração operacional — componentes sem dependência externa. */
+.cfg-layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(320px,5fr);gap:14px;align-items:stretch}
+.cfg-card{background:var(--t);border:1px solid var(--line);border-radius:var(--r);padding:24px;min-width:0}
+.cfg-card h2{font-size:18px;margin:0;letter-spacing:-.025em}
+.cfg-card p.lead{margin:5px 0 22px;font-size:13px;line-height:1.6;color:var(--muted)}
+.cfg-title{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:18px}
+.cfg-fields{display:grid;gap:15px}
+.cfg-divider{border:0;border-top:1px solid var(--line);margin:20px 0}
+.cfg-section{margin:18px 0 8px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.cfg-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px}
+.cfg-tip{font-size:12px;line-height:1.5;color:var(--muted);margin:5px 0 0}
+.cfg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.cfg-input{width:100%;min-width:0;height:40px}
+.cfg-pill{display:inline-flex;align-items:center;gap:7px;border-radius:100px;font-size:12px;padding:4px 9px;color:var(--muted);background:var(--soft)}
+.cfg-pill .dot{margin:0;width:7px;height:7px}
+.cfg-summary{padding:13px 15px;background:var(--soft);border:1px solid var(--line);border-radius:14px;font-size:13px;margin-top:15px}
+.cfg-summary strong{display:block;margin-bottom:3px}
+.cfg-note{border-left:3px solid var(--acc);padding:9px 12px;margin-top:12px;background:var(--soft);font-size:12px;color:var(--muted);border-radius:0 9px 9px 0}
+.cfg-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+.cfg-actions button{white-space:nowrap}
+.cfg-days{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.cfg-days label{cursor:pointer}
+.cfg-days input{position:absolute;opacity:0;pointer-events:none}
+.cfg-days span{display:inline-flex;min-width:39px;min-height:34px;padding:0 9px;border:1px solid var(--line);border-radius:10px;align-items:center;justify-content:center;color:var(--muted);font-size:12px;user-select:none}
+.cfg-days input:checked+span{border-color:var(--acc);background:var(--acc-s);color:var(--acc);font-weight:700}
+.cfg-days input:focus-visible+span{outline:2px solid var(--acc);outline-offset:2px}
+.cfg-hidden{display:none!important}
+.cfg-advance{margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:14px}
+.cfg-advance summary{font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
+.cfg-advance .f{margin-top:12px}
+.cfg-channels{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cfg-channel{padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--t);min-width:0}
+.cfg-channel .cfg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cfg-channel .cfg-head b{font-size:15px}
+.cfg-channel .cfg-desc{font-size:12.5px;color:var(--muted);margin:0 0 20px}
+.cfg-secrets{display:flex;align-items:center;gap:8px}
+.cfg-secrets input{flex:1;min-width:0}
+.cfg-secrets button{padding:8px 13px;border-radius:12px;height:40px}
+.cfg-message{min-height:16px;font-size:12.5px;color:var(--muted)}
+.cfg-message.bad{color:var(--err)}.cfg-message.good{color:var(--ok)}
+.cfg-save{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}
+.cfg-save button.primary{padding:10px 22px}
+@media(max-width:900px){.cfg-layout,.cfg-channels{grid-template-columns:1fr}}
+@media(max-width:540px){.cfg-card{padding:17px}.cfg-grid{grid-template-columns:1fr}.cfg-channel{padding:16px}}
+
+/* Assistente Gmail: três etapas com campos próprios e teste explícito */
+.gmail-launch{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 15px;border-radius:14px;background:var(--acc-s);border:1px solid var(--line);margin:0 0 17px}
+.gmail-launch b{font-size:13px}.gmail-launch p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.gmail-launch button{background:var(--t);border-color:var(--acc);color:var(--acc);font-weight:600;white-space:nowrap}
+#wiz-gmail{width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 36px);overflow-y:auto;border-radius:23px}
+.gmail-wiz{padding:25px;display:grid;gap:18px}
+.gmail-top{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.gmail-top h2{font-size:21px;margin:0;letter-spacing:-.03em}
+.gmail-top p{color:var(--muted);font-size:12.5px;margin:5px 0 0}
+.gmail-top button{border-radius:12px;padding:4px 10px;font-size:18px}
+.gmail-steps{display:flex;align-items:center;gap:7px}
+.gmail-steps span{flex:1;background:var(--line);height:5px;border-radius:6px}
+.gmail-steps span.current{background:var(--acc)}
+.gmail-step{display:grid;gap:15px}
+.gmail-step h3{font-size:15px;margin:0}
+.gmail-step p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.65}
+.gmail-step input,.gmail-step select{width:100%;min-width:0}
+.gmail-help{padding:13px 14px;background:var(--soft);border-radius:14px;border:1px solid var(--line);font-size:12.5px}
+.gmail-help ol{margin:8px 0 8px;padding-left:18px}
+.gmail-help li{margin-bottom:5px}
+.gmail-help a{color:var(--acc)}
+.gmail-overview{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gmail-overview>div{background:var(--soft);border-radius:11px;padding:10px 12px;overflow-wrap:anywhere}
+.gmail-overview small{display:block;color:var(--muted);font-size:11px}
+.gmail-overview strong{font-size:13px}
+.gmail-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:15px;flex-wrap:wrap}
+.gmail-footer .cfg-actions{margin-top:0}
+.gmail-footer button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.gmail-input-row{display:flex;gap:8px;align-items:center}
+.gmail-input-row input{flex:1}
+.gmail-input-row button{border-radius:11px;padding:9px 11px}
+.gmail-security{padding:11px 13px;background:var(--warn-s);color:var(--warn);border-radius:12px;font-size:12px;line-height:1.6}
+.gmail-message{font-size:12.5px;min-height:17px;color:var(--muted);white-space:pre-wrap}
+.gmail-message.good{color:var(--ok)}.gmail-message.bad{color:var(--err)}
+@media(max-width:540px){.gmail-wiz{padding:16px}.gmail-overview{grid-template-columns:1fr}}
+.rel-panel{margin-top:18px;background:var(--t);border:1px solid var(--line);border-radius:16px;padding:16px;overflow-wrap:anywhere}
+.rel-panel .h{margin-bottom:8px}.rel-panel p{margin:8px 0}.rel-panel select{border-radius:12px}
+.rel-panel details summary{cursor:pointer;color:var(--muted);font-size:12.5px}.rel-list{display:grid;gap:8px;margin:12px 0}
+.rel-result{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}.rel-change{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:10px}
+.rel-change summary{color:var(--ink)!important}.rel-history{padding:8px 0;border-top:1px dashed var(--line);font-size:12px}
+.rel-attention{border-radius:12px;padding:12px;margin-top:12px;background:var(--warn-s);color:var(--warn);font-size:12px}
+.rel-attention ul{margin:5px 0 0;padding-left:22px}
+
+/* Revisão assistida de pendências: sem edição silenciosa da CCT. */
+.review-list{display:grid;gap:9px;margin:12px 0}
+.review-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:13px;background:var(--soft)}
+.review-item b{font-size:13px}.review-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.review-item .row{flex-shrink:0}
+#dlg-revisao{width:min(850px,calc(100vw - 22px));max-height:calc(100dvh - 28px)}
+.review-inner{padding:24px;display:grid;gap:17px}
+.review-header{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.review-header h2{margin:0;font-size:20px;letter-spacing:-.025em}
+.review-header p{margin:5px 0 0;font-size:12px;color:var(--muted)}
+.review-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.review-doc{min-width:0;padding:15px;border:1px solid var(--line);background:var(--soft);border-radius:15px}
+.review-doc h3{margin:0 0 8px;font-size:12px;color:var(--muted)}
+.review-doc b{font-size:12px}.review-doc p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;margin:8px 0}
+.review-doc q{display:block;font-size:12px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px;white-space:pre-wrap;margin-top:8px}
+/* O texto inteiro é uma opção de decisão — seleção não significa salvar. */
+.review-select{display:block;position:relative;cursor:pointer;transition:border-color .16s,background .16s,box-shadow .16s}
+.review-select:hover:not(.is-disabled){border-color:var(--acc)}
+.review-select:has(input:checked){border-color:var(--acc);background:var(--acc-s);box-shadow:inset 0 0 0 1px var(--acc)}
+.review-select:focus-within{outline:2px solid var(--acc);outline-offset:3px}
+.review-select.is-disabled{opacity:.55;cursor:not-allowed}
+.review-select>input[type=radio]{position:absolute;width:1px;height:1px;opacity:0;left:16px;top:16px}
+.review-headline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.review-headline strong{font-size:13px;color:var(--ink)}
+.review-selector{width:20px;height:20px;border:2px solid var(--muted);border-radius:50%;display:inline-flex;flex:none;align-items:center;justify-content:center}
+.review-select:has(input:checked) .review-selector{border-color:var(--acc);background:var(--acc)}
+.review-select:has(input:checked) .review-selector:after{content:'✓';font-size:12px;font-weight:bold;color:#fff}
+.review-hint{display:block;font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:10px}
+.review-instruction{color:var(--muted);font-size:12px;margin:0 0 12px}
+.review-manual{display:none!important}
+#review-content:has(input[name="review-choice"][value="manual"]:checked) .review-manual{display:grid!important}
+.review-selection-note{font-size:12px;background:var(--warn-s);color:var(--warn);border-radius:10px;padding:10px 12px;margin:9px 0 0}
+#review-content .review-suggest .review-select{margin-top:12px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--t)}
+.review-suggest{border:1px solid var(--line);background:var(--soft);border-radius:15px;padding:15px;overflow-wrap:anywhere}
+.review-suggest strong{font-size:14px}.review-suggest p{margin:9px 0;font-size:13px;white-space:pre-wrap}
+.review-choices{display:grid;gap:8px}
+.review-choice{display:block;border:1px solid var(--line);border-radius:12px;padding:11px;cursor:pointer;font-size:13px}
+.review-choice:has(input:checked){border-color:var(--acc);background:var(--acc-s)}
+.review-choice input{margin-right:8px;accent-color:var(--acc)}
+.review-inner textarea{width:100%;font:inherit;color:var(--ink);background:var(--soft);border:1px solid var(--line);padding:12px;border-radius:12px;resize:vertical;min-height:80px}
+.review-inner input[type=text]{width:100%}
+.review-inner label:not(.review-choice){font-size:12px;color:var(--muted)}
+.review-footer{display:flex;justify-content:flex-end;align-items:center;gap:9px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:15px}
+.review-audit{font-size:12px;color:var(--muted)}
+@media(max-width:650px){.review-compare{grid-template-columns:1fr}.review-inner{padding:16px}.review-item{flex-direction:column;align-items:stretch}}
+
+/* Registros v0.3.11 — lista/detalhe; demais telas preservadas. */
+.wrap:has(#registros-page) header #run.primary{background:linear-gradient(115deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent}
+.wrap:has(#registros-page) nav button[data-t=registros][aria-selected=true]{background:var(--acc-s);color:var(--acc)}
+.wrap:has(#registros-page){max-width:none}
+#registros-page{--rg-ra:18px;display:grid;gap:18px}
+.rg-titlebar{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.rg-titlebar h1{font-size:clamp(24px,2.4vw,31px);letter-spacing:-.035em;line-height:1.15;margin:0}
+.rg-titlebar p{font-size:13px;margin:7px 0 0;color:var(--muted)}
+.rg-updated{display:inline-flex;gap:7px;align-items:center;font-size:12px;color:var(--muted)}
+.rg-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.rg-metric{display:flex;align-items:center;gap:14px;min-width:0;border:1px solid var(--line);background:var(--t);border-radius:16px;padding:17px}
+.rg-metric-icon{display:grid;place-items:center;font-size:19px;font-weight:700;width:42px;height:42px;border-radius:12px;flex:none;background:var(--acc-s);color:var(--acc)}
+.rg-metric[data-kind=warn] .rg-metric-icon{color:var(--warn);background:var(--warn-s)}
+.rg-metric[data-kind=ok] .rg-metric-icon{color:var(--ok);background:var(--ok-s)}
+.rg-metric[data-kind=blue] .rg-metric-icon{color:#60a5fa;background:rgba(37,99,235,.14)}
+.rg-metric small{display:block;font-size:12px;color:var(--muted);line-height:1.35}
+.rg-metric strong{display:block;font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:3px}
+.rg-filters{display:grid;grid-template-columns:minmax(220px,2.3fr) repeat(3,minmax(120px,.8fr)) minmax(130px,.8fr);gap:10px}
+.rg-search{display:flex;align-items:center;gap:10px;background:var(--t);border:1px solid var(--line);border-radius:13px;padding:0 12px;min-width:0}
+.rg-search span{color:var(--muted);font-size:21px}
+.rg-search:focus-within{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-s)}
+.rg-search input{background:transparent;border:0;outline:0!important;box-shadow:none;flex:1;min-width:0;padding:12px 0}
+.rg-filter{display:flex;flex-direction:column;justify-content:center;min-width:0;border:1px solid var(--line);background:var(--t);border-radius:13px;padding:6px 11px}
+.rg-filter label{font-size:10.5px;color:var(--muted);line-height:1}
+.rg-filter select{padding:4px 0 0;border:0!important;min-width:0;width:100%;background:transparent;border-radius:0;outline-offset:4px;font-size:12.5px;text-overflow:ellipsis}
+.rg-main{display:grid;grid-template-columns:minmax(285px,.37fr) minmax(0,.63fr);align-items:start;gap:14px;min-height:520px}
+.rg-list,.rg-detail{min-width:0;border:1px solid var(--line);background:var(--t);border-radius:19px;overflow:hidden}
+.rg-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.rg-list-toolbar strong{font-size:12px}.rg-list-toolbar .rg-sort{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted)}
+.rg-list-toolbar select{font-size:12px;border:0;background:var(--soft);padding:5px 9px;border-radius:8px;max-width:160px}
+.rg-list-scroll{max-height:min(980px,calc(100dvh - 260px));min-height:380px;overflow:auto;overscroll-behavior:contain}
+.rg-record{display:block;width:100%;padding:15px 17px;border:0;border-radius:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;color:var(--ink);white-space:normal}
+.rg-record:last-child{border-bottom:0}
+.rg-record:hover:not(:disabled){background:var(--soft);border-color:var(--line)}
+.rg-record.is-selected{background:var(--acc-s);box-shadow:inset 3px 0 0 var(--acc)}
+.rg-record:focus-visible{position:relative;outline:2px solid var(--acc);outline-offset:-3px}
+.rg-record-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.rg-record-top .mono{font-size:14px}
+.rg-record-parties{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:6px}
+.rg-record-meta{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
+.rg-record-meta time{font-size:11px;color:var(--muted)}
+.rg-record-type{font-size:11px;color:var(--acc);background:var(--acc-s);padding:2px 9px;border-radius:20px;display:inline-flex;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rg-state{border-radius:99px;padding:3px 9px;font-size:11px;line-height:1.4;background:var(--soft);color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-weight:650}
+.rg-state:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.rg-state.warn{color:var(--warn);background:var(--warn-s)}.rg-state.ok{color:var(--ok);background:var(--ok-s)}.rg-state.err{color:var(--err);background:var(--err-s)}
+.rg-state.busy{color:var(--acc);background:var(--acc-s)}.rg-state.busy:before{animation:pl 1.1s infinite}
+.rg-detail-head{padding:20px 22px 15px;display:grid;gap:14px}
+.rg-headline{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.rg-headline h2{font-size:20px;letter-spacing:-.02em;margin:0;display:inline-block}
+.rg-headline .sub{font-size:12.5px;color:var(--muted);line-height:1.5;margin:7px 0 0;overflow-wrap:anywhere}
+.rg-head-tags{text-align:right;display:grid;justify-items:end;gap:7px;max-width:36%}
+.rg-head-tags time{font-size:11px;color:var(--muted)}
+.rg-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rg-head-actions a,.rg-head-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:12px;padding:9px 13px;border-radius:10px;text-decoration:none;font-weight:600}
+.rg-head-actions .rg-main-action{background:linear-gradient(120deg,#4f46e5,#7c3aed);color:#fff;border:0}
+.rg-head-actions .rg-main-action:hover{filter:brightness(1.12)}
+.rg-tabs{display:flex;gap:3px;overflow-x:auto;border-bottom:1px solid var(--line);padding:0 12px;scrollbar-width:thin}
+.rg-tab{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-size:12px;padding:13px 10px;white-space:nowrap}
+.rg-tab:hover{color:var(--ink);border-color:transparent}
+.rg-tab[aria-selected=true]{color:var(--acc);border-bottom-color:var(--acc);font-weight:700}
+.rg-tab .rg-count{background:var(--err-s);color:var(--err);margin-left:5px;padding:0 6px;border-radius:20px}
+.rg-content{padding:18px 20px 24px;min-width:0;display:grid;gap:14px}
+.rg-card{border:1px solid var(--line);border-radius:15px;background:var(--soft);padding:17px 18px;min-width:0}
+.rg-card h3{font-size:13px;letter-spacing:-.015em;margin:0 0 12px}
+.rg-overview{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(210px,.9fr);gap:12px;align-items:start}
+.rg-keyvals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 18px;margin:0}
+.rg-keyvals div{min-width:0}.rg-keyvals dt{color:var(--muted);font-size:11px}.rg-keyvals dd{font-size:12.5px;overflow-wrap:anywhere;margin:3px 0 0;line-height:1.55}
+.rg-keyvals .rg-wide{grid-column:1/-1}
+.rg-side{display:grid;gap:12px}
+.rg-steps{display:grid;gap:13px;padding:2px 0}
+.rg-step{display:grid;grid-template-columns:20px minmax(0,1fr);gap:9px;align-items:start;font-size:12px}
+.rg-step-ind{display:grid;place-items:center;border-radius:50%;width:19px;height:19px;background:var(--line);color:var(--muted);font-size:10px}
+.rg-step.is-ok .rg-step-ind{background:var(--ok-s);color:var(--ok)}
+.rg-step.is-busy .rg-step-ind{background:var(--acc-s);color:var(--acc)}
+.rg-step.is-err .rg-step-ind{background:var(--err-s);color:var(--err)}
+.rg-step-body{min-width:0;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.rg-step-body em{font-size:11px;font-style:normal;color:var(--muted)}
+.rg-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rg-quick>*{border-radius:10px;padding:10px 8px;text-align:center;text-decoration:none;color:var(--ink);font-size:11.5px;background:var(--t);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center}
+.rg-quick>*:hover:not(:disabled){border-color:var(--acc)}
+.rg-mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rg-mini-grid button{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border-radius:13px;padding:13px 15px;background:var(--soft)}
+.rg-mini-grid strong{font-size:21px;display:block}.rg-mini-grid small{color:var(--muted);font-size:11px}
+.rg-section-top{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.rg-section-top h3{font-size:17px;letter-spacing:-.025em;margin:0}
+.rg-intro{color:var(--muted);font-size:12px;margin:0}
+.rg-content .rel-panel{margin:0;border-color:var(--line);background:var(--soft);border-radius:15px}
+.rg-content .topico{background:var(--soft)}.rg-content .topico.dest{background:var(--acc-s)}
+.rg-content .ana{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.rg-review-item{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);background:var(--soft);border-radius:13px;padding:14px}
+.rg-review-item strong{font-size:13px}.rg-review-item p{font-size:11.5px;color:var(--muted);margin:4px 0 0;overflow-wrap:anywhere}
+.rg-review-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:end}
+.rg-null{text-align:center;padding:35px 18px;color:var(--muted);font-size:13px}.rg-null b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.rg-empty-state{border:1px dashed var(--line);border-radius:13px;background:var(--soft);padding:23px;color:var(--muted);font-size:13px}
+.rg-notice{font-size:12px;border:1px solid var(--line);padding:12px 14px;border-radius:12px;background:var(--soft);color:var(--muted)}
+.rg-notice.warn{background:var(--warn-s);color:var(--warn);border-color:transparent}
+@media(max-width:1150px){.rg-filters{grid-template-columns:minmax(240px,2fr) repeat(2,minmax(130px,1fr))}.rg-filters .rg-filter:last-child{grid-column:span 1}.rg-overview{grid-template-columns:1fr}.rg-side{grid-template-columns:1fr 1fr}}
+@media(max-width:840px){.rg-metrics{grid-template-columns:repeat(2,1fr)}.rg-main{grid-template-columns:1fr}.rg-list-scroll{max-height:300px;min-height:140px}.rg-list{max-height:395px}.rg-overview{grid-template-columns:1.2fr .8fr}}
+@media(max-width:630px){.rg-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.rg-search{grid-column:1/-1}.rg-headline{flex-direction:column}.rg-head-tags{text-align:left;max-width:none;justify-items:start}.rg-overview,.rg-side{grid-template-columns:1fr}.rg-mini-grid{grid-template-columns:1fr}.rg-content{padding:14px}.rg-detail-head{padding:17px}.rg-keyvals{grid-template-columns:1fr}.rg-review-item{align-items:stretch;flex-direction:column}.rg-review-actions{justify-content:start}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo">◆</span>Mediador Monitor</div>
+    <nav role="tablist" aria-label="Seções">
+      <button role="tab" data-t="home" aria-selected="true">Painel</button>
+      <button role="tab" data-t="registros" aria-selected="false">Registros</button>
+      <button role="tab" data-t="clientes" aria-selected="false">Clientes</button>
+      <button role="tab" data-t="sindicatos" aria-selected="false">Sindicatos</button>
+      <button role="tab" data-t="contatos" aria-selected="false">Contatos</button>
+      <button role="tab" data-t="envios" aria-selected="false">Envios</button>
+      <button role="tab" data-t="consultas" aria-selected="false">Consultas</button>
+      <button role="tab" data-t="execucoes" aria-selected="false">Execuções</button>
+      <button role="tab" data-t="config" aria-selected="false">Configurações</button>
+    </nav>
+    <div class="row">
+      <button id="run" class="primary" title="Consulta o portal e alerta o que for novo">Verificar agora</button>
+      <button id="theme" aria-label="Alternar tema">◐</button>
+    </div>
+  </header>
+  <main id="view" aria-live="polite"></main>
+  <div class="status" id="status" hidden role="status"><i></i><span class="stage"></span>
+    <button id="stop" class="danger" type="button">Interromper</button>
+  </div>
+</div>
+
+<dialog id="dlg-revisao" aria-labelledby="review-title">
+  <div class="review-inner">
+    <div class="review-header"><div><h2 id="review-title">Revisar conflito</h2><p id="review-subtitle">Conferência documental e decisão rastreável</p></div><button type="button" id="review-close" aria-label="Fechar revisão">×</button></div>
+    <div id="review-content"></div>
+    <details><summary>Histórico de decisões deste conflito</summary><div id="review-history" class="review-audit" style="padding-top:10px">Carregando…</div></details>
+    <div class="review-footer"><button type="button" id="review-cancel">Cancelar</button><button type="button" class="primary" id="review-save">Salvar decisão</button></div>
+  </div>
+</dialog>
+<dialog id="wiz-gmail" aria-labelledby="gmail-title">
+  <div class="gmail-wiz">
+    <div class="gmail-top"><div><h2 id="gmail-title">Configurar Gmail</h2><p>Assistente de envio SMTP · dados oficiais do Google</p></div><button type="button" id="gmail-close" aria-label="Fechar assistente">×</button></div>
+    <div class="gmail-steps" aria-label="Progresso de configuração"><span class="current"></span><span></span><span></span></div>
+    <form id="gmail-form" autocomplete="off" novalidate>
+      <section class="gmail-step" data-wstep="1">
+        <h3>1. Conta e destinatário</h3><p>Informe a conta do Google que enviará os avisos e o endereço que deve recebê-los. Os dados SMTP serão aplicados automaticamente.</p>
+        <div class="f"><label for="gmail-account">E-mail da Conta Google</label><input id="gmail-account" name="account" type="email" required placeholder="conta@gmail.com" autocomplete="email"></div>
+        <div class="f"><label for="gmail-recipient">Destinatário dos alertas</label><input id="gmail-recipient" name="recipient" type="email" required placeholder="rh@empresa.com"><small>É possível configurar múltiplos destinatários depois, na configuração avançada de SMTP.</small></div>
+        <div class="gmail-help">Configuração oficial: <b>smtp.gmail.com</b> · <a href="https://support.google.com/a/answer/176600?hl=pt-BR" target="_blank" rel="noopener noreferrer">Ver documentação do Google</a>. Nenhum dado privado é consultado na Conta Google.</div>
+      </section>
+      <section class="gmail-step cfg-hidden" data-wstep="2">
+        <h3>2. Autenticação da conta</h3><p>O Google exige um método de autenticação autorizado. Este assistente utiliza <b>senha de app</b> (se permitida na conta); não utilize sua senha habitual do Google.</p>
+        <div class="gmail-help"><strong>Como obter a senha de app</strong><ol><li>Ative a verificação em duas etapas na Conta Google, se necessário.</li><li>Abra <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">Senhas de app (Google)</a>.</li><li>Crie uma senha para “Mediador Monitor” e cole abaixo.</li></ol>Em contas Workspace, o administrador pode restringir esse recurso.</div>
+        <div class="f"><label for="gmail-password">Senha de aplicativo (16 caracteres)</label><div class="gmail-input-row"><input id="gmail-password" name="password" type="password" autocomplete="new-password" placeholder="Cole a senha de app" required><button type="button" id="gmail-reveal">Exibir</button></div></div>
+        <div class="f"><label for="gmail-transport">Conexão segura</label><select name="transport" id="gmail-transport"><option value="465">SSL/TLS · porta 465 (recomendada)</option><option value="587">STARTTLS · porta 587</option></select></div>
+        <div class="gmail-security">A senha de app será salva no SQLite local, atualmente sem criptografia em repouso. Restrinja acesso ao arquivo <code>data/</code> e aos backups.</div>
+      </section>
+      <section class="gmail-step cfg-hidden" data-wstep="3">
+        <h3>3. Teste e confirmação</h3><p>Confira os dados, envie uma mensagem de teste e ative o canal no Mediador Monitor.</p>
+        <div class="gmail-overview"><div><small>Conta / remetente</small><strong id="gmail-preview-account">—</strong></div><div><small>Destinatário</small><strong id="gmail-preview-to">—</strong></div><div><small>Servidor SMTP</small><strong>smtp.gmail.com</strong></div><div><small>Segurança</small><strong id="gmail-preview-tls">SSL/TLS: 465</strong></div></div>
+        <div><button type="button" id="gmail-test">Enviar e-mail de teste</button></div>
+        <div class="gmail-security">Para salvar sem testar, será solicitada uma confirmação. O botão de teste envia uma mensagem real para o destinatário informado.</div>
+      </section>
+    </form>
+    <p class="gmail-message" id="gmail-message" role="status" aria-live="polite"></p>
+    <div class="gmail-footer"><span class="cfg-tip" id="gmail-progress">Etapa 1 de 3</span><div class="cfg-actions"><button type="button" id="gmail-back" hidden>Voltar</button><button type="button" id="gmail-next" class="primary">Continuar</button><button type="button" id="gmail-save" class="primary" hidden>Salvar e ativar</button></div></div>
+  </div>
+</dialog>
+<dialog id="dlg"><form class="form" id="sf" autocomplete="off">
+  <h2 id="dt">Novo sindicato</h2>
+  <div class="f"><label for="s-nome">Nome *</label><input id="s-nome" name="nome" required placeholder="Ex.: Sindicato dos Hotéis e Restaurantes do DF"></div>
+  <div class="g2">
+    <div class="f"><label for="s-cnpj">CNPJ</label><input id="s-cnpj" name="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" maxlength="18"></div>
+    <div class="f"><label for="s-uf">UF de registro</label><select id="s-uf" name="uf"><option value="">Todas</option></select></div>
+  </div>
+  <div class="f"><div class="tipos-title"><span>Tipos de instrumento *</span><span class="muted" id="tipos-count" aria-live="polite"></span></div>
+    <div id="s-tipos" class="tipos-grid" role="group" aria-label="Tipos de instrumento monitorados">
+      <label class="tipo-option"><input type="checkbox" name="tipos" value="Convenção Coletiva"><span>Convenção Coletiva</span></label>
+      <label class="tipo-option"><input type="checkbox" name="tipos" value="Termo Aditivo de Convenção Coletiva"><span>Termo Aditivo de Convenção</span></label>
+      <label class="tipo-option"><input type="checkbox" name="tipos" value="Acordo Coletivo"><span>Acordo Coletivo</span></label>
+      <label class="tipo-option"><input type="checkbox" name="tipos" value="Termo Aditivo de Acordo Coletivo"><span>Termo Aditivo de Acordo</span></label>
+    </div>
+    <details class="tipos-advanced"><summary>Outros instrumentos e consulta sem filtro de tipo</summary>
+      <div class="tipos-grid">
+        <label class="tipo-option"><input type="checkbox" name="tipos" value="Acordo Coletivo Específico - Programa de Proteção ao Emprego"><span>Acordo específico — PPE</span></label>
+        <label class="tipo-option"><input type="checkbox" name="tipos" value="Acordo Coletivo Específico - Autorização de Trabalho nos Domingos e Feriados"><span>Acordo específico — domingos e feriados</span></label>
+        <label class="tipo-option"><input type="checkbox" name="tipos" value="Termo Aditivo de Acordo Coletivo Programa de Proteção ao Emprego"><span>Aditivo de acordo — PPE</span></label>
+        <label class="tipo-option"><input type="checkbox" name="tipos" value="Termo Aditivo de Acordo Coletivo - Autorização de Trabalho nos Domingos e Feriados"><span>Aditivo de acordo — domingos e feriados</span></label>
+        <label class="tipo-option wide"><input type="checkbox" name="tipos" value="Todos os tipos"><span>Todos os tipos (uma única pesquisa sem filtro de instrumento)</span></label>
+      </div>
+    </details>
+    <small>Cada tipo selecionado gera uma consulta independente no Mediador. Registros encontrados em mais de uma consulta não são duplicados.</small>
+  </div>
+  <div class="f"><label for="s-vig">Vigência</label><select id="s-vig" name="vigencia"><option value="Vigentes">Vigentes</option><option value="Todos">Todos</option><option value="Não Vigentes">Não Vigentes</option></select></div>
+  <div class="f"><label for="s-cat">Categoria</label><input id="s-cat" name="categoria" placeholder="Opcional"><small>Os filtros de tipo e vigência seguem as opções do MTE. Informe CNPJ, categoria ou palavra do título para identificar o sindicato.</small></div>
+  <div class="f"><label for="s-titulo">Palavra do título</label><input id="s-titulo" name="titulo" placeholder="Filtro opcional do Mediador"></div>
+  <label class="check"><span>Monitorar este sindicato</span><input type="checkbox" class="sw" name="ativo" checked></label>
+  <div class="err" id="s-err" role="alert"></div>
+  <div class="row" style="justify-content:flex-end"><button type="button" data-act="fechar">Cancelar</button><button class="primary" id="s-ok">Salvar</button></div>
+</form></dialog>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api=async(p,o)=>{const r=await fetch(p,o);const j=await r.json();if(!r.ok)throw new Error(j.erro||r.status);return j};
+const send=(m,u,b)=>api(u,{method:m,headers:{"content-type":"application/json"},body:b?JSON.stringify(b):undefined});
+const D=s=>new Date(s.replace(" ","T")+"Z");
+const fmt=s=>s?D(s).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"—";
+const ago=s=>{if(!s)return"nunca";const m=(Date.now()-D(s))/6e4;return m<1?"agora":m<60?`há ${Math.round(m)} min`:m<1440?`há ${Math.round(m/60)} h`:`há ${Math.round(m/1440)} d`};
+const S={tab:"home",reg:[],sind:[],q:"",watch:"",tipo:"",estado:"",periodo:"",ordenacao:"recentes",regTab:"geral",open:null,rodando:false,st:null};
+const toast=t=>{const e=$("#toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,4000)};
+const empty=(t,d)=>`<div class="t empty"><b>${t}</b>${d}</div>`;
+const chips=w=>[w.cnpj&&"CNPJ "+w.cnpj,w.categoria&&"Cat. "+w.categoria,...(w.tipos?.length ? w.tipos : [w.tipo]),w.vigencia,w.uf&&"UF "+w.uf,w.titulo&&"Título "+w.titulo].filter(Boolean).map(t=>`<span class="chip">${esc(t)}</span>`).join("");
+const canais=s=>[["Slack",s.canais.slack,"Gerenciado no painel"],["E-mail",s.canais.email,"Gerenciado no painel"],["IA (LLM)",s.canais.ia,"Em Configurações"]]
+  .map(([n,o,d])=>`<div class="li" style="cursor:default"><span><span class="dot ${o?"on":""}"></span><b>${n}</b></span><span class="muted">${o?"Ativo":d}</span></div>`).join("");
+
+/* ---------- Painel (bento) ---------- */
+async function viewHome(){
+  const [r,reg,ex,sd,st]=await Promise.all([api("/api/resumo"),api("/api/registros"),api("/api/execucoes"),api("/api/sindicatos"),api("/api/status")]);
+  S.reg=reg;S.sind=sd;
+  const dias=[...Array(14)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);return d.toISOString().slice(0,10)});
+  const n=dias.map(d=>reg.filter(x=>x.primeira_vez.startsWith(d)).length),mx=Math.max(1,...n);
+  const runs=ex.slice(0,14).reverse(),u=r.ultimaExecucao,ativos=sd.filter(x=>x.ativo);
+  return `<div class="bento">
+  <div class="t hero c5 r2"><span class="lbl">Registros monitorados</span><div class="big">${r.total.toLocaleString("pt-BR")}</div>
+    <div class="bars" aria-label="Detecções nos últimos 14 dias">${n.map(v=>`<i style="height:${Math.max(8,v/mx*100)}%" title="${v}"></i>`).join("")}</div>
+    <span class="lbl" style="margin-top:8px">Detecções nos últimos 14 dias</span></div>
+  <div class="t c3 tint-ok"><span class="lbl">Novos em 7 dias</span><div class="big">${r.novos7d}</div></div>
+  <div class="t c4 ${r.pendentes?"tint-warn":""}"><span class="lbl">Alertas não enviados</span><div class="big">${r.pendentes}</div>
+    <span class="lbl" style="margin-top:8px">${r.pendentes?"Verifique Slack/e-mail":"Tudo em dia"}</span></div>
+  <div class="t c4"><span class="lbl">Última verificação</span><div style="font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:auto">${u?ago(u.iniciada_em):"Nunca"}</div>
+    <div class="runs" title="Últimas execuções">${runs.map(x=>`<i class="${x.erro?"e":""}" title="${fmt(x.iniciada_em)}"></i>`).join("")||'<i class="n"></i>'}</div></div>
+  <div class="t c3"><div class="h"><b>Canais</b><button class="ghost" data-t="config">Ajustar</button></div>${canais(st)}</div>
+  <div class="t c7"><div class="h"><b>Últimos registros</b><button class="ghost" data-t="registros">Ver todos →</button></div>
+    ${reg.slice(0,5).map(x=>`<div class="li" tabindex="0" data-open="${esc(x.numero_registro)}"><span class="mono">${esc(x.numero_registro)}</span>
+      <span class="muted clip hide-s" style="flex:1">${esc(x.partes)}</span><span class="badge">${esc(x.tipo||"—")}</span><span class="muted">${ago(x.primeira_vez)}</span></div>`).join("")
+      ||'<div class="muted" style="padding:24px 0">Nenhum registro ainda. Cadastre um sindicato e use “Verificar agora”.</div>'}</div>
+  <div class="t c5"><div class="h"><b>Sindicatos ativos</b><button class="ghost" data-act="novo">+ Novo</button></div>
+    ${ativos.slice(0,5).map(x=>`<div class="li" data-t="sindicatos"><span class="clip"><b>${esc(x.nome)}</b></span><span class="badge">${esc(x.uf||"Todas")}</span></div>`).join("")
+      ||'<div class="muted" style="padding:24px 0">Cadastre um sindicato para começar a monitorar.</div>'}</div>
+  </div>`;
+}
+
+/* ---------- CCT base + termos aditivos ---------- */
+const ehCct=r=>/conven[çc][ãa]o coletiva/i.test(r.tipo||'')&&!/termo aditivo/i.test(r.tipo||'');
+const ehAditivo=r=>/termo aditivo/i.test(r.tipo||'')&&/conven[çc][ãa]o coletiva/i.test(r.tipo||'');
+const DECISOES={manter:'Manter redação da CCT original',aplicar_aditivo:'Adotar trecho literal do aditivo',aplicar_sugestao:'Adotar redação sugerida pela IA',manual:'Escrever redação personalizada'};
+function pendenciaAberta(){
+  const x=S.revisao;if(!x)return null;
+  const r=S.reg.find(v=>v.numero_registro===x.base),c=r?.consolidacao;
+  return c?.resultado?.pendenciasDetalhadas?.find(p=>p.campo===x.campo&&p.instrumento===x.aditivo)||null;
+}
+function conteudoRevisao(){
+  const p=pendenciaAberta();if(!p)return '<p class="err">Pendência indisponível. Recalcule a consolidação.</p>';
+  const s=p.sugestao,aplicavel=s?.recomendacao==='aplicar_aditivo';
+  const escolha=S.reviewDraft?.acao??p.decisao??null;
+  const identidade=['s01_numero_do_registro_no_mte','s01_codigo_da_solicitacao_mediador'].includes(p.campo);
+  const conflitosCampo=S.reg.find(r=>r.numero_registro===S.revisao.base)?.consolidacao?.resultado?.pendenciasDetalhadas?.filter(k=>k.campo===p.campo).length||1;
+  const bloqueioAlteracao=identidade||conflitosCampo>1;
+  const opt=(v,desabilitado=false)=>`<input type="radio" name="review-choice" value="${v}" ${escolha===v?'checked':''} ${desabilitado?'disabled':''}>`;
+  const recText=({aplicar_aditivo:'Considerar aplicação do aditivo',manter_original:'Manter redação anterior',revisao_manual:'Análise adicional necessária'});
+  return `<p class="review-instruction">Clique sobre a redação que deseja aceitar. A seleção não altera a CCT; somente <b>Salvar decisão</b> registra a escolha.</p>
+    <div class="review-compare">
+      <label class="review-doc review-select" data-choice="manter">${opt('manter')}
+        <span class="review-headline"><strong>CCT original · Manter redação</strong><span class="review-selector" aria-hidden="true"></span></span>
+        <b>${esc(S.revisao.base)}</b><p>${esc(p.anterior||'Não consta na CCT')}</p>
+        <small class="review-hint">Preserva a regra atual no relatório consolidado.</small>
+      </label>
+      <label class="review-doc review-select ${bloqueioAlteracao?'is-disabled':''}" data-choice="aplicar_aditivo">${opt('aplicar_aditivo',bloqueioAlteracao)}
+        <span class="review-headline"><strong>Aditivo · Adotar trecho</strong><span class="review-selector" aria-hidden="true"></span></span>
+        <b>${esc(p.instrumento)} · ${esc(p.clausula)}</b><p>${esc(p.citacao||'Texto não identificado')}</p>
+        <small class="review-hint">${esc(p.valor&&p.valor!==p.citacao?'Resumo extraído: '+p.valor+' · ':'')}A redação selecionada é o trecho literal acima, não uma regra presumida.</small>
+      </label>
+    </div>
+    ${bloqueioAlteracao?'<p class="review-selection-note">Campo protegido ou vários aditivos sem precedência comprovada. Apenas preservar a redação atual está disponível neste conflito.</p>':''}
+    <div class="review-suggest"><div class="h"><strong>Sugestão fundamentada da IA</strong><span class="badge ${p.sugestao_estado==='pronta'?'ok':p.sugestao_estado==='falhou'?'err':''}">${esc(({nao_solicitada:'Não solicitada',gerando:'Analisando…',pronta:'Disponível',falhou:'Falhou'})[p.sugestao_estado]||'—')}</span></div>
+    ${s?`<p><b>Recomendação:</b> ${esc(recText[s.recomendacao]||'Revisar')}</p>
+      <p><b>Fundamentação:</b> ${esc(s.justificativa)}</p>
+      ${aplicavel?`<label class="review-select ${bloqueioAlteracao?'is-disabled':''}" data-choice="aplicar_sugestao">${opt('aplicar_sugestao',bloqueioAlteracao)}<span class="review-headline"><strong>IA · Adotar redação sugerida</strong><span class="review-selector" aria-hidden="true"></span></span><p>${esc(s.valor_proposto)}</p><small class="review-hint">A sugestão também exige aprovação humana explícita.</small></label>`:`<p class="muted">Valor proposto: ${esc(s.valor_proposto||'Não determinado')}</p>`}
+      ${(s.evidencias||[]).map(e=>`<div class="review-doc" style="margin-top:8px"><b>${esc(e.instrumento)}</b><q>${esc(e.citacao)}</q></div>`).join('')}`:'<p class="muted">A IA é opcional para escolher entre os textos documentais. Você pode selecionar a CCT ou o trecho do aditivo mesmo se a sugestão falhar.</p>'}
+    ${p.sugestao_erro?`<p class="err">${esc(p.sugestao_erro)}</p>`:''}
+    <button type="button" class="sm" data-act="sugerir-pendencia" ${p.sugestao_estado==='gerando'?'disabled':''}>${p.sugestao_estado==='gerando'?'Consultando IA…':s?'Gerar outra sugestão':'Solicitar sugestão da IA'}</button>
+    <p class="muted" style="font-size:11px">Citações verificadas no documento de origem; a eficácia jurídica depende de revisão humana.</p></div>
+    <div><h3 style="font-size:14px;margin:0 0 9px">Outra opção</h3>
+      <label class="review-choice" style="display:block"><input type="radio" name="review-choice" value="manual" ${escolha==='manual'?'checked':''} ${bloqueioAlteracao?'disabled':''}>Escrever redação personalizada, considerando ambas as cláusulas</label>
+    </div>
+    <div class="f review-manual"><label for="review-valor">Redação personalizada *</label><textarea id="review-valor" maxlength="3000" placeholder="Descreva a regra e as condições de aplicação…">${esc(S.reviewDraft?.valor||'')}</textarea></div>
+    <div class="f"><label for="review-justificativa">Justificativa da decisão *</label><textarea id="review-justificativa" maxlength="2500" placeholder="Justifique a redação selecionada e o alcance da cláusula…">${esc(S.reviewDraft?.justificativa||'')}</textarea></div>
+    <div class="f"><label for="review-revisor">Responsável pela revisão *</label><input id="review-revisor" type="text" maxlength="150" placeholder="Nome ou identificação do responsável" value="${esc(S.reviewDraft?.revisor||'')}"></div>
+    ${p.decisao?`<p class="muted">Última decisão: ${esc(DECISOES[p.decisao]||p.decisao)} · ${esc(p.revisado_em||'')} · ${esc(p.revisor||'')}</p>`:''}`;
+}
+async function atualizarRevisao(){
+  if(!document.getElementById('dlg-revisao').open)return;
+  const p=pendenciaAberta();if(!p)return;
+  document.getElementById('review-title').textContent=p.rotulo;
+  document.getElementById('review-subtitle').textContent=`${S.revisao.base} · Aditivo ${p.instrumento}`;
+  document.getElementById('review-content').innerHTML=conteudoRevisao();
+  const d=new URLSearchParams(S.revisao);
+  try{const itens=await api('/api/pendencias/historico?'+d.toString());
+    document.getElementById('review-history').innerHTML=itens.length?itens.map(x=>`<p><b>${esc(x.revisor)}</b> · ${esc(x.criado_em)}<br>${esc(JSON.parse(x.decisao_json).acao)}: ${esc(JSON.parse(x.decisao_json).justificativa)}</p>`).join(''):'Nenhuma decisão registrada.';
+  }catch(e){document.getElementById('review-history').textContent=e.message}
+}
+async function abrirPendencia(base,campo,aditivo){
+  S.revisao={base,campo,aditivo};
+  const p=pendenciaAberta();
+  S.reviewDraft={acao:p?.decisao||null,valor:p?.decisao==='manual'?p.valor_decidido||'':'',justificativa:p?.justificativa||'',revisor:p?.revisor||''};
+  document.getElementById('dlg-revisao').showModal();
+  await atualizarRevisao();
+}
+function painelRelacoes(r){
+  const v=r.vinculo;
+  if(ehAditivo(r)){
+    const bases=S.reg.filter(ehCct).filter(c=>c.numero_registro!==r.numero_registro);
+    const ordenadas=bases.sort((a,b)=>(a.watch===r.watch?-1:0)-(b.watch===r.watch?-1:0));
+    return `<section class="rel-panel"><div class="h"><b>Vínculo com a CCT original</b><span class="badge ${v?.base_registro?'ok':v?.status==='rejeitado'?'err':'warn'}">${esc(v?.status||'Pendente')}</span></div>
+    ${v?.base_registro?`<p>Vinculado à CCT <b>${esc(v.base_registro)}</b>. <button class="ghost" data-act="abrir-reg" data-id="${esc(v.base_registro)}">Abrir CCT</button></p>`:
+      `<p class="muted">Sem CCT original confirmada. Uma coincidência entre sindicatos não é suficiente para vincular automaticamente.</p>`}
+    ${v?.evidencia?`<details><summary>Evidência do vínculo</summary><p>${esc(v.evidencia)}</p></details>`:''}
+    <div class="row" style="margin-top:12px"><select aria-label="Selecionar CCT original" id="rel-${esc(r.numero_registro)}" style="min-width:270px;max-width:100%;flex:1">
+      <option value="">Escolha uma CCT original…</option>${ordenadas.map(c=>`<option value="${esc(c.numero_registro)}" ${v?.base_registro===c.numero_registro?'selected':''}>${esc(c.numero_registro)} · ${esc(c.watch)}</option>`).join('')}
+    </select><button class="sm" data-act="ligar" data-id="${esc(r.numero_registro)}">Confirmar vínculo</button>
+    ${v?.status!=='rejeitado'?`<button class="sm danger" data-act="rejeitar-vinculo" data-id="${esc(r.numero_registro)}">Rejeitar vínculo</button>`:''}</div>
+    <p class="muted" style="font-size:12px;margin-top:9px">A associação manual tem prioridade sobre a detecção automática.</p></section>`;
+  }
+  if(!ehCct(r))return '';
+  const aditivos=r.aditivos||[],con=r.consolidacao,status=con?.status||'sem_analise',resultado=con?.resultado;
+  const estados={sem_analise:'Sem consolidação',consolidando:'Consolidando…',consolidado:'Consolidado',desatualizado:'Desatualizado',falhou:'Falhou'};
+  const changes=resultado?Object.entries(resultado.historico||{}):[];
+  return `<section class="rel-panel"><div class="h"><b>CCT e termos aditivos</b><span class="badge ${status==='consolidado'?'ok':status==='falhou'?'err':'warn'}">${estados[status]||esc(status)}</span></div>
+    ${aditivos.length?`<p class="muted">Aditivos associados a esta CCT:</p><div class="rel-list">${aditivos.map(a=>`<div class="row" style="justify-content:space-between"><span><button class="ghost" data-act="abrir-reg" data-id="${esc(a.numero)}">${esc(a.numero)}</button> <span class="badge">${esc(a.status)}</span></span>${a.arquivo_path?'':'<span class="badge warn">Arquivo pendente</span>'}</div>`).join('')}</div>`:
+    `<p class="muted">Nenhum aditivo vinculado. Quando o documento do aditivo citar explicitamente este registro, o sistema tentará associá-lo; outros casos podem ser associados manualmente.</p>`}
+    <div class="row" style="margin-top:14px"><button class="sm" data-act="consolidar" data-id="${esc(r.numero_registro)}" ${!aditivos.length||status==='consolidando'?'disabled':''}>${status==='consolidando'?'Consolidando…':status==='consolidado'?'Recalcular consolidação':'Consolidar com IA'}</button>
+    ${status==='consolidado'&&resultado?`<a class="download-link" href="/api/consolidado/${encodeURIComponent(r.numero_registro)}">↓ Relatório consolidado Markdown</a>`:''}</div>
+    ${con?.erro?`<p class="err">${esc(con.erro)}</p>`:''}
+    ${resultado?`<div class="rel-result"><p class="muted" style="font-size:12px">${esc(resultado.observacao||'')} ${status==='desatualizado'?'Esta visão é histórica: execute novamente para incorporar as mudanças recentes.':''}</p>
+      <div class="h"><b>Alterações rastreáveis (${changes.length} campos)</b><span class="badge ${resultado.pendencias?.length?'warn':'ok'}">${resultado.pendencias?.length||0} pendências</span></div>
+      ${changes.map(([id,h])=>`<details class="rel-change"><summary><b>${esc(id)}</b> · ${esc(resultado.fontes?.[id]||r.numero_registro)} ${h.some(a=>!a.aplicada)&&resultado.pendenciasDetalhadas?.some(p=>p.campo===id&&!p.decisao)?'· Revisão necessária':''}</summary>
+        <p><b>Regra resultante:</b> ${esc(resultado.padrao?.campos?.[id]||'—')}</p>
+        ${h.map(a=>`<div class="rel-history"><b>${esc(a.instrumento)}</b> · ${esc(a.acao)} ${a.aplicada?'':'· não aplicada'}<p>${esc(a.clausula)}: <q>${esc(a.citacao)}</q></p></div>`).join('')}</details>`).join('')}
+      ${(resultado.pendenciasDetalhadas||[]).length ? `<div class="rel-attention"><b>Revisão de conflitos · ${(resultado.pendencias||[]).length} pendente(s)</b>
+        <p>As sugestões de IA são apenas pareceres documentais. A decisão humana exige justificativa e fica registrada no histórico.</p></div>
+        <div class="review-list">${resultado.pendenciasDetalhadas.map(p=>`<div class="review-item"><div><b>${esc(p.rotulo)}</b><small>${esc(p.instrumento)} · ${esc(p.clausula)} · ${esc(p.acao)}</small></div>
+        <div class="row"><span class="badge ${p.decisao?'ok':'warn'}">${p.decisao?'Revisado':'Pendente'}</span>
+        <button class="sm" data-act="abrir-pendencia" data-base="${esc(r.numero_registro)}" data-campo="${esc(p.campo)}" data-aditivo="${esc(p.instrumento)}" ${status!=='consolidado'?'disabled':''}>${p.decisao?'Ver / alterar':'Revisar conflito'}</button></div></div>`).join('')}</div>`
+        : (resultado.pendencias||[]).length?`<div class="rel-attention"><b>Pendências para revisão</b><ul>${resultado.pendencias.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>`:''}
+    </div>`:''}
+  </section>`;
+}
+
+/* ---------- Registros ---------- */
+function detalhe(r){
+  const x=r.extracao;
+  const itens=x?.aditivo?`<div class="ana"><div class="muted">Este documento é um termo aditivo. A análise individual descreve somente suas alterações, sem tratá-lo como uma CCT completa.</div>
+      ${(x.alteracoes||[]).map(a=>`<div class="topico"><div class="lbl">${esc(a.campo)} · ${esc(a.acao)}</div><p>${esc(a.valor||'Revogação expressa')}</p><details><summary>${esc(a.clausula)}</summary><q>${esc(a.citacao)}</q></details></div>`).join('')}</div>`
+  :x?.secoes?`<div class="ana-cct">
+    ${x.secoes.map(s=>`<section class="cct-section" style="margin:12px 0 20px"><h3 style="font-size:15px;margin:0 0 12px">${esc(s.titulo)}</h3>
+      ${s.grupos.map(g=>`${g.titulo?`<h4 style="margin:16px 0 8px;font-size:13px">${esc(g.titulo)}</h4>`:""}
+      <div class="ana">${g.campos.map(c=>`<div class="topico ${c.valor==="Não consta na CCT"?"nc":""}">
+        <div class="lbl">${esc(c.rotulo)}</div><p style="white-space:pre-wrap">${esc(c.valor)}</p>
+        ${c.clausula||c.citacao?`<details><summary>${esc(c.clausula||"Fonte textual")}</summary>${c.citacao?`<q>${esc(c.citacao)}</q>`:""}</details>`:""}
+      </div>`).join("")}</div>`).join("")}</section>`).join("")}
+    </div>`:x?`<div class="ana">${x.itens.map(i=>i.resumo
+    ?`<div class="topico ${i.id==="reajuste"?"dest":""}"><div class="lbl">${esc(i.titulo)}</div><p>${esc(i.resumo)}</p>${i.clausula||i.citacao?`<details><summary>${esc(i.clausula||"Trecho do documento")}</summary>${i.citacao?`<q>${esc(i.citacao)}</q>`:""}</details>`:""}</div>`
+    :`<div class="topico nc"><div class="lbl">${esc(i.titulo)}</div><p>Não consta no documento</p></div>`).join("")}</div>
+    ${x.observacoes.length?`<div class="obs"><div class="lbl">Pontos de atenção</div><ul>${x.observacoes.map(o=>`<li>${esc(o)}</li>`).join("")}</ul></div>`:""}`
+    :'<p class="muted" style="margin:0">Sem análise por IA para este registro.</p>';
+  return `<tr class="det"><td colspan="6"><dl class="dl"><div><dt>Consulta</dt><dd>${esc(r.watch)}</dd></div><div><dt>Nº da solicitação</dt><dd>${esc(r.numero_solicitacao||"—")}</dd></div><div><dt>Detectado em</dt><dd>${fmt(r.primeira_vez)}</dd></div>
+    <div style="grid-column:1/-1"><dt>Partes</dt><dd>${esc(r.partes||"—")}</dd></div></dl>
+    <div class="row" style="margin-top:15px">${r.arquivo_path?`<a class="download-link" href="/api/arquivo/${encodeURIComponent(r.numero_registro)}">↓ Baixar documento original</a>`:`<span class="badge warn">${esc(r.download_erro||"Arquivo pendente; será tentado novamente na próxima verificação")}</span>`}</div>
+    ${typeof painelRelacoes==="function"?painelRelacoes(r):""}
+    <div class="h" style="margin:20px 0 10px"><b>${x?.aditivo?'Alterações do termo aditivo':'Análise da CCT original por IA'} ${x?.versao?x?.aditivo?`· v${esc(x.versao)}`:`· Template CCT v${esc(x.versao)}`:""}</b>
+      <div class="ana-control">
+        ${x?.secoes?`<a class="download-link" href="/api/relatorio/${encodeURIComponent(r.numero_registro)}">↓ Relatório Markdown</a>`:""}
+        ${(() => {const estado=r.analise_status|| (x?"analisado":"sem_analise");
+          const map={sem_analise:["Sem análise","","Analisar com IA"],analisando:["Analisando","busy","Analisando…"],analisado:["Analisado","ok","Reanalisar com IA"],falhou:["Falhou","err","Tentar novamente"]};
+          const [rotulo,classe,acao]=map[estado]||map.sem_analise;
+          return `<span class="badge analise-pill ${classe}" role="status" title="${esc(r.analise_erro||rotulo)}">${rotulo}</span>
+            <button class="sm" type="button" data-act="reanalisar" data-id="${esc(r.numero_registro)}" ${estado==="analisando"?'disabled aria-disabled="true"':""}>${acao}</button>`})()}
+      </div></div>
+    ${r.analise_status==="falhou"&&r.analise_erro?`<p class="err" role="alert">${esc(r.analise_erro)}</p>`:""}
+    ${itens}
+    <p class="muted" style="margin:14px 0 0;font-size:12.5px">Extraído por IA — confira sempre no documento original.</p></td></tr>`;
+}
+
+/* Registros: informações reais do SQLite — sem métricas ou estados simulados. */
+function rgAnaliseEstado(r){return r.analise_status||(r.extracao?'analisado':'sem_analise')}
+function rgPendencias(r){return (r.consolidacao?.resultado?.pendenciasDetalhadas||[]).filter(p=>!p.decisao)}
+function rgEstado(r){
+  const a=rgAnaliseEstado(r),c=r.consolidacao?.status;
+  if(a==='analisando')return ['Analisando','busy'];
+  if(c==='consolidando')return ['Consolidando','busy'];
+  if(rgPendencias(r).length)return ['Revisão pendente','warn'];
+  if(c==='consolidado')return ['Consolidado','ok'];
+  if(c==='desatualizado')return ['Consolidação desatualizada','warn'];
+  if(a==='falhou')return ['Falha na análise','err'];
+  if(a==='analisado')return ['Analisado','busy'];
+  if(!r.arquivo_path)return ['Arquivo pendente','warn'];
+  return ['Sem análise','warn'];
+}
+function rgBadge(r){const [nome,classe]=rgEstado(r);return `<span class="rg-state ${classe}" title="${esc(nome)}">${esc(nome)}</span>`}
+function rgAcaoAnalise(r){
+  const st=rgAnaliseEstado(r),labels={sem_analise:'Analisar com IA',analisando:'Analisando…',analisado:'Reanalisar com IA',falhou:'Tentar novamente'};
+  const bloqueado=st==='analisando'||!r.arquivo_path;
+  return `<button type="button" data-act="reanalisar" data-id="${esc(r.numero_registro)}" ${bloqueado?'disabled aria-disabled="true"':''} title="${!r.arquivo_path?'Aguardando download do arquivo original':esc(r.analise_erro||'Analisar documento com IA')}">✦ ${esc(labels[st]||labels.sem_analise)}</button>`;
+}
+function rgAnalisado(r){return rgAnaliseEstado(r)==='analisado'||!!r.extracao}
+function rgAnaliseConteudo(r){
+  const x=r.extracao;
+  if(!x)return `<div class="rg-empty-state">${rgAnaliseEstado(r)==='analisando'?'A análise está em andamento. Este painel será atualizado automaticamente.':'Ainda não há uma análise estruturada para este documento.'}</div>`;
+  if(x.aditivo)return `<p class="rg-intro">Este termo aditivo é analisado como alteração documental, e não como uma CCT completa.</p><div class="ana">${(x.alteracoes||[]).map(a=>`<div class="topico"><div class="lbl">${esc(a.campo)} · ${esc(a.acao)}</div><p>${esc(a.valor||'Revogação expressa')}</p>${a.clausula||a.citacao?`<details><summary>${esc(a.clausula||'Cláusula')}</summary><q>${esc(a.citacao||'')}</q></details>`:''}</div>`).join('')}</div>`;
+  if(x.secoes)return `<div class="ana-cct">${x.secoes.map(section=>`<section class="cct-section"><h3 style="font-size:15px;margin:18px 0 10px">${esc(section.titulo)}</h3>${(section.grupos||[]).map(group=>`${group.titulo?`<h4 style="font-size:13px;margin:12px 0 8px">${esc(group.titulo)}</h4>`:''}<div class="ana">${(group.campos||[]).map(c=>`<div class="topico ${c.valor==='Não consta na CCT'?'nc':''}"><div class="lbl">${esc(c.rotulo)}</div><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(c.valor)}</p>${c.clausula||c.citacao?`<details><summary>${esc(c.clausula||'Fonte textual')}</summary><q>${esc(c.citacao||'')}</q></details>`:''}</div>`).join('')}</div>`).join('')}</section>`).join('')}</div>`;
+  return `<div class="ana">${(x.itens||[]).map(i=>`<div class="topico"><div class="lbl">${esc(i.titulo)}</div><p>${esc(i.resumo||'Não consta no documento')}</p>${i.citacao?`<details><summary>${esc(i.clausula||'Fonte')}</summary><q>${esc(i.citacao)}</q></details>`:''}</div>`).join('')}</div>`;
+}
+function rgDetalhesGeral(r){
+ const a=rgAnaliseEstado(r),c=r.consolidacao?.status,p=rgPendencias(r),aditivos=r.aditivos||[];
+ const steps=[
+   ['Documento original',!!r.arquivo_path,r.arquivo_path?'Disponível':'Aguardando download'],
+   ['Análise por IA',a==='analisado',({analisando:'Em andamento…',falhou:'Falhou',analisado:'Concluída'})[a]||'Não iniciada',a==='analisando'?'busy':a==='falhou'?'err':''],
+   ['Consolidação',c==='consolidado',({consolidando:'Em andamento…',desatualizado:'Desatualizada',falhou:'Falhou',consolidado:'Concluída'})[c]||'Não iniciada',c==='consolidando'?'busy':c==='falhou'?'err':''],
+   ['Revisão dos conflitos',c==='consolidado'&&!p.length,c==='consolidado'?(p.length?`${p.length} pendência(s)`:'Sem pendências abertas'):'Aguardando consolidação']
+ ];
+ return `<div class="rg-overview"><section class="rg-card"><h3>Informações principais</h3><dl class="rg-keyvals">
+ <div><dt>Registro no MTE</dt><dd class="mono">${esc(r.numero_registro)}</dd></div>
+ <div><dt>Tipo de instrumento</dt><dd>${esc(r.tipo||'—')}</dd></div>
+ <div><dt>Vigência</dt><dd>${esc(r.vigencia||'—')}</dd></div>
+ <div><dt>Consulta</dt><dd>${esc(r.watch||'—')}</dd></div>
+ <div><dt>Nº da solicitação</dt><dd>${esc(r.numero_solicitacao||'—')}</dd></div>
+ <div><dt>Detectado em</dt><dd>${fmt(r.primeira_vez)}</dd></div>
+ <div class="rg-wide"><dt>Partes envolvidas</dt><dd>${esc(r.partes||'Não informado')}</dd></div>
+ </dl></section><div class="rg-side"><section class="rg-card"><h3>Status do processamento</h3><div class="rg-steps">${steps.map(([name,ok,info,variant])=>`<div class="rg-step ${ok?'is-ok':variant==='busy'?'is-busy':variant==='err'?'is-err':''}"><span class="rg-step-ind">${ok?'✓':variant==='err'?'!':'•'}</span><div class="rg-step-body"><span>${name}</span><em>${esc(info)}</em></div></div>`).join('')}</div></section>
+ <section class="rg-card"><h3>Ações rápidas</h3><div class="rg-quick">
+ ${r.arquivo_path?`<a href="/api/arquivo/${encodeURIComponent(r.numero_registro)}">↓ Documento original</a>`:'<button disabled title="Arquivo ainda não foi obtido">↓ Documento original</button>'}
+ ${rgAcaoAnalise(r)}
+ <button type="button" data-rgt="aditivos">≡ Vínculos e aditivos</button>
+ <button type="button" data-rgt="pendencias" ${!ehCct(r)?'disabled':''}>! Revisar pendências</button>
+ ${c==='consolidado'&&r.consolidacao?.resultado?`<a href="/api/consolidado/${encodeURIComponent(r.numero_registro)}">↓ Relatório consolidado</a>`:'<button type="button" disabled title="Disponível após a consolidação">↓ Relatório consolidado</button>'}
+ </div></section></div></div>
+ <div class="rg-mini-grid"><button type="button" data-rgt="pendencias" ${!ehCct(r)?'disabled':''}><span><small>Pendências de revisão</small><strong>${p.length}</strong></span><span aria-hidden="true">›</span></button><button type="button" data-rgt="aditivos"><span><small>Termos aditivos vinculados</small><strong>${aditivos.length}</strong></span><span aria-hidden="true">›</span></button><button type="button" data-rgt="analise"><span><small>Análise por IA</small><strong style="font-size:13px">${esc(({sem_analise:'Não iniciada',analisando:'Em andamento',analisado:'Concluída',falhou:'Falhou'})[a]||'—')}</strong></span><span aria-hidden="true">›</span></button></div>`;
+}
+function rgDetalhesDocumento(r){
+ return `<div class="rg-section-top"><h3>Documento original</h3>${r.arquivo_path?'<span class="rg-state ok">Arquivo disponível</span>':'<span class="rg-state warn">Download pendente</span>'}</div>
+ <section class="rg-card"><h3>Fonte oficial</h3><dl class="rg-keyvals"><div><dt>Registro</dt><dd>${esc(r.numero_registro)}</dd></div><div><dt>Solicitação</dt><dd>${esc(r.numero_solicitacao||'—')}</dd></div><div><dt>Instrumento</dt><dd>${esc(r.tipo||'—')}</dd></div><div><dt>Vigência</dt><dd>${esc(r.vigencia||'—')}</dd></div></dl>
+ <div style="margin-top:18px">${r.arquivo_path?`<a class="download-link" href="/api/arquivo/${encodeURIComponent(r.numero_registro)}">↓ Baixar documento original</a>`:`<p class="rg-notice warn">${esc(r.download_erro||'O arquivo será solicitado novamente na próxima verificação.')} </p>`}</div></section>
+ <p class="rg-intro">A análise por IA é auxiliar. Consulte o documento original para verificar a íntegra e a aplicabilidade das cláusulas.</p>`;
+}
+function rgDetalhesAnalise(r){
+ const a=rgAnaliseEstado(r),title=r.extracao?.aditivo?'Alterações identificadas no termo aditivo':'Análise estruturada da CCT';
+ return `<div class="rg-section-top"><h3>${title}</h3><div class="row"><span class="rg-state ${a==='analisado'?'ok':a==='falhou'?'err':a==='analisando'?'busy':'warn'}">${esc(({analisando:'Analisando',analisado:'Analisado',falhou:'Falhou',sem_analise:'Sem análise'})[a]||'Sem análise')}</span>${rgAcaoAnalise(r)}</div></div>
+ <div class="row">${r.extracao?.secoes?`<a class="download-link" href="/api/relatorio/${encodeURIComponent(r.numero_registro)}">↓ Exportar relatório Markdown</a>`:''}<button class="sm" data-cl="baixar-pdf" data-id="${esc(r.numero_registro)}" ${a!=='analisado'?'disabled':''}>↓ Baixar análise PDF</button></div>
+ ${a==='falhou'&&r.analise_erro?`<div class="rg-notice warn" role="alert">${esc(r.analise_erro)} ${r.extracao?'A análise anterior foi preservada.':''}</div>`:''}
+ ${rgAnaliseConteudo(r)}<p class="rg-intro">Os dados foram extraídos por IA e devem ser conferidos no instrumento registrado.</p>`;
+}
+function rgDetalhesPendencias(r){
+ if(!ehCct(r))return `<div class="rg-empty-state">A revisão consolidada de pendências está disponível para convenções coletivas. Para termos aditivos, verifique o vínculo com a CCT de origem.</div>`;
+ const con=r.consolidacao,rows=con?.resultado?.pendenciasDetalhadas||[],pendentes=rgPendencias(r);
+ return `<div class="rg-section-top"><h3>Pendências de revisão</h3><span class="rg-state ${pendentes.length?'warn':'ok'}">${pendentes.length} em aberto</span></div>
+ ${!con||!con.resultado?`<div class="rg-empty-state">Ainda não existe consolidação para conferir. Vincule os aditivos e inicie a consolidação na aba <b>CCT e termos aditivos</b>.</div>`:!rows.length?`<div class="rg-empty-state"><b>Sem conflitos identificados</b>A consolidação atual não apresenta pendências detalhadas. Confira o relatório para validar as alterações.</div>`:
+ `<p class="rg-intro">Compare as redações, consulte a sugestão da IA e registre a decisão. Nada é alterado sem sua confirmação.</p>${rows.map(p=>`<div class="rg-review-item"><div><strong>${esc(p.rotulo||p.campo)}</strong><p>${esc(p.instrumento)} · ${esc(p.clausula||'Cláusula não identificada')} · ${esc(p.acao||'Alteração')}</p></div><div class="rg-review-actions"><span class="rg-state ${p.decisao?'ok':'warn'}">${p.decisao?'Revisado':'Pendente'}</span><button type="button" class="sm" data-act="abrir-pendencia" data-base="${esc(r.numero_registro)}" data-campo="${esc(p.campo)}" data-aditivo="${esc(p.instrumento)}" ${con.status!=='consolidado'?'disabled':''}>${p.decisao?'Ver decisão':'Revisar conflito'}</button></div></div>`).join('')}`}
+ ${con?.status==='desatualizado'?'<p class="rg-notice warn">A consolidação está desatualizada. Recalcule antes de registrar novas decisões.</p>':''}`;
+}
+function rgDetalhe(r){
+ const tabs=[['geral','Visão geral'],['documento','Documento original'],['analise','Análise por IA'],['aditivos',ehAditivo(r)?'Vínculo da CCT':'CCT e termos aditivos'],...(ehCct(r)?[['pendencias','Pendências de revisão']]:[])];
+ if(!tabs.some(x=>x[0]===S.regTab))S.regTab='geral';
+ const state=rgEstado(r),count=rgPendencias(r).length;
+ return `<article class="rg-detail" aria-label="Detalhes do registro ${esc(r.numero_registro)}"><div class="rg-detail-head"><div class="rg-headline"><div><div class="row" style="gap:9px"><h2>${esc(r.numero_registro)}</h2>${rgBadge(r)}</div><p class="sub">${esc(r.partes||r.watch||'Partes não informadas')}</p></div><div class="rg-head-tags"><span class="rg-record-type" title="${esc(r.tipo||'')}">${esc(r.tipo||'Instrumento coletivo')}</span><time>Vigência: ${esc(r.vigencia||'Não informada')}</time></div></div>
+ <div class="rg-head-actions">${r.arquivo_path?`<a class="rg-main-action" href="/api/arquivo/${encodeURIComponent(r.numero_registro)}">↓ Documento original</a>`:''}${rgAcaoAnalise(r)}${ehCct(r)?`<button type="button" data-rgt="aditivos">≡ Consolidação</button>`:''}</div></div>
+ <div class="rg-tabs" role="tablist" aria-label="Detalhes do registro">${tabs.map(([id,label])=>`<button type="button" class="rg-tab" id="rg-tab-${id}" role="tab" aria-controls="rg-tabpanel" data-rgt="${id}" aria-selected="${S.regTab===id}" ${S.regTab===id?'tabindex="0"':'tabindex="-1"'}>${label}${id==='pendencias'&&count?`<span class="rg-count">${count}</span>`:''}</button>`).join('')}</div>
+ <div class="rg-content" role="tabpanel" id="rg-tabpanel" aria-labelledby="rg-tab-${S.regTab}">${S.regTab==='geral'?rgDetalhesGeral(r):S.regTab==='documento'?rgDetalhesDocumento(r):S.regTab==='analise'?rgDetalhesAnalise(r):S.regTab==='aditivos'?painelRelacoes(r)||'<div class="rg-empty-state">Este instrumento não possui vínculo de CCT configurado.</div>':rgDetalhesPendencias(r)}</div></article>`;
+}
+function viewRegistros(){
+ const reg=S.reg||[],all=reg;
+ const estados={'sem_analise':'Sem análise',analisando:'Analisando',analisado:'Analisado',falhou:'Falhou',consolidado:'Consolidado',revisao:'Revisão pendente'};
+ let list=all.filter(r=>(!S.watch||r.watch===S.watch)&&(!S.tipo||r.tipo===S.tipo));
+ if(S.q.trim()){const q=S.q.toLocaleLowerCase('pt-BR');list=list.filter(r=>[r.numero_registro,r.numero_solicitacao,r.watch,r.partes,r.tipo].join(' ').toLocaleLowerCase('pt-BR').includes(q))}
+ if(S.estado)list=list.filter(r=>S.estado==='consolidado'?r.consolidacao?.status==='consolidado':S.estado==='revisao'?rgPendencias(r).length>0:rgAnaliseEstado(r)===S.estado);
+ if(S.periodo){const cutoff=Date.now()-Number(S.periodo)*864e5;list=list.filter(r=>r.primeira_vez&&D(r.primeira_vez).getTime()>=cutoff)}
+ list=[...list].sort((a,b)=>S.ordenacao==='registro'?String(a.numero_registro).localeCompare(String(b.numero_registro),'pt-BR'):(D(b.primeira_vez||'1970-01-01').getTime()-D(a.primeira_vez||'1970-01-01').getTime())*(S.ordenacao==='antigos'?-1:1));
+ if(!list.some(r=>r.numero_registro===S.open)){S.open=list[0]?.numero_registro||null;S.regTab='geral'}
+ const selected=list.find(r=>r.numero_registro===S.open);
+ const pending=all.filter(r=>['sem_analise','falhou'].includes(rgAnaliseEstado(r))||rgPendencias(r).length>0).length;
+ const analyzed=all.filter(rgAnalisado).length;
+ const consolidated=all.filter(r=>r.consolidacao?.status==='consolidado').length;
+ const metric=(icon,name,n,kind)=>`<div class="rg-metric" data-kind="${kind||''}"><span class="rg-metric-icon" aria-hidden="true">${icon}</span><div><small>${name}</small><strong>${n}</strong></div></div>`;
+ const opt=k=>[...new Set(all.map(r=>r[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(v=>`<option value="${esc(v)}" ${S[k]===v?'selected':''}>${esc(v)}</option>`).join('');
+ return `<div id="registros-page"><div class="rg-titlebar"><div><h1>Registros</h1><p>Acompanhe os instrumentos coletivos, a análise por IA, os aditivos e as revisões.</p></div><span class="rg-updated" aria-live="polite">${all.length} registro(s) carregado(s) do Mediador</span></div>
+ <div class="rg-metrics">${metric('▤','Total carregado',all.length,'')}${metric('◷','Precisam de atenção',pending,'warn')}${metric('✧','Com análise por IA',analyzed,'blue')}${metric('✓','Consolidados',consolidated,'ok')}</div>
+ <div class="rg-filters"><label class="rg-search"><span aria-hidden="true">⌕</span><input type="search" id="q" placeholder="Buscar registro, sindicato, solicitação…" value="${esc(S.q)}" aria-label="Buscar registros"></label>
+ <div class="rg-filter"><label for="fw">Consulta</label><select id="fw"><option value="">Todas as consultas</option>${opt('watch')}</select></div>
+ <div class="rg-filter"><label for="ft">Tipo</label><select id="ft"><option value="">Todos os tipos</option>${opt('tipo')}</select></div>
+ <div class="rg-filter"><label for="fe">Status</label><select id="fe"><option value="">Todos os status</option>${Object.entries(estados).map(([k,v])=>`<option value="${k}" ${S.estado===k?'selected':''}>${v}</option>`).join('')}</select></div>
+ <div class="rg-filter"><label for="fp">Detectado</label><select id="fp"><option value="">Todo o período</option>${[['7','Últimos 7 dias'],['30','Últimos 30 dias'],['90','Últimos 90 dias']].map(([k,v])=>`<option value="${k}" ${S.periodo===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
+ <div class="rg-main"><section class="rg-list" aria-label="Lista de registros"><div class="rg-list-toolbar"><strong>${list.length} registro(s)</strong><div class="rg-sort"><label for="rg-ord">Ordenar</label><select id="rg-ord"><option value="recentes" ${S.ordenacao==='recentes'?'selected':''}>Mais recentes</option><option value="antigos" ${S.ordenacao==='antigos'?'selected':''}>Mais antigos</option><option value="registro" ${S.ordenacao==='registro'?'selected':''}>Nº do registro</option></select></div></div>
+ <div class="rg-list-scroll" id="rg-list-scroll">${list.length?list.map(r=>`<button type="button" class="rg-record ${r.numero_registro===S.open?'is-selected':''}" data-act="abrir-reg" data-id="${esc(r.numero_registro)}" aria-pressed="${r.numero_registro===S.open}"><span class="rg-record-top"><strong class="mono">${esc(r.numero_registro)}</strong>${rgBadge(r)}</span><div class="rg-record-parties" title="${esc(r.partes||r.watch||'')}">${esc(r.partes||r.watch||'Sem sindicato informado')}</div><div class="rg-record-meta"><span class="rg-record-type">${esc(r.tipo||'Instrumento')}</span><time>${esc(r.vigencia||'Vigência não informada')}</time></div></button>`).join(''):`<div class="rg-null"><b>Nenhum registro encontrado</b>${all.length?'Altere a busca ou os filtros.':'Cadastre um sindicato e utilize “Verificar agora”.'}</div>`}</div></section>
+ ${selected?rgDetalhe(selected):`<section class="rg-detail"><div class="rg-null"><b>Selecione um registro</b>${all.length?'Altere os filtros para exibir um registro.':'Os documentos consultados aparecerão aqui.'}</div></section>`}</div></div>`;
+}
+
+/* ---------- Sindicatos (CRUD) ---------- */
+async function viewSindicatos(){
+  S.sind=await api("/api/sindicatos");
+  return `<div class="bar"><span class="muted">Cada sindicato pode monitorar vários instrumentos; o sistema consulta cada tipo separadamente.</span></div><div class="bento">`+
+  S.sind.map(x=>`<div class="t c4"><div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><b style="font-size:16px;letter-spacing:-.01em">${esc(x.nome)}</b>
+      <input type="checkbox" class="sw" data-tg="${x.id}" ${x.ativo?"checked":""} aria-label="Monitorar ${esc(x.nome)}"></div>
+    <div class="mono muted" style="margin-top:4px">${esc(x.cnpj||"Sem CNPJ")}</div><div class="chips">${chips({...x,cnpj:""})||'<span class="chip">Sem filtros</span>'}</div>
+    <div style="margin-top:12px"><button class="ghost" data-cl="clientes-sindicato" data-id="${x.id}">${x.clientes_total||0} cliente(s) vinculado(s)</button></div><div class="foot"><span class="badge ${x.ativo?"ok":""}">${x.ativo?"Monitorando":"Pausado"}</span><span><button class="sm" data-act="edit" data-id="${x.id}">Editar</button> <button class="sm danger" data-act="del" data-id="${x.id}">Excluir</button></span></div></div>`).join("")+
+  `<div class="t c4 add" tabindex="0" role="button" data-act="novo"><b>+</b>Novo sindicato</div></div>`;
+}
+
+async function viewConsultas(){
+  const c=await api("/api/consultas");
+  return `<div class="bento">`+c.map(w=>{const u=w.ultima;
+    const st=!u?'<span class="badge">Sem execuções</span>':u.erro?'<span class="badge err">Erro</span>':'<span class="badge ok">OK</span>';
+    return `<div class="t c6"><div class="h"><b style="font-size:16px">${esc(w.name)}</b>${st}</div><div class="chips" style="margin:0">${chips(w)}</div>
+      ${u?.erro?`<div style="margin-top:10px;color:var(--err)">${esc(u.erro)}</div>`:""}
+      <div class="foot muted"><span>${w.registros} registros</span><span>última ${ago(u?.iniciada_em)}</span></div></div>`}).join("")+
+  `</div><p class="muted">Para filtros fixos, edite <code>config/watch.json</code>; os demais vêm de Sindicatos.</p>`;
+}
+
+async function viewExecucoes(){
+  const [e,st]=await Promise.all([api("/api/execucoes"),api("/api/status")]);
+  if(!e.length)return empty("Sem execuções","O histórico aparece aqui após a primeira verificação.");
+  return `<div class="t flush tbl"><table><thead><tr><th>Quando</th><th>Consulta</th><th>Encontrados</th><th>Novos</th><th>Resultado</th></tr></thead><tbody>`+
+  e.map(x=>`<tr><td class="muted">${fmt(x.iniciada_em)}</td><td>${esc(x.watch)}${x.tipo_instrumento?`<div class="muted" style="font-size:12px">${esc(x.tipo_instrumento)}</div>`:''}</td><td>${x.encontrados??0}</td><td>${x.novos??0}</td>
+  <td>${x.erro?`<span class="badge err" title="${esc(x.erro)}">Erro</span>`:'<span class="badge ok">OK</span>'}</td></tr>`).join("")+"</tbody></table></div>" +
+  `<div class="t" style="margin-top:14px"><div class="h"><b>Últimos eventos de automação</b></div><pre style="max-height:300px;overflow:auto;white-space:pre-wrap;font:12px/1.65 ui-monospace,monospace">${esc((st.log||[]).join('\n')||'Sem eventos recentes')}</pre><p class="muted">Capturas HTML, screenshots e inventário DOM em <code>data/debug/</code>.</p></div>`;
+}
+
+/* ---------- Configurações: IA, automação, Slack e SMTP (SQLite) ---------- */
+const PRESETS={OpenAI:["https://api.openai.com/v1","gpt-4o-mini"],OpenRouter:["https://openrouter.ai/api/v1","anthropic/claude-sonnet-4"],Ollama:["http://localhost:11434/v1","llama3.1"],"LM Studio":["http://localhost:1234/v1",""]};
+const WEEKDAYS=[['1','Seg'],['2','Ter'],['3','Qua'],['4','Qui'],['5','Sex'],['6','Sáb'],['0','Dom']];
+function agDisplay(cron){
+  const m=/^(\d{1,2}) (\d{1,2}) \* \* ([0-7,\-\*]+)$/.exec(cron||'');
+  if(!m)return {freq:'custom',time:'08:00',days:['1','2','3','4','5']};
+  const [,min,hour,days]=m;
+  const time=hour.padStart(2,'0')+':'+min.padStart(2,'0');
+  if(days==='*')return {freq:'daily',time,days:['1','2','3','4','5']};
+  if(days==='1-5')return {freq:'weekdays',time,days:['1','2','3','4','5']};
+  const parsed=days.split(',').flatMap(s=>{const range=s.split('-').map(Number);return range.length===2?Array.from({length:range[1]-range[0]+1},(_,i)=>''+(range[0]+i)):[s]}).map(x=>x==='7'?'0':x);
+  if(parsed.every(x=>WEEKDAYS.some(d=>d[0]===x)))return {freq:'chosen',time,days:parsed};
+  return {freq:'custom',time,days:['1','2','3','4','5']};
+}
+function getCron(){
+  const form=$('#agf');if(!form)return '';
+  const freq=form.elements.freq.value;
+  if(freq==='custom')return form.elements.cron.value.trim();
+  const [h,m]=(form.elements.time.value||'08:00').split(':');
+  const days=freq==='daily'?'*':freq==='weekdays'?'1-5':WEEKDAYS.filter(x=>form.querySelector('[name="d'+x[0]+'"]').checked).map(x=>x[0]).join(',');
+  return `${Number(m)} ${Number(h)} * * ${days}`;
+}
+function refreshSchedule(){
+  const f=$('#agf');if(!f)return;
+  const freq=f.elements.freq.value;
+  $('#ag-choose-days').classList.toggle('cfg-hidden',freq!=='chosen');
+  $('#ag-custom-wrap').classList.toggle('cfg-hidden',freq!=='custom');
+  const value=getCron(),valid=!!value&&!value.endsWith(' ');
+  $('#ag-summary').innerHTML=`<strong>${f.elements.ativo.checked?'Agendamento habilitado':'Agendamento desativado'}</strong>`+
+    `<span class="muted">${freq==='daily'?'Todos os dias':freq==='weekdays'?'Segunda a sexta':freq==='chosen'?'Dias selecionados':'Expressão personalizada'} · ${esc(f.elements.time.value||'08:00')} · ${esc(f.elements.timezone.selectedOptions[0].textContent)}</span>`+
+    `<div class="cfg-tip">${valid?'Cron gerado: ':'Selecione ao menos um dia. '}<code>${esc(value||'—')}</code></div>`;
+}
+async function viewConfig(){
+  const [c,ag,n,browser]=await Promise.all([api('/api/llm'),api('/api/agendamento'),api('/api/notificacoes'),api('/api/navegador')]);
+  const a=agDisplay(ag.cron);
+  return `<div class="cfg-layout">
+  <section class="cfg-card"><form id="lf" class="form" autocomplete="off">
+    <div><h2>Extração com IA</h2><p class="lead">60 campos em 9 seções. Informações ausentes são identificadas como “Não consta na CCT”. Endpoint compatível com OpenAI.</p></div>
+    <label class="check"><span>Ativar extração</span><input type="checkbox" class="sw" name="ativo" ${c.ativo?'checked':''}></label>
+    <div class="f"><label>Provedor</label><div class="presets">${Object.keys(PRESETS).map(k=>`<button type="button" data-act="preset" data-k="${k}">${k}</button>`).join('')}</div></div>
+    <div class="f"><label for="l-url">URL base</label><input id="l-url" name="baseUrl" type="url" required value="${esc(c.baseUrl)}"><small>Compatibilidade: <code>{URL base}/chat/completions</code></small></div>
+    <div class="f"><label for="l-key">Chave de API</label><input id="l-key" name="apiKey" type="password" autocomplete="new-password" placeholder="${c.temChave?'Configurada ('+esc(c.chaveFinal)+') — vazio mantém':'Opcional para servidor local'}"><small>Armazenada localmente no SQLite; a API não devolve o segredo.</small></div>
+    <div class="f"><label for="l-model">Modelo</label><input id="l-model" name="model" required value="${esc(c.model)}" placeholder="Nome exato do modelo"></div>
+    <div class="err" id="l-msg" role="status"></div><div class="cfg-actions"><button type="button" data-act="testar">Testar conexão</button><button class="primary">Salvar IA</button></div>
+  </form></section>
+  <section class="cfg-card"><form id="agf" autocomplete="off">
+    <div class="cfg-title"><div><h2>Automação</h2><p class="lead">Defina quando o monitor consulta o Mediador.</p></div><span class="cfg-pill"><span class="dot ${ag.ativo?'on':''}"></span>${ag.ativo?'Ativo':'Inativo'}</span></div>
+    <label class="check"><span><b>Verificações automáticas</b><span class="cfg-tip" style="display:block">Ativar execução recorrente</span></span><input type="checkbox" class="sw" name="ativo" ${ag.ativo?'checked':''}></label>
+    <hr class="cfg-divider">
+    <div class="cfg-fields">
+      <div><label class="cfg-label">Como executar as consultas</label>
+        <div class="tipos-grid" role="radiogroup" aria-label="Modo de execução do navegador">
+          <label class="tipo-option"><input type="radio" name="browserMode" value="headless" ${browser.headless?'checked':''}><span><b>Sem janela</b><span class="cfg-tip" style="display:block">Playwright em segundo plano</span></span></label>
+          <label class="tipo-option"><input type="radio" name="browserMode" value="visible" ${!browser.headless?'checked':''}><span><b>Visível</b><span class="cfg-tip" style="display:block">Abre janela e fecha ao concluir</span></span></label>
+        </div>
+        <div class="cfg-tip" style="margin-top:8px">Nenhum modo exige confirmação manual entre as etapas. Se o MTE solicitar verificação de segurança, a consulta é interrompida, registrada no histórico e as guias são fechadas.</div>
+      </div>
+    </div>
+    <hr class="cfg-divider">
+    <div class="cfg-fields">
+      <div><label class="cfg-label" for="ag-freq">Frequência</label><select id="ag-freq" name="freq" class="cfg-input"><option value="weekdays" ${a.freq==='weekdays'?'selected':''}>Dias úteis (segunda a sexta)</option><option value="daily" ${a.freq==='daily'?'selected':''}>Todos os dias</option><option value="chosen" ${a.freq==='chosen'?'selected':''}>Selecionar dias da semana</option><option value="custom" ${a.freq==='custom'?'selected':''}>Expressão cron personalizada</option></select></div>
+      <div id="ag-choose-days" class="${a.freq==='chosen'?'':'cfg-hidden'}"><label class="cfg-label">Executar nos dias</label><div class="cfg-days">${WEEKDAYS.map(d=>`<label><input type="checkbox" name="d${d[0]}" ${a.days.includes(d[0])?'checked':''}><span>${d[1]}</span></label>`).join('')}</div></div>
+      <div class="cfg-grid"><div><label class="cfg-label" for="ag-time">Horário</label><input class="cfg-input" type="time" name="time" id="ag-time" value="${esc(a.time)}" required></div>
+        <div><label class="cfg-label" for="ag-tz">Fuso horário</label><select class="cfg-input" name="timezone" id="ag-tz">${[['server','Horário do servidor'],['America/Sao_Paulo','Brasília (São Paulo)'],['America/Manaus','Manaus'],['America/Rio_Branco','Rio Branco'],['UTC','UTC']].map(([val,label])=>`<option value="${val}" ${ag.timezone===val?'selected':''}>${label}</option>`).join('')}</select></div></div>
+      <div id="ag-custom-wrap" class="${a.freq==='custom'?'':'cfg-hidden'}"><label class="cfg-label" for="ag-cron">Expressão cron avançada</label><input class="cfg-input" id="ag-cron" name="cron" value="${esc(ag.cron)}" placeholder="0 8 * * 1-5"><div class="cfg-tip">Minuto · Hora · Dia do mês · Mês · Dia da semana</div></div>
+    </div>
+    <div class="cfg-summary" id="ag-summary" aria-live="polite"></div>
+    <div class="cfg-note">Execuções manuais e agendadas usam o mesmo modo selecionado. Sem tentativas de contornar Cloudflare ou CAPTCHA. Capturas de falhas em <code>data/debug/</code>.</div>
+    <div class="cfg-message" id="ag-msg" role="status"></div>
+    <div class="cfg-actions"><button type="submit" class="primary">Salvar automação</button></div>
+  </form></section></div>
+  <section class="cfg-card" style="margin-top:14px">
+    <div class="cfg-title"><div><h2>Notificações</h2><p class="lead" style="margin-bottom:0">Configure os alertas sem editar o arquivo .env. Os dados passam a ser persistidos no SQLite.</p></div><span class="cfg-pill">Configuração local</span></div>
+    <form id="nf" autocomplete="off"><div class="cfg-channels">
+      <div class="cfg-channel"><div class="cfg-head"><b>Slack</b><input id="n-slack-active" name="slackActive" type="checkbox" class="sw" aria-label="Ativar notificações Slack" ${n.slack.ativo?'checked':''}></div>
+        <p class="cfg-desc">Envie uma mensagem para um canal por Incoming Webhook.</p>
+        <div class="f"><label for="n-slack-webhook">Webhook URL</label><div class="cfg-secrets"><input type="password" id="n-slack-webhook" name="webhook" autocomplete="off" placeholder="${n.slack.temWebhook?'Configurado ('+esc(n.slack.webhookFinal)+') — vazio mantém':'https://hooks.slack.com/services/...'}"><button type="button" data-act="revelar" data-for="n-slack-webhook">Exibir</button></div><small>O webhook não é enviado de volta para a interface.</small></div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px" class="cfg-tip"><input type="checkbox" name="limparWebhook"> Remover webhook salvo</label>
+        <div class="cfg-message" id="slack-msg" role="status"></div><div class="cfg-actions"><button type="button" data-act="testar-notificacao" data-canal="slack">Enviar teste Slack</button></div>
+      </div>
+      <div class="cfg-channel"><div class="cfg-head"><b>E-mail (SMTP)</b><input id="n-email-active" type="checkbox" name="emailActive" class="sw" aria-label="Ativar notificações por e-mail" ${n.email.ativo?'checked':''}></div>
+        <p class="cfg-desc">Configure o servidor para enviar alertas para os destinatários informados.</p>
+        <div class="gmail-launch"><div><b>Conta Gmail ou Google Workspace?</b><p>Preencha SMTP automaticamente e configure o envio em 3 etapas.</p></div><button type="button" data-act="gmail-wizard">Configurar Gmail →</button></div>
+        <div class="cfg-fields"><div class="cfg-grid"><div><label class="cfg-label" for="n-host">Servidor SMTP</label><input class="cfg-input" id="n-host" name="host" placeholder="smtp.exemplo.com" value="${esc(n.email.host)}"></div>
+        <div><label class="cfg-label" for="n-port">Porta</label><input class="cfg-input" type="number" min="1" max="65535" id="n-port" name="port" value="${n.email.port}"></div></div>
+        <label class="check"><span>SSL/TLS direto (geralmente porta 465)</span><input type="checkbox" class="sw" name="secure" ${n.email.secure?'checked':''}></label>
+        <div class="cfg-grid"><div><label class="cfg-label" for="n-user">Usuário SMTP</label><input class="cfg-input" id="n-user" name="user" autocomplete="off" value="${esc(n.email.user)}"></div>
+        <div><label class="cfg-label" for="n-pass">Senha SMTP</label><div class="cfg-secrets"><input id="n-pass" type="password" name="password" autocomplete="new-password" placeholder="${n.email.temSenha?'Configurada — vazio mantém':'Senha ou token'}"><button type="button" data-act="revelar" data-for="n-pass">Exibir</button></div></div></div>
+        <div class="cfg-grid"><div><label class="cfg-label" for="n-from">Remetente</label><input class="cfg-input" type="email" id="n-from" name="from" placeholder="monitor@empresa.com" value="${esc(n.email.from)}"></div>
+        <div><label class="cfg-label" for="n-to">Alertas internos (destinatários opcionais)</label><input class="cfg-input" id="n-to" name="to" placeholder="Seu e-mail interno; clientes usam os contatos" value="${esc(n.email.to)}"></div></div></div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px" class="cfg-tip"><input type="checkbox" name="limparSenha"> Remover senha salva</label>
+        <div class="cfg-message" id="email-msg" role="status"></div><div class="cfg-actions"><button type="button" data-act="testar-notificacao" data-canal="email">Enviar e-mail de teste</button></div>
+      </div>
+    </div><div class="cfg-save"><span class="cfg-tip">Senhas e webhooks são mantidos no banco local e mascarados na interface.</span><button type="submit" class="primary">Salvar notificações</button></div><div class="cfg-message" id="nf-msg" role="status"></div></form>
+  </section>`;
+}
+const lbody=()=>{const f=new FormData($('#lf'));return {ativo:f.get('ativo')==='on',baseUrl:f.get('baseUrl'),model:f.get('model'),apiKey:f.get('apiKey')}};
+const lmsg=(t,ok)=>{const m=$('#l-msg');if(!m)return;m.textContent=t;m.className='err'+(ok?' ok-t':'')};
+const nbody=()=>{const f=$('#nf').elements;return {
+  slack:{ativo:f.slackActive.checked,webhook:f.webhook.value,limparWebhook:f.limparWebhook.checked},
+  email:{ativo:f.emailActive.checked,host:f.host.value,port:Number(f.port.value),secure:f.secure.checked,
+    user:f.user.value,password:f.password.value,limparSenha:f.limparSenha.checked,from:f.from.value,to:f.to.value}
+}};
+const cfgmsg=(id,message,good)=>{const el=$(id);if(!el)return;el.textContent=message;el.className='cfg-message '+(good===true?'good':good===false?'bad':'')};
+
+/* Assistente Gmail: reutiliza o mesmo contrato SMTP, teste e persistência SQLite. */
+const GMAIL={step:1,preset:null,savedSlack:null,verified:false,busy:false};
+const gw=$('#wiz-gmail'),gf=$('#gmail-form');
+function gmailStatus(message,ok){const el=$('#gmail-message');el.textContent=message;el.className='gmail-message '+(ok===true?'good':ok===false?'bad':'')}
+function gmailShow(step){
+  GMAIL.step=step;
+  gw.querySelectorAll('[data-wstep]').forEach(el=>el.classList.toggle('cfg-hidden',Number(el.dataset.wstep)!==step));
+  gw.querySelectorAll('.gmail-steps span').forEach((el,i)=>el.classList.toggle('current',i<step));
+  $('#gmail-progress').textContent='Etapa '+step+' de 3';
+  $('#gmail-back').hidden=step===1;$('#gmail-next').hidden=step===3;$('#gmail-save').hidden=step!==3;
+  if(step===3){
+    $('#gmail-preview-account').textContent=gf.elements.account.value;
+    $('#gmail-preview-to').textContent=gf.elements.recipient.value;
+    $('#gmail-preview-tls').textContent=gf.elements.transport.value==='465'?'SSL/TLS · 465':'STARTTLS · 587';
+  }
+}
+function gmailValidStep(){
+  if(GMAIL.step===1){
+    const account=gf.elements.account,recipient=gf.elements.recipient;
+    if(!account.value.trim()||!account.checkValidity()){account.reportValidity();return false}
+    if(!recipient.value.trim()||!recipient.checkValidity()){recipient.reportValidity();return false}
+  }
+  if(GMAIL.step===2){
+    if(!GMAIL.preset)return false;
+    const pass=gf.elements.password.value.replace(/\s/g,'');
+    if(!/^[a-zA-Z0-9]{16}$/.test(pass)){gmailStatus('Informe uma senha de app do Google com 16 caracteres (espaços opcionais).',false);gf.elements.password.focus();return false}
+  }
+  return true;
+}
+function gmailPayload(){
+  if(!GMAIL.preset)throw Error('Configuração Gmail não carregada. Reabra o assistente.');
+  const account=gf.elements.account.value.trim(),recipient=gf.elements.recipient.value.trim();
+  const pass=gf.elements.password.value.replace(/\s/g,'');
+  const choice=GMAIL.preset.transportes.find(v=>String(v.porta)===gf.elements.transport.value);
+  if(!choice)throw Error('Conexão SMTP inválida');
+  // O wizard altera apenas o e-mail; não inclui modificações não salvas do formulário Slack.
+  const cfg={slack:{...GMAIL.savedSlack},email:null};
+  cfg.email={ativo:true,host:GMAIL.preset.host,port:choice.porta,secure:choice.secure,user:account,password:pass,
+    limparSenha:false,from:account,to:recipient};
+  return cfg;
+}
+async function gmailOpen(){
+  if(!$('#nf'))return toast('Abra Configurações primeiro.');
+  gw.showModal();gf.reset();GMAIL.preset=null;GMAIL.savedSlack=null;GMAIL.verified=false;GMAIL.busy=true;
+  const current=$('#nf').elements;
+  gf.elements.account.value=current.user.value||current.from.value||'';
+  gf.elements.recipient.value=current.to.value.includes(',')?'':(current.to.value||'');
+  gmailShow(1);gmailStatus('');
+  $('#gmail-next').disabled=true;
+  try{
+    const [preset,saved]=await Promise.all([api('/api/provedores/gmail'),api('/api/notificacoes')]);
+    GMAIL.preset=preset;
+    GMAIL.savedSlack={ativo:saved.slack.ativo,webhook:'',limparWebhook:false};
+    if(GMAIL.preset.host!=='smtp.gmail.com')throw Error('Preset inválido');
+  }catch(e){gmailStatus('Não foi possível carregar o preset: '+e.message,false);$('#gmail-next').disabled=true;return}
+  finally{GMAIL.busy=false;$('#gmail-next').disabled=!GMAIL.preset}
+  gf.elements.account.focus();
+}
+$('#gmail-close').onclick=()=>gw.close();
+gw.addEventListener('close',()=>{gf.elements.password.value='';GMAIL.verified=false});
+gw.addEventListener('click',e=>{if(e.target===gw)gw.close()});
+$('#gmail-back').onclick=()=>{if(GMAIL.busy)return;gmailStatus('');gmailShow(Math.max(1,GMAIL.step-1))};
+$('#gmail-next').onclick=()=>{if(GMAIL.busy||!gmailValidStep())return;gmailStatus('');gmailShow(Math.min(3,GMAIL.step+1))};
+gf.addEventListener('submit',e=>e.preventDefault());
+gf.addEventListener('input',()=>{GMAIL.verified=false;gmailStatus('')});
+gf.addEventListener('change',()=>{GMAIL.verified=false;gmailStatus('')});
+$('#gmail-reveal').onclick=()=>{let el=gf.elements.password;el.type=el.type==='password'?'text':'password';$('#gmail-reveal').textContent=el.type==='password'?'Exibir':'Ocultar'};
+$('#gmail-test').onclick=async()=>{
+  if(GMAIL.busy||!gmailValidStep())return;
+  GMAIL.busy=true;$('#gmail-test').disabled=true;$('#gmail-save').disabled=true;
+  gmailStatus('Conectando ao Gmail e enviando mensagem de teste…');
+  try{
+    const r=await send('POST','/api/notificacoes/testar',{canal:'email',config:gmailPayload()});
+    GMAIL.verified=!!r.ok;gmailStatus(r.ok?'Mensagem aceita pelo servidor SMTP. Confira a caixa de entrada (ou spam) do destinatário.':r.erro,!!r.ok);
+  }catch(e){GMAIL.verified=false;gmailStatus(e.message,false)}
+  finally{GMAIL.busy=false;$('#gmail-test').disabled=false;$('#gmail-save').disabled=false}
+};
+$('#gmail-save').onclick=async()=>{
+  if(GMAIL.busy||!gmailValidStep())return;
+  if(!GMAIL.verified&&!confirm('O envio ainda não foi confirmado pelo teste. Salvar e ativar a configuração mesmo assim?'))return;
+  GMAIL.busy=true;$('#gmail-test').disabled=true;$('#gmail-save').disabled=true;
+  try{
+    await send('PUT','/api/notificacoes',gmailPayload());
+    // Evita que um segredo permaneça em inputs após salvar.
+    gf.elements.password.value='';
+    gw.close();toast('Gmail configurado e ativo. Preferências salvas no SQLite.');
+    await render();poll();
+  }catch(e){gmailStatus('Não foi possível salvar: '+e.message,false)}
+  finally{GMAIL.busy=false;$('#gmail-test').disabled=false;$('#gmail-save').disabled=false}
+};
+
+
+/* ---------- Navegação / render ---------- */
+const VIEWS={home:viewHome,sindicatos:viewSindicatos,consultas:viewConsultas,execucoes:viewExecucoes,config:viewConfig,
+  clientes:()=>CctClientes.viewClientes(),contatos:()=>CctClientes.viewContatos(),envios:()=>CctClientes.viewEnvios()};
+let renderSequence=0;
+async function render(){
+  const sequence=++renderSequence,tab=S.tab;
+  const v=$("#view");
+  v.setAttribute('aria-busy','true');
+  try{
+    const content=tab==="registros"?(document.activeElement?.matches("#q")||(S.reg=await api("/api/registros")),viewRegistros()):await VIEWS[tab]();
+    if(sequence!==renderSequence||S.tab!==tab)return;
+    v.innerHTML=content;
+    v.classList.toggle("anim",!!S.anim);S.anim=false;
+    v.querySelectorAll('.t').forEach((e,i)=>e.style.setProperty('--n',i));
+    if(S.tab==='config')refreshSchedule();
+  }catch(e){if(sequence===renderSequence)v.innerHTML=empty("Não foi possível carregar",esc(e.message))}
+  finally{if(sequence===renderSequence)v.setAttribute('aria-busy','false');}
+}
+function go(t){S.tab=t;S.anim=true;document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));render();scrollTo({top:0})}
+const reRegs=()=>{const old=document.getElementById('rg-list-scroll');const pos=old?.scrollTop||0;$("#view").innerHTML=viewRegistros();const now=document.getElementById('rg-list-scroll');if(now)now.scrollTop=pos;};
+
+const dlg=$("#dlg"),sf=$("#sf");
+$("#s-uf").insertAdjacentHTML("beforeend","AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ").map(u=>`<option>${u}</option>`).join(""));
+function abrir(x){
+  S.edit=x?.id??null;$("#dt").textContent=x?"Editar sindicato":"Novo sindicato";$("#s-err").textContent="";sf.reset();
+  if(x){for(const k of["nome","cnpj","categoria","uf","vigencia","titulo"])sf.elements[k].value=x[k]||"";sf.elements.vigencia.value=x.vigencia||"Vigentes";sf.elements.ativo.checked=x.ativo}
+  const selected=x?(x.tipos?.length?x.tipos:[x.tipo||"Convenção Coletiva"]):["Convenção Coletiva","Termo Aditivo de Convenção Coletiva"];
+  sf.querySelectorAll('[name="tipos"]').forEach(i=>{i.checked=selected.includes(i.value)});
+  sf.querySelector('.tipos-advanced').open=selected.some(t=>!['Convenção Coletiva','Acordo Coletivo','Termo Aditivo de Convenção Coletiva','Termo Aditivo de Acordo Coletivo'].includes(t));
+  atualizarContagemTipos();
+  dlg.showModal();sf.elements.nome.focus();
+}
+sf.elements.cnpj.addEventListener("input",e=>{const d=e.target.value.replace(/\D/g,"").slice(0,14);
+  e.target.value=d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2")});
+function tiposSelecionados(){return [...sf.querySelectorAll('[name="tipos"]:checked')].map(i=>i.value)}
+function atualizarContagemTipos(){const n=tiposSelecionados().length;$('#tipos-count').textContent=`${n} selecionado${n===1?'':'s'}`}
+sf.addEventListener('change',e=>{
+  if(e.target.name!=='tipos')return;
+  if(e.target.checked){
+    if(e.target.value==='Todos os tipos')sf.querySelectorAll('[name="tipos"]').forEach(i=>{if(i!==e.target)i.checked=false});
+    else sf.querySelector('[name="tipos"][value="Todos os tipos"]').checked=false;
+  }
+  atualizarContagemTipos();
+});
+sf.addEventListener("submit",async e=>{e.preventDefault();const f=sf.elements,tipos=tiposSelecionados(),b={nome:f.nome.value,cnpj:f.cnpj.value,categoria:f.categoria.value,uf:f.uf.value,tipos,tipo:tipos[0]||'',vigencia:f.vigencia.value,titulo:f.titulo.value,ativo:f.ativo.checked};
+  if(!tipos.length){$('#s-err').textContent='Selecione pelo menos um tipo de instrumento.';return;}
+  if(!b.cnpj.trim()&&!b.categoria.trim()&&!b.titulo.trim()){ $("#s-err").textContent="Informe o CNPJ, a categoria ou a palavra do título. Sem isso, a pesquisa não identifica este sindicato.";return; }
+  $("#s-ok").disabled=true;
+  try{await(S.edit?send("PUT","/api/sindicatos/"+S.edit,b):send("POST","/api/sindicatos",b));dlg.close();toast("Sindicato salvo");render()}
+  catch(er){$("#s-err").textContent=er.message}finally{$("#s-ok").disabled=false}});
+dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+
+document.getElementById('review-close').onclick=()=>document.getElementById('dlg-revisao').close();
+document.getElementById('review-cancel').onclick=()=>document.getElementById('dlg-revisao').close();
+document.getElementById('review-content').addEventListener('change',e=>{
+  if(e.target.matches('input[name="review-choice"]'))(S.reviewDraft??={}).acao=e.target.value;
+});
+document.getElementById('review-content').addEventListener('input',e=>{
+  const k=({'review-valor':'valor','review-justificativa':'justificativa','review-revisor':'revisor'})[e.target.id];
+  if(k)(S.reviewDraft??={})[k]=e.target.value;
+});
+document.getElementById('review-save').onclick=async()=>{
+  const p=pendenciaAberta(),x=S.revisao;if(!p||!x)return;
+  const btn=document.getElementById('review-save');
+  const acao=document.querySelector('input[name="review-choice"]:checked')?.value;
+  const valor=document.getElementById('review-valor').value;
+  const justificativa=document.getElementById('review-justificativa').value.trim();
+  const revisor=document.getElementById('review-revisor').value.trim();
+  if(!acao||justificativa.length<8||!revisor||(acao==='manual'&&!valor.trim())){toast('Preencha decisão, justificativa (8 caracteres), responsável e, se manual, o texto.');return;}
+  if(acao==='aplicar_aditivo'&&!confirm('Confirmo que conferi a íntegra do aditivo, as condições, a abrangência e a vigência. Desejo adotar apenas o trecho literal exibido no relatório consolidado. A CCT original permanecerá intacta.'))return;
+  if((acao==='manual'||acao==='aplicar_sugestao')&&!confirm('Confirmar a redação selecionada no relatório consolidado? O documento original permanecerá intacto.'))return;
+  btn.disabled=true;
+  try{await send('POST','/api/pendencias/decidir',{...x,acao,valor,justificativa,revisor});
+    document.getElementById('dlg-revisao').close();S.reg=await api('/api/registros');reRegs();toast('Decisão salva no SQLite e registrada na auditoria.');
+  }catch(er){toast(er.message)}finally{btn.disabled=false}
+};
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-t]");if(t&&!t.matches("nav button")||t&&t.matches("nav button"))return go(t.dataset.t);
+  const o=e.target.closest("[data-open]");if(o){S.open=o.dataset.open;S.regTab="geral";return go("registros")}
+  const rt=e.target.closest("[data-rgt]");if(rt){S.regTab=rt.dataset.rgt;reRegs();return;}
+  const a=e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act,x=S.sind.find(s=>s.id==a.dataset.id);
+  if(act==="novo")abrir();else if(act==="edit")abrir(x);else if(act==="fechar")dlg.close();
+  else if(act==="del"&&confirm(`Excluir "${x.nome}"? Os registros já detectados são mantidos.`)){await send("DELETE","/api/sindicatos/"+x.id);toast("Sindicato excluído");render()}
+  else if(act==='abrir-reg') {if(S.open!==a.dataset.id)S.regTab='geral';S.open=a.dataset.id;if(S.tab!=='registros')go('registros');else reRegs();}
+  else if(act==='ligar') {
+    const base=document.getElementById('rel-'+a.dataset.id)?.value;
+    if(!base){toast('Selecione a CCT original.');return;}
+    a.disabled=true;
+    try{await send('POST','/api/vinculos',{aditivo:a.dataset.id,base});S.reg=await api('/api/registros');reRegs();toast('Vínculo confirmado no SQLite.');}
+    catch(er){toast(er.message);a.disabled=false}
+  }
+  else if(act==='rejeitar-vinculo') {
+    if(!confirm('Rejeitar o vínculo automático deste aditivo?'))return;
+    try{await send('POST','/api/vinculos/rejeitar',{aditivo:a.dataset.id});S.reg=await api('/api/registros');reRegs();toast('Vínculo rejeitado.');}
+    catch(er){toast(er.message)}
+  }
+  else if(act==='abrir-pendencia') {await abrirPendencia(a.dataset.base,a.dataset.campo,a.dataset.aditivo);}
+  else if(act==='sugerir-pendencia') {
+    a.disabled=true;
+    try{await send('POST','/api/pendencias/sugerir',S.revisao);toast('A IA está preparando a sugestão.');
+      S.reg=await api('/api/registros');await atualizarRevisao();
+      const aguardar=async()=>{
+        if(!document.getElementById('dlg-revisao').open)return;
+        try{S.reg=await api('/api/registros');const p=pendenciaAberta();
+          if(p?.sugestao_estado==='gerando')return setTimeout(aguardar,2100);
+          await atualizarRevisao();reRegs();
+        }catch(er){toast(er.message)}
+      };setTimeout(aguardar,2100);
+    }catch(er){toast(er.message);a.disabled=false}
+  }
+  else if(act==='consolidar') {
+    if(a.disabled)return;a.disabled=true;
+    try{await send('POST','/api/consolidar',{numero:a.dataset.id});S.reg=await api('/api/registros');reRegs();toast('Consolidação iniciada.');poll();}
+    catch(er){toast(er.message);a.disabled=false}
+  }
+  else if(act==="reanalisar"){
+    if(a.disabled)return;
+    a.disabled=true;
+    try{
+      await send("POST","/api/reanalisar",{numero:a.dataset.id});
+      S.reg=await api("/api/registros");reRegs();toast("Análise iniciada. O status será atualizado automaticamente.");poll();
+    }catch(er){toast(er.message);a.disabled=false}
+  }
+  else if(act==='gmail-wizard'){await gmailOpen();}
+  else if(act==='revelar'){
+    const field=document.getElementById(a.dataset.for);
+    const show=field.type==='password';field.type=show?'text':'password';a.textContent=show?'Ocultar':'Exibir';
+  }
+  else if(act==='testar-notificacao'){
+    a.disabled=true;const canal=a.dataset.canal;
+    cfgmsg('#'+canal+'-msg','Enviando mensagem de teste…');
+    try{const r=await send('POST','/api/notificacoes/testar',{canal,config:nbody()});cfgmsg('#'+canal+'-msg',r.ok?r.mensagem:r.erro,!!r.ok)}
+    catch(er){cfgmsg('#'+canal+'-msg',er.message,false)}finally{a.disabled=false}
+  }
+  else if(act==="preset"){const[u,m]=PRESETS[a.dataset.k],f=$("#lf").elements;f.baseUrl.value=u;if(m||!f.model.value)f.model.value=m}
+  else if(act==="testar"){if(!$("#lf").reportValidity())return;a.disabled=true;lmsg("Testando…");
+    try{const r=await send("POST","/api/llm/testar",lbody());r.ok?lmsg(`Conexão OK (${r.ms} ms) — resposta: “${r.resposta}”`,1):lmsg(r.erro)}catch(er){lmsg(er.message)}a.disabled=false}
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.matches('.rg-tab')&&['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){
+    e.preventDefault();const tabs=[...document.querySelectorAll('.rg-tab')],i=tabs.indexOf(e.target);
+    const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+    const id=tabs[next]?.dataset.rgt;if(id){S.regTab=id;reRegs();document.getElementById('rg-tab-'+id)?.focus()};return;
+  }
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches("tr.item,.li[tabindex],.add")){e.preventDefault();e.target.click()}});
+document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;reRegs();const q=$("#q");q.focus();q.setSelectionRange(q.value.length,q.value.length)}});
+document.addEventListener("change",async e=>{
+  if(e.target.id==="fw"){S.watch=e.target.value;return reRegs()}if(e.target.id==="ft"){S.tipo=e.target.value;return reRegs()}if(e.target.id==="fe"){S.estado=e.target.value;return reRegs()}if(e.target.id==="fp"){S.periodo=e.target.value;return reRegs()}if(e.target.id==="rg-ord"){S.ordenacao=e.target.value;return reRegs()}
+  const id=e.target.dataset?.tg;if(!id)return;const x=S.sind.find(s=>s.id==id);
+  try{await send("PUT","/api/sindicatos/"+id,{...x,ativo:e.target.checked});x.ativo=e.target.checked;toast(x.ativo?"Monitoramento ativado":"Monitoramento pausado");render()}
+  catch(er){e.target.checked=!e.target.checked;toast(er.message)}});
+document.addEventListener('input',e=>{if(e.target.closest?.('#agf'))refreshSchedule()});
+document.addEventListener('change',e=>{if(e.target.closest?.('#agf'))refreshSchedule()});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='agf')return;
+  e.preventDefault();const f=e.target.elements,expression=getCron();
+  if(!expression || expression.endsWith(' ') || expression.endsWith(','))return cfgmsg('#ag-msg','Selecione ao menos um dia válido.',false);
+  const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;
+  try{await Promise.all([
+      send('PUT','/api/agendamento',{ativo:f.ativo.checked,cron:expression,timezone:f.timezone.value}),
+      send('PUT','/api/navegador',{headless:f.browserMode.value==='headless'})
+    ]);
+    if(f.freq.value!=='custom')f.cron.value=expression;
+    cfgmsg('#ag-msg','Agendamento e modo do navegador salvos no SQLite.',true);toast('Automação configurada')}
+  catch(err){cfgmsg('#ag-msg',err.message,false)}finally{btn.disabled=false}
+});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='nf')return;e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;
+  try{const r=await send('PUT','/api/notificacoes',nbody());
+    e.target.elements.webhook.value='';e.target.elements.password.value='';
+    e.target.elements.limparWebhook.checked=false;e.target.elements.limparSenha.checked=false;
+    e.target.elements.webhook.placeholder=r.slack.temWebhook?'Webhook salvo (vazio mantém)':'https://hooks.slack.com/services/...';
+    e.target.elements.password.placeholder=r.email.temSenha?'Senha salva (vazio mantém)':'Senha ou token';
+    cfgmsg('#nf-msg','Canais e credenciais salvos no SQLite.',true);toast('Notificações salvas')}
+  catch(err){cfgmsg('#nf-msg',err.message,false)}finally{btn.disabled=false}
+});
+document.addEventListener("submit",async e=>{if(e.target.id!=="lf")return;e.preventDefault();lmsg("Salvando…");
+  try{await send("PUT","/api/llm",lbody());toast("Configuração salva");poll();render()}catch(er){lmsg(er.message)}});
+
+async function executar(modo){
+  try{await send("POST","/api/executar",{modo});toast("Consulta iniciada automaticamente. Acompanhe o progresso em Execuções.");poll()}catch(e){toast(e.message)}
+}
+$("#run").onclick=()=>executar("check");
+$("#stop").onclick=async()=>{if(!confirm('Interromper o monitoramento em andamento?'))return;try{await send('POST','/api/interromper',{});poll()}catch(e){toast(e.message)}};
+$("#theme").onclick=()=>{const d=document.documentElement,dark=d.dataset.theme?d.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;d.dataset.theme=dark?"light":"dark"};
+
+async function poll(){
+  try{
+    const s=await api("/api/status"),was=S.rodando;S.rodando=s.rodando;S.st=s;
+    $("#run").disabled=s.rodando;$("#run").textContent=s.rodando?"Verificando…":"Verificar agora";
+    // Atualiza somente se o estado efetivamente mudou, evitando perder foco e rolagem.
+    if(S.tab==="registros" && (s.analisesEmAndamento || S.analisesAnteriores || s.consolidacoesEmAndamento || S.consolidacoesAnteriores)){
+      const proximos=await api("/api/registros");
+      const mudou=proximos.length!==S.reg.length || proximos.some((r,i)=>r.numero_registro!==S.reg[i]?.numero_registro || r.analise_status!==S.reg[i]?.analise_status || r.analise_erro!==S.reg[i]?.analise_erro || r.consolidacao?.status!==S.reg[i]?.consolidacao?.status || r.aditivos?.length!==S.reg[i]?.aditivos?.length);
+      S.reg=proximos;
+      if(mudou)reRegs();
+    }
+    S.analisesAnteriores=s.analisesEmAndamento||0;
+    S.consolidacoesAnteriores=s.consolidacoesEmAndamento||0;
+    const sp=$("#status");sp.hidden=!s.rodando;
+    if(s.rodando){
+      const l=s.log[s.log.length-1]||"";
+      sp.querySelector('.stage').textContent=s.interrompendo?'Interrompendo e fechando guias…':`${s.headless?'Sem janela':'Visível'} · ${l||'Consultando Mediador…'}`;
+      $("#stop").disabled=!!s.interrompendo;
+    }
+    if(was&&!s.rodando){toast(s.codigo===0?"Concluído":"Concluído com erros — veja Execuções");render()}
+    if(s.rodando || s.analisesEmAndamento || s.consolidacoesEmAndamento)setTimeout(poll,1200);
+  }catch{}
+}
+render();poll();
+setInterval(()=>{if(!S.rodando&&S.tab!=="config"&&!dlg.open&&!window.CctClientes?.modalAberto()&&!window.CctClientes?.editando()&&!document.activeElement?.matches("#q"))render();poll()},30000);
+</script>
+<script src="/clientes-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Área de trabalho — Mediador Monitor</title><link rel="stylesheet" href="/auth-ui.css"><link rel="stylesheet" href="/workspace-conceito.css"><script defer src="/gestao-ui.js"></script><script defer src="/ia-plataforma-ui.js"></script><script defer src="/cliente-cnpj-ui.js"></script><script defer src="/cliente-vinculos-ui.js"></script><script defer src="/auth-ui.js"></script><script defer src="/publicacoes-ui.js"></script><script defer src="/monitoramento-ui.js"></script></head>
+<body data-page="acesso"><script src="/theme-ui.js"></script><main class="auth-card auth-wide">
+  <div class="auth-brand">Mediador Monitor</div><h1>Minha conta</h1><p id="auth-identidade"></p>
+  <section><h2>Selecione seu contexto</h2><p>Escolha o escritório ou a empresa em que deseja atuar.</p><form id="contexto-form">
+    <label for="contexto">Escritório ou empresa</label><select id="contexto" required><option value="">Selecione</option></select>
+    <div id="suporte-campos" hidden><label for="suporte-justificativa">Motivo do acesso administrativo</label><textarea id="suporte-justificativa" minlength="8" maxlength="1000"></textarea><p>O acesso preserva sua identidade e será registrado no histórico.</p></div>
+    <button type="submit">Selecionar contexto</button></form><p id="contexto-selecionado" role="status"></p><button id="suporte-encerrar" type="button" class="secondary" hidden>Encerrar acesso administrativo</button>
+  </section>
+  <section id="resumo-escritorio" hidden></section>
+  <section id="cadastros-escritorio" hidden><h2>Cadastros do escritório</h2><p id="cadastros-status" role="status"></p>
+    <h3>Clientes</h3><button id="novo-cliente-contexto" type="button">Novo cliente</button><ul id="lista-clientes-contexto" class="cadastros-lista"></ul>
+    <form id="cliente-contexto-form" hidden><h3 id="cliente-contexto-titulo">Novo cliente</h3>
+      <label for="cliente-razao">Razão social</label><input id="cliente-razao" required minlength="2" maxlength="250">
+      <label for="cliente-cnpj">CNPJ</label><input id="cliente-cnpj" required maxlength="25">
+      <label for="cliente-fantasia">Nome fantasia</label><input id="cliente-fantasia" maxlength="500">
+      <label for="cliente-uf">UF</label><input id="cliente-uf" maxlength="2">
+      <label for="cliente-municipio">Município</label><input id="cliente-municipio" maxlength="500">
+      <label for="cliente-ativo">Situação do cliente</label><select id="cliente-ativo"><option value="true">Ativo</option><option value="false">Inativo</option></select>
+      <label for="cliente-modo">Modo de envio</label><select id="cliente-modo"><option value="revisao">Revisar antes de enviar</option><option value="automatico">Automático conforme regras</option></select>
+      <label for="cliente-sindicatos">Sindicatos do cliente</label><select id="cliente-sindicatos" multiple size="4"></select><p>Disponíveis após configurar o sindicato neste escritório. Novos vínculos ficam sem confirmação de enquadramento.</p>
+      <label for="cliente-contatos">Contatos vinculados</label><select id="cliente-contatos" multiple size="4"></select><p>Selecione os contatos deste escritório. Preferências dos vínculos existentes serão preservadas.</p>
+      <button type="submit">Salvar cliente</button><button type="button" class="secondary" id="cliente-cancelar">Cancelar edição de cliente</button>
+    </form>
+    <section id="documentos-contexto" hidden><h3 id="documentos-contexto-titulo">Documentos do cliente</h3>
+      <p>Confira o original antes de decidir a aplicabilidade. A decisão nesta área não coloca o documento na fila de e-mail.</p>
+      <button id="documentos-atualizar" type="button">Atualizar documentos</button><button id="documentos-fechar" type="button" class="secondary">Fechar documentos</button>
+      <p id="documentos-status" role="status"></p><ul id="lista-documentos-contexto" class="cadastros-lista"></ul>
+      <form id="decisao-contexto-form" hidden><h3 id="decisao-contexto-titulo">Decisão de aplicabilidade</h3>
+        <label for="decisao-status">Aplicabilidade</label><select id="decisao-status"><option value="confirmado">Confirmar aplicabilidade</option><option value="rejeitado">Não se aplica</option></select>
+        <label for="decisao-responsavel">Responsável pela decisão</label><input id="decisao-responsavel" readonly>
+        <label for="decisao-justificativa">Justificativa da decisão</label><textarea id="decisao-justificativa" required maxlength="2000"></textarea>
+        <button type="submit">Registrar decisão</button><button id="decisao-cancelar" type="button" class="secondary">Cancelar decisão</button>
+      </form>
+    </section>
+    <h3>Sindicatos e filtros privados</h3><p id="monitoramentos-explicacao">Configure consultas para este escritório usando o catálogo compartilhado de sindicatos.</p>
+    <button id="novo-monitoramento-contexto" type="button">Configurar sindicato</button><ul id="lista-monitoramentos-contexto" class="cadastros-lista"></ul>
+    <form id="monitoramento-contexto-form" hidden><h3 id="monitoramento-contexto-titulo">Configurar sindicato</h3>
+      <label for="monitoramento-sindicato">Sindicato do catálogo</label><select id="monitoramento-sindicato" required></select><p>Se o sindicato não constar no catálogo, solicite o cadastro ao administrador da plataforma.</p>
+      <label for="monitoramento-nome">Nome da consulta</label><input id="monitoramento-nome" required minlength="2" maxlength="250">
+      <label for="monitoramento-cnpj">Filtro de CNPJ</label><input id="monitoramento-cnpj" maxlength="25">
+      <label for="monitoramento-categoria">Filtro de categoria</label><input id="monitoramento-categoria" maxlength="500">
+      <label for="monitoramento-uf">Filtro de UF</label><input id="monitoramento-uf" maxlength="2">
+      <label for="monitoramento-titulo">Palavra no título</label><input id="monitoramento-titulo" maxlength="500">
+      <label for="monitoramento-vigencia">Filtro de vigência</label><input id="monitoramento-vigencia" maxlength="500">
+      <label for="monitoramento-tipos">Tipos de instrumento</label><select id="monitoramento-tipos" multiple required size="5">
+        <option>Convenção Coletiva</option><option>Termo Aditivo de Convenção Coletiva</option><option>Acordo Coletivo</option><option>Termo Aditivo de Acordo Coletivo</option>
+        <option>Acordo Coletivo Específico - Programa de Proteção ao Emprego</option><option>Acordo Coletivo Específico - Autorização de Trabalho nos Domingos e Feriados</option>
+        <option>Termo Aditivo de Acordo Coletivo Programa de Proteção ao Emprego</option><option>Termo Aditivo de Acordo Coletivo - Autorização de Trabalho nos Domingos e Feriados</option><option>Todos os tipos</option>
+      </select>
+      <label for="monitoramento-ativo">Situação da configuração</label><select id="monitoramento-ativo"><option value="true">Ativa</option><option value="false">Inativa</option></select>
+      <button type="submit">Salvar configuração</button><button type="button" class="secondary" id="monitoramento-cancelar">Cancelar configuração</button>
+    </form>
+    <h3>Contatos</h3><button id="novo-contato-contexto" type="button">Novo contato</button><ul id="lista-contatos-contexto" class="cadastros-lista"></ul>
+    <form id="contato-contexto-form" hidden><h3 id="contato-contexto-titulo">Novo contato</h3>
+      <label for="contato-nome">Nome do contato</label><input id="contato-nome" required minlength="2" maxlength="250">
+      <label for="contato-email">E-mail do contato</label><input id="contato-email" type="email" required maxlength="254">
+      <label for="contato-telefone">Telefone</label><input id="contato-telefone" maxlength="500">
+      <label for="contato-cargo">Cargo</label><input id="contato-cargo" maxlength="500">
+      <label for="contato-ativo">Situação do contato</label><select id="contato-ativo"><option value="true">Ativo</option><option value="false">Inativo</option></select>
+      <button type="submit">Salvar contato</button><button type="button" class="secondary" id="contato-cancelar">Cancelar edição de contato</button>
+    </form>
+  </section>
+  <section id="monitoramento-contexto" hidden></section><div id="gestao-plataforma"></div><section id="ia-plataforma" hidden></section><div id="gestao-local"></div><div id="envios-local"></div><div id="interpretacoes-local"></div><div id="publicacoes-contexto" hidden></div><div id="portal-cliente" hidden></div>
+  <section><h2>Seu perfil</h2><form id="perfil-form"><label for="perfil-nome">Nome</label><input id="perfil-nome" autocomplete="name" required minlength="2" maxlength="250"><button type="submit">Salvar nome</button></form></section>
+  <p id="auth-mensagem" role="status" aria-live="polite"></p><div class="auth-actions"><a id="painel-global" href="/" hidden>Painel global da plataforma</a><button id="auth-sair" type="button" class="secondary">Sair</button></div>
+</main><script src="/uf-ui.js"></script><script src="/workspace-ui.js"></script><script src="/resumo-ui.js"></script><script src="/cadastros-ui.js"></script></body></html>
+
+
+
+

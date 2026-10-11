@@ -1,0 +1,9 @@
+# Unified Development Environment Configuration — m_mte-mediador-monitor-unificado
+
+## 1. Local Prerequisites & Tooling
+
+* **Runtime:** Node.js 22+ (alinhado ao SAD: Node.js 22+; o projeto usa `@types/node` 22.9 e scripts com `tsx`/`node`/`playwright` 1.48).
+* **，Gerenciador de pacotes:** npm (o projeto usa `npm` com `npm run` scripts; scripts reais do package.json listados acima).
+* **Ferramentas obrigatórias:** Nenhuma ferramenta adicional detectada (não há docker-compose; setup é local, sem containers).
+* **Editores recomendados & extensões:** VS Code + extensões: TypeScript, Prettier, etc. [INFERIDO PIA — RE, REQUER, VALIDAÇÃO HUMANA] (premissa: editor não detectado no código; recomendação baseado no template).
+* **Versão mínima do SO/:** qualquer SO compatível com o runtime (Windows/Linux/macOS) [IN, RE, REQUER, VALIDAÇÃO H, RE, RE, RE, <|open|>, <|open|>, <|open|>, <|open|>, <|close|>think, , <|close|>think, <|open|>, , <|open|>, , <|close|>think.<|close|>think, <|open|>, <|close|>think, <|close|>think, <|close|>think <|close|>think, <|close|>, <|close|>, <|close|>, <|close|> <|close|>think.<|close|>think <|close|>think, <|close|>think, <|close|> <|close|>, <|close|>think, <|close|>think, <|close|> <|close|>, <|close|>think,  <|close|> <|close|>think, <|open|>, , <|close|>think <|close|>think, <|close|>think, <|close|> <|close|>, <|close|>think, <|close|>, <|open|>, <|close|>think, <|close|> <|close|>, <|close|>think, <|close|>think, <|close|> <|close|>, , <|close|>think, <|close|>think, <|close|>think, <|close|>think, <|close|>, <|close|>, <|close|> <|close|>think <|close|>, <|close|> , <|close|>, <|close|> <|close|> <|close|> , <|close|> <|close|>, <|close|>think, <|close|>think, <|close|>think, <|close|>think, <|close|>think, <|close|>, <|close|>, <|close|>think <|close|>, <|close|>, <|close|>think, <|close|>think, <|close|>think, <|close|> <|close|>, <|close|>think, <|close|>think,

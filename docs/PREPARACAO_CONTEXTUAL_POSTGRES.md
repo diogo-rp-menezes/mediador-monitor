@@ -1,0 +1,11 @@
+# Preparação contextual de envios PostgreSQL
+
+`npm run postgres:preparar-envios -- --escritorio ID [--cliente ID]` prepara um lote usando papel runtime validado e escritório explícito. O cliente opcional precisa estar ativo no mesmo escritório. O comando somente prepara: não confirma aplicabilidade, não publica, não aprova e não envia mensagens. Os resultados ficam em `revisao` para aprovação humana pelos fluxos existentes. Não foi executado contra o banco operacional atual.
+
+O serviço mantém o limite existente de 20 pares documento/contato por chamada; o comando não promete esgotar todos os cadastros nem agenda ciclos automaticamente. Preparação contínua com paginação completa é uma integração futura. Documentos precisam estar confirmados, com inclusão no envio, análise disponível e destinatários ativos/autorizados.
+
+Rotinas internas usam origem `{tipo: sistema, rotina: preparacao-envios-v1}`. A preparação/repreparação HTTP fornece `{tipo: usuario, usuario_id: ID}` derivado da sessão revalidada, com IP direto e request ID da requisição. O corpo HTTP não pode substituir a origem. A origem fica no snapshot estável do envio e nos detalhes da auditoria. Sistema não inventa usuário humano ou IP de requisição.
+
+Eventos `ENVIO_PREPARACAO_INICIADA`, `ENVIO_PREPARACAO_CONCLUIDA` e `ENVIO_PREPARACAO_FALHOU` acompanham a mudança de estado na mesma transação contextual. Cancelamento de versões anteriores também registra a origem em `ENVIOS_PREPARACAO_VERSOES_SUPERADAS`. Falha na auditoria inicial reverte a reserva e impede geração de arquivos. Falha na auditoria final reverte snapshot/revisão; o tratamento tenta registrar falha e sua auditoria. Se a auditoria continuar indisponível, a transação de falha também reverte e a reserva exige recuperação explícita. Não há aprovação automática ou repetição de SMTP.
+
+Build, testes HTTP/de origem e ensaio PostgreSQL descartável com PDF real e SMTP TLS local passaram. O ensaio verifica origens de sistema/usuário, rollback nas duas etapas de auditoria, isolamento, alterações de destinatário/preferência/anexo, concorrência e resultado SMTP ambíguo. Arquivos gerados antes de um rollback final podem ficar sem referência: continuam cobertos pela pendência de inventário/retenção, sem exclusão automática.

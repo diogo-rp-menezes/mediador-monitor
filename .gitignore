@@ -1,0 +1,38 @@
+# Dependências
+node_modules/
+
+# Ambiente / segredos
+.env
+.env.docker
+.env.local
+.env.*.local
+
+# Dados locais e artefatos de execução
+data/
+downloads/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Build / distribuição
+dist/
+dist-historico/
+build/
+
+# Logs
+*.log
+logs/
+
+# Caches
+.cache/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,9 @@
+import {it,expect,vi} from 'vitest';
+import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {join,resolve,sep} from 'node:path';
+import {tmpdir} from 'node:os';
+import type {Pool} from 'pg';
+import {migratePostgres} from '../src/postgres-migrations.js';
+async function fixture(work:(root:string)=>Promise<void>){const root=await mkdtemp(join(tmpdir(),'mediador-migrations-backup-'));try{await writeFile(join(root,'001_probe.sql'),'SELECT 123');await work(root);}finally{if(!resolve(root).startsWith(resolve(tmpdir())+sep))throw new Error('Limpeza inválida');await rm(root,{recursive:true,force:true});}}
+it('pausa recusa migração antes de criar tabela de versões ou adquirir lock de migração',()=>fixture(async root=>{const client={query:vi.fn(async()=>({rows:[{adquirido:false}]})),release:vi.fn()};await expect(migratePostgres({connect:async()=>client} as unknown as Pool,root)).rejects.toMatchObject({status:409});expect(client.query).toHaveBeenCalledOnce();expect(client.release).toHaveBeenCalledWith(undefined);}));
+it('falha SQL reverte versão e libera ambos os locks sem devolver conexão bloqueada',()=>fixture(async root=>{const calls:string[]=[];const client={query:vi.fn(async(sql:string)=>{calls.push(sql);if(sql==='SELECT 123')throw new Error('Falha sintética');return {rows:sql.includes('try_advisory')?[{adquirido:true}]:sql.includes('unlock')?[{liberado:true}]:[]};}),release:vi.fn()};await expect(migratePostgres({connect:async()=>client} as unknown as Pool,root)).rejects.toThrow('Falha sintética');expect(calls).toContain('ROLLBACK');expect(calls.some(sql=>sql.startsWith('INSERT INTO mediador_schema_migrations'))).toBe(false);expect(calls.slice(-2)).toEqual(['SELECT pg_advisory_unlock($1) AS liberado','SELECT pg_advisory_unlock_shared($1,$2) AS liberado']);expect(client.release).toHaveBeenCalledWith(undefined);}));

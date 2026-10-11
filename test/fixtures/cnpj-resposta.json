@@ -1,0 +1,23 @@
+{
+  "cnpj": "11222333000181",
+  "razao_social": "Empresa Alfa Comércio Ltda",
+  "nome_fantasia": "Alfa Comércio",
+  "municipio": "Brasília",
+  "uf": "DF",
+  "descricao_tipo_de_logradouro": "RUA",
+  "logradouro": "DO COMÉRCIO",
+  "numero": "100",
+  "complemento": "SALA 2",
+  "bairro": "CENTRO",
+  "cep": "70000000",
+  "cnae_fiscal": 4711302,
+  "cnae_fiscal_descricao": "Comércio varejista de mercadorias em geral",
+  "cnaes_secundarios": [{"codigo": 4721104, "descricao": "Comércio varejista de doces"}],
+  "descricao_situacao_cadastral": "ATIVA",
+  "data_situacao_cadastral": "2020-01-01",
+  "natureza_juridica": "Sociedade Empresária Limitada",
+  "porte": "MICRO EMPRESA",
+  "data_inicio_atividade": "2020-01-01",
+  "email": "nao-importar@example.test",
+  "qsa": [{"nome_socio": "Não importar", "cnpj_cpf_do_socio": "***000000**"}]
+}

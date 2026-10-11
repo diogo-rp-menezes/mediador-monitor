@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import {resolve} from 'node:path';
+
+const browser=await chromium.launch({headless:true});
+try{
+  const page=await browser.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.setContent('<div id="envios-local"></div><div id="gestao-local"></div><div id="interpretacoes-local"></div><div id="gestao-plataforma"></div><p id="auth-mensagem"></p>');
+  await page.addStyleTag({path:resolve('web/auth-ui.css')});
+  await page.addStyleTag({path:resolve('web/workspace-conceito.css')});
+  await page.evaluate(()=>{document.documentElement.dataset.theme='dark';document.getElementById('envios-local').classList.add('bento-card');});
+  await page.evaluate(()=>{
+    document.body.classList.add('workspace');window.calls=[];
+    window.fetch=async(url,options)=>{
+      window.calls.push({url,options});
+      const rows=[{id:1,numero_registro:'DF000001/2026',razao_social:'Café Aurora',nome:'Marina',email:'marina@example.test',status:'revisao',aplicabilidade:'confirmado',previsualizacao_hash:'hash-1',snapshot:{assunto:'Atualização',texto:'Texto revisado',anexos:[]}},{id:2,numero_registro:'DF000002/2026',razao_social:'Posto Horizonte',nome:'João',email:'joao@example.test',status:'enviado'},{id:3,numero_registro:'DF000003/2026',razao_social:'Café Aurora',nome:'Ana',email:'ana@example.test',status:'incerto'}];
+      let data=[];
+      if(url==='/api/contexto/envios')data=options.headers['x-context-id']==='1'?rows:[];
+      else if(url==='/api/contexto/usuarios')data={funcionarios:[],representantes:[]};
+      else if(url==='/api/contexto/interpretacoes')data={documentos:[],vinculos:[]};
+      else if(url==='/api/contexto/escritorio')data={nome:'Escritório teste',email:'',telefone:''};
+      else if(url==='/api/contexto/smtp')data={ativo:false,host:'',port:587,secure:false,user:'',from:'',temSenha:false};
+      return {ok:true,json:async()=>data};
+    };
+  });
+  await page.addScriptTag({path:resolve('web/gestao-ui.js')});
+  const context=async id=>page.evaluate(id=>window.dispatchEvent(new CustomEvent('mediador:contexto',{detail:{contexto:{tipo:'escritorio',escritorio_id:id,papel:'administrador'},sessao:{csrf:'test-csrf',capacidades:{monitoramento_execucoes:true}}}})),id);
+  await context(1);await page.locator('#envios-contexto-lista>li').first().waitFor();
+  await page.getByRole('button',{name:'Configurar envio por e-mail',exact:true}).waitFor();
+  assert.equal(await page.locator('#smtp-escritorio-form').isVisible(),false);
+  await page.getByRole('button',{name:'Editar dados do escritório',exact:true}).click();
+  await page.getByLabel('Nome público do escritório').fill('Escritório atualizado');
+  await page.getByRole('button',{name:'Salvar dados do escritório',exact:true}).click();
+  await page.locator('dialog[open]').waitFor({state:'hidden'});
+  const officeUpdate=await page.evaluate(()=>window.calls.find(call=>call.url==='/api/contexto/escritorio'&&call.options.method==='PUT'));
+  assert.equal(JSON.parse(officeUpdate.options.body).nome,'Escritório atualizado');assert.equal(officeUpdate.options.headers['x-context-id'],'1');
+  await page.getByRole('button',{name:'Configurar envio por e-mail',exact:true}).click();
+  await page.getByLabel('Senha SMTP',{exact:true}).fill('senha-sintetica-do-teste');await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#smtp-escritorio-senha').inputValue(),'');
+  await page.getByRole('button',{name:'Configurar envio por e-mail',exact:true}).click();
+  await page.getByRole('button',{name:'Salvar SMTP deste escritório',exact:true}).click();
+  await page.locator('dialog[open]').waitFor({state:'hidden'});
+  const smtpUpdate=await page.evaluate(()=>window.calls.find(call=>call.url==='/api/contexto/smtp'&&call.options.method==='PUT'));
+  assert.equal(Object.hasOwn(JSON.parse(smtpUpdate.options.body),'password'),false);
+  await page.getByRole('button',{name:'Gerenciar equipe e acessos',exact:true}).click();
+  await page.getByLabel('Operação de usuário').selectOption('vincular');
+  assert.equal(await page.getByLabel('Senha inicial da nova conta').isDisabled(),true);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#envios-contexto-lista>li').count(),3);
+  assert.deepEqual(await page.locator('.delivery-indicators dd').allTextContents(),['1','0','1','1']);
+  await page.setViewportSize({width:1440,height:1000});
+  await page.locator('#envios-local').screenshot({path:resolve('data/ui-envios-sinteticos.png')});
+  await page.setViewportSize({width:390,height:844});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.locator('#envios-local').screenshot({path:resolve('data/ui-envios-mobile-sinteticos.png')});
+  await page.setViewportSize({width:1280,height:900});
+
+  await page.getByLabel('Buscar empresa, registro ou destinatário').fill('cafe');
+  assert.equal(await page.locator('#envios-contexto-lista>li:visible').count(),2);
+  await page.getByLabel('Situação do envio').selectOption('revisao');
+  assert.equal(await page.locator('#envios-contexto-lista>li:visible').count(),1);
+  await page.locator('#envios-contexto-lista>li:visible summary').first().click();
+  await page.getByRole('button',{name:'Aprovar e colocar na fila',exact:true}).click();
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.url.endsWith('/aprovar')).length),0);
+  await page.locator('#envios-contexto-lista>li:visible input[type=checkbox]').check();
+  await page.getByRole('button',{name:'Aprovar e colocar na fila',exact:true}).click();
+  const approval=await page.evaluate(()=>window.calls.find(call=>call.url.endsWith('/aprovar')));
+  assert.equal(approval.options.headers['x-context-id'],'1');assert.equal(JSON.parse(approval.options.body).previsualizacao_hash,'hash-1');
+  await page.evaluate(()=>window.dispatchEvent(new Event('mediador:limpar')));await context(2);
+  await page.getByText('Nenhum envio preparado para este escritório.',{exact:true}).waitFor();
+  assert.equal(await page.locator('.delivery-indicators').count(),0);
+  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  assert.deepEqual(errors,[]);console.log('OK: modais de configurações, preservação SMTP, vínculo de equipe, filtros de envios e revisão obrigatória.');
+}finally{await browser.close();}

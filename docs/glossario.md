@@ -1,0 +1,26 @@
+# Glossário (Ubiquitous Language)
+
+- **Escritório**: Unidade de isolamento no sistema; representa uma entidade contábil que possui seus próprios dados, configurações e isolamento de acesso.
+- **Cliente**: Pessoa jurídica ou física vinculada a um escritório, identificada por CNPJ/CPF.
+- **Contato**: Pessoa que representa um cliente ou escritório para comunicação.
+- **Sindicato**: Categoria ou classe de clientes que compartilham regras específicas (ex.: sindicato de contadores).
+- **Documento**: Arquivo original (PDF, DOC) ou extraído relacionado a um cliente ou aditivo.
+- **Aditivo**: Modificação ou termo aditivo a um contrato coletivo de trabalho (CCT).
+- **CCT**: Contrato Coletivo de Trabalho.
+- **RLS**: Row-Level Security, mecanismo de isolamento de dados no PostgreSQL.
+- **PostgreSQL**: Banco de dados operacional previsto para produção.
+- **SQLite**: Banco de dados usado localmente durante desenvolvimento e transição.
+- **IA**: Inteligência Artificial, usada para análise de documentos via API compatível com OpenAI.
+- **BrasilAPI**: Serviço gratuito de consulta de CNPJ.
+- **CN PJ**: Cadastro Nacional da Pessoa Jurídica.
+- **Job**: Tarefa de background executada periodicamente.
+- **SMTP**: Serviço de envio de e-mails configurado por escritório.
+- **Portal do Cliente**: Interface web para clientes consultarem seus documentos.
+- **RBAC**: Role-Based Access Control, controle de acesso baseado em papéis.
+- **API**: Interface de programação para integração interna ou externa.
+- **Markdown**: Formato de documentação usado no projeto.
+- **Docker**: Plataforma de containerização usada para PostgreSQL.
+- **Migração**: Script de versionamento de banco de dados.
+- **Sprint**: Iteração de desenvolvimento no plano do projeto.
+- **ADR**: Architecture Decision Record.
+- **BRD**: Business Requirements Document.
