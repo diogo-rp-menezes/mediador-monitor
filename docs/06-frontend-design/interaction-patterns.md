@@ -1,5 +1,7 @@
 # Interaction & Motion Patterns — MTE Mediador Monitor Unificado
 
+> **Documento histórico.** A referência vigente é [UI_UX_OFICIAL.md](UI_UX_OFICIAL.md). Este documento descreve a UI legada e não deve orientar novas implementações quando houver divergência.
+
 > **Versão:** 1.0 · **Owner:** [Frontend/Design Lead — a definir] · **Status:** Draft
 > **Depende de:** [component-library.md], [design-tokens.md], [accessibility-guidelines.md], [user-flows.md], [nfr.md]
 

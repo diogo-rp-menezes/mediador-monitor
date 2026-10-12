@@ -8,6 +8,7 @@ import { aplicarAlteracoes, validarAlteracoes, type ResultadoConsolidado } from 
 import { validarExtracaoCct, CAMPOS_CCT } from './cct-template.js';
 import { lerDocumento } from './documento.js';
 import { obterDocumentoContexto } from './documentos-contexto.js';
+import { normalizarExtracao,paraVisao } from './extract.js';
 import type { Extracao } from './types.js';
 
 type Documento={numero_registro:string;tipo:string;vigencia:string;arquivo_path:string|null;arquivo_hash:string|null;extracao_json:string|null;analise_status:string;analise_concluida_em:string|null};
@@ -36,7 +37,8 @@ export function detalheInstrumento(db:Db,office:number,numero:string) {
   const row=db.prepare(`SELECT numero_registro,numero_solicitacao,tipo,vigencia,partes,
     analise_status,analise_concluida_em,extracao_json FROM registros WHERE numero_registro=?`).get(numero) as Record<string,unknown>;
   const {extracao_json,...details}=row;
-  return {...details,analise:extracao_json?JSON.parse(String(extracao_json)):null};
+  const analise=extracao_json?JSON.parse(String(extracao_json)):null;
+  return {...details,analise,analise_visao:paraVisao(normalizarExtracao(analise))};
 }
 function vinculos(db:Db,office:number,base:string) {
   return db.prepare('SELECT aditivo,base,justificativa,revisao FROM vinculos_escritorio WHERE escritorio_id=? AND base=? ORDER BY aditivo').all(office,base) as Vinculo[];

@@ -17,7 +17,7 @@ try{
   if(path==='/api/contexto/escritorio')data={nome:'Gescon',usuarios:[],convites:[]};
   if(path==='/api/contexto/smtp')data={configurado:false};
   if(path==='/api/contexto/clientes')data=[{id:1,razao_social:'Empresa teste',nome_fantasia:'Posto Monumental'}];
-  if(path==='/api/contexto/interpretacoes')data=u.searchParams.has('numero')?{...doc,analise:{campos:{piso:'R$ 2.000'}}}:u.searchParams.has('base')?{versao:'versao-segura-123',desatualizado:false,vinculos:[],revisoes:[],historico:[],resultado:{padrao:{campos:{piso:'R$ 2.000'}},pendencias:pending?['piso']:[],historico:{piso:pending?[{aplicada:false,instrumento:'DF000526/2026',citacao:'Novo piso R$ 2.100'}]:[]}}}:{documentos:[doc],vinculos:[]};
+  if(path==='/api/contexto/interpretacoes')data=u.searchParams.has('numero')?{...doc,analise_status:'analisado',analise:{campos:{piso:'R$ 2.000'}},analise_visao:{versao:'1.0.0',secoes:[{titulo:'1. Identificação e metadados',grupos:[{titulo:'Instrumento',campos:[{id:'s01_numero',rotulo:'Número do registro no MTE',valor:'DF000525/2026',clausula:'Cláusula 1ª',citacao:'Registro DF000525/2026.'},{id:'s01_vigencia',rotulo:'Vigência',valor:'Não consta na CCT'}]}]},{titulo:'2. Cláusulas econômicas',grupos:[{titulo:'Piso',campos:[{id:'s02_piso',rotulo:'Piso geral',valor:'R$ 2.000'}]}]}]}}:u.searchParams.has('base')?{versao:'versao-segura-123',desatualizado:false,vinculos:[],revisoes:[],historico:[],resultado:{padrao:{campos:{piso:'R$ 2.000'}},pendencias:pending?['piso']:[],historico:{piso:pending?[{aplicada:false,instrumento:'DF000526/2026',citacao:'Novo piso R$ 2.100'}]:[]}}}:{documentos:[doc],vinculos:[]};
   if(path==='/api/contexto/publicacoes/auditoria')data=[{criado_em:'2026-10-11',evento:'abertura',ator_id:1,ip:'127.0.0.1',resultado:'sucesso'}];
   return route.fulfill({json:data});
  });
@@ -31,7 +31,7 @@ try{
  await page.getByRole('button',{name:'Abrir ficha de DF000525/2026'}).click();
  const sheet=page.locator('.document-sheet');
  await sheet.getByRole('button',{name:'Clientes',exact:true}).click();await sheet.getByText('Posto Monumental',{exact:true}).waitFor();
- await sheet.getByRole('button',{name:'Análise',exact:true}).click();await sheet.getByText('R$ 2.000',{exact:true}).waitFor();
+ await sheet.getByRole('button',{name:'Análise',exact:true}).click();await sheet.getByText('Análise estruturada da CCT',{exact:true}).waitFor();await sheet.getByText('DF000525/2026',{exact:true}).last().waitFor();await sheet.getByRole('button',{name:'Ver evidência',exact:true}).click();await page.getByRole('dialog',{name:'Evidência: Número do registro no MTE'}).waitFor();await page.getByRole('dialog',{name:'Evidência: Número do registro no MTE'}).getByRole('button',{name:'Fechar',exact:true}).click();await sheet.getByRole('button',{name:/Cláusulas econômicas/}).click();await sheet.getByText('R$ 2.000',{exact:true}).waitFor();
  await sheet.getByRole('button',{name:'Consolidação',exact:true}).click();
  await sheet.getByRole('button',{name:'Revisar Piso',exact:true}).click();
  const review=page.locator('dialog[open]').last();await review.getByLabel('Justificativa da revisão').fill('Conferido no documento original.');await review.getByRole('button',{name:'Registrar revisão'}).click();

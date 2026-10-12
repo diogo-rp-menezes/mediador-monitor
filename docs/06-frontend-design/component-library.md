@@ -1,5 +1,7 @@
 # Component Library / Inventory — MTE Mediador Monitor Unificado
 
+> **Documento histórico.** A referência vigente é [UI_UX_OFICIAL.md](UI_UX_OFICIAL.md). Este inventário descreve a UI legada e não deve orientar novas implementações quando houver divergência.
+
 > **Versão:** 1.0 · **Owner:** [Frontend Lead — a definir] · **Status:** Draft
 > **Baseado em:** Nenhuma biblioteca de componentes — a varredura determinística do workspace **não detectou nenhuma biblioteca de UI/ícones externa** (sem React, sem shadcn/ui, sem Radix, sem Material) e **nenhum componente React/UI explicitamente identificado** na base de código.
 > **Depende de:** [design-tokens.md] — única fonte de tokens: `web/auth-ui.css:2` (`--bg`, `--ink`, `--muted`, `--line`).

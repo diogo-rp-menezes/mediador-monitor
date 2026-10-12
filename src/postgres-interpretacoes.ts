@@ -3,6 +3,7 @@ import type { Pool,PoolClient,QueryResultRow } from 'pg';
 import { ErroCadastro } from './cadastros.js';
 import { ehAditivoCct,ehCct } from './vinculos.js';
 import { withPostgresOfficeTransaction } from './postgres-transaction.js';
+import { normalizarExtracao,paraVisao } from './extract.js';
 
 const NumberSchema=z.string().trim().min(1).max(100);
 const SaveLinkSchema=z.object({aditivo:NumberSchema,base:NumberSchema.nullable(),justificativa:z.string().trim().min(8).max(2000),revisao:z.number().int().nonnegative()}).strict();
@@ -34,7 +35,8 @@ export async function detalheInstrumentoPostgres(pool:Pool,officeId:number,numer
       FROM registros r WHERE r.numero_registro=$1 AND EXISTS(
         SELECT 1 FROM clientes_documentos d WHERE d.numero_registro=r.numero_registro AND d.escritorio_id=$2)`,[NumberSchema.parse(numero),officeId]);
     if(!result.rowCount)throw new ErroCadastro('Documento não encontrado neste escritório.',404);
-    return result.rows[0];
+    const row=result.rows[0];
+    return {...row,analise_visao:paraVisao(normalizarExtracao(row.analise))};
   });
 }
 

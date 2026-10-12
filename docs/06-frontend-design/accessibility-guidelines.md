@@ -1,5 +1,7 @@
 # Accessibility Guidelines — MTE Mediador Monitor Unificado
 
+> **Documento histórico.** A referência vigente é [UI_UX_OFICIAL.md](UI_UX_OFICIAL.md). Este guia descreve a UI legada e não deve orientar novas implementações quando houver divergência.
+
 > **Versão:** 1.0 · **Owner:** [Frontend/QA Lead — a definir] · **Status:** Draft
 > **Nível-alvo:** WCAG 2.2 Nível AA · **Depende de:** design-tokens.md, nfr.md
 

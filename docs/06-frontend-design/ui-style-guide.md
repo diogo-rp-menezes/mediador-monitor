@@ -1,5 +1,7 @@
 # UI Style Guide — MTE Mediador Monitor Unificado
 
+> **Documento histórico.** A referência vigente é [UI_UX_OFICIAL.md](UI_UX_OFICIAL.md). Este guia descreve a UI legada e não deve orientar novas implementações quando houver divergência.
+
 > **Versão:** 1.0 · **Owner:** [Design/Frontend Lead — a definir] · **Status:** Draft
 > **Depende de:** design-tokens.md, component-library.md, accessibility-guidelines.md
 > **Fonte de implementação:** `web/auth-ui.css` (variáveis CSS em `:root`, linha 2) e `web/clientes-ui.css`. Não há framework de UI, biblioteca de componentes, `tailwind.config` nem ferramenta de design referenciada no repositório.
