@@ -7,7 +7,7 @@
   "scripts": {
     "local:verificar": "tsx src/local-cli.ts verificar",
     "local:iniciar": "tsx src/local-cli.ts iniciar",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && vue-tsc --noEmit -p frontend/tsconfig.json",
     "test": "vitest run",
     "test:postgres-envios": "npm run build && node test/postgres-envios.integration.mjs",
     "test:postgres-recuperacao": "npm run build && node test/postgres-recovery.integration.mjs",
@@ -31,7 +31,8 @@
     "test:postgres-https": "npm run build && node test/postgres-https.integration.mjs",
     "postgres:ia:consumir": "tsx src/postgres-ia-worker-cli.ts",
     "dev": "tsx watch src/server.ts",
-    "build": "node scripts/build-operacional.mjs",
+    "build:frontend": "vite build --config vite.config.ts",
+    "build": "npm run build:frontend && node scripts/build-operacional.mjs",
     "start": "node dist/server.js",
     "db:up": "docker compose --env-file .env.docker up -d postgres",
     "db:down": "docker compose --env-file .env.docker stop postgres",
@@ -93,7 +94,8 @@
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vite": "^6.4.4",
-    "vitest": "^2.1.5"
+    "vitest": "^2.1.5",
+    "vue-tsc": "^2.2.12"
   },
   "engines": {
     "node": ">=20"

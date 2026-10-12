@@ -1,5 +1,7 @@
 import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {readFileSync} from 'node:fs';
+import {extname,resolve,relative} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {ZodError} from 'zod';
 import {ErroCadastro} from './cadastros.js';
 import {criarPoolPostgresRuntime} from './postgres.js';
@@ -12,6 +14,7 @@ const PORT=Number(process.env.UI_PORT||3000);
 const bindHost=process.env.UI_BIND_HOST||'127.0.0.1';
 if(!['127.0.0.1','0.0.0.0'].includes(bindHost))throw new Error('UI_BIND_HOST inválido.');
 const publicUrl=process.env.AUTH_PUBLIC_URL||`http://localhost:${PORT}`;
+const vueBuildRoot=resolve(fileURLToPath(new URL('../web/vue/',import.meta.url)));
 const postgresPool=criarPoolPostgresRuntime();
 try {await validarPapelRuntimePostgres(postgresPool);} catch(error) {await postgresPool.end();throw error;}
 
@@ -39,6 +42,14 @@ const server=createServer(async(req,res)=>{
     }
 
     const arquivosAuth: Record<string, string> = { '/theme-ui.js':'theme-ui.js', '/workspace-ui.js':'workspace-ui.js', '/cadastros-ui.js':'cadastros-ui.js', '/uf-ui.js':'uf-ui.js', '/resumo-ui.js':'resumo-ui.js', '/workspace-conceito.css':'workspace-conceito.css', '/auth-ui.css': 'auth-ui.css', '/auth-ui.js': 'auth-ui.js', '/cliente-vinculos-ui.js':'cliente-vinculos-ui.js', '/cliente-cnpj-ui.js':'cliente-cnpj-ui.js', '/auth-client.js': 'auth-client.js', '/gestao-ui.js': 'gestao-ui.js', '/publicacoes-ui.js':'publicacoes-ui.js', '/monitoramento-ui.js':'monitoramento-ui.js', '/ia-plataforma-ui.js':'ia-plataforma-ui.js' };
+    if(req.method==='GET'&&(p==='/app'||p==='/app/')){
+      res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});return res.end(readFileSync(resolve(vueBuildRoot,'index.html')));
+    }
+    if(req.method==='GET'&&p.startsWith('/app/')){
+      const asset=resolve(vueBuildRoot,decodeURIComponent(p.slice('/app/'.length)));if(relative(vueBuildRoot,asset).startsWith('..')){json(res,404,{erro:'Arquivo não encontrado.'});return;}
+      const types:Record<string,string>={'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'};
+      try{res.writeHead(200,{'content-type':types[extname(asset)]||'application/octet-stream','cache-control':'no-store'});return res.end(readFileSync(asset));}catch{json(res,404,{erro:'Arquivo não encontrado.'});return;}
+    }
     if (req.method === 'GET' && arquivosAuth[p]) {
       res.writeHead(200, { 'content-type': p.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(readFileSync(new URL('../web/' + arquivosAuth[p], import.meta.url)));

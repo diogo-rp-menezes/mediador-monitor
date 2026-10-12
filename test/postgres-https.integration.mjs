@@ -84,6 +84,7 @@ try{
   return {ids:list.map(p=>String(p.id)),foreignStatus,otherContext,csrf};
  },{customer,foreign,otherCustomer});
  assert.deepEqual(checks.ids,[String(own)]);assert.equal(checks.foreignStatus,404);assert.equal(checks.otherContext,403);assert.equal(checks.csrf,403);
+ await page.goto(origin+'/app/');await page.getByText('Fundação Vue',{exact:true}).waitFor();await page.getByRole('button',{name:'Documentos',exact:true}).click();await page.getByText('Este domínio será migrado para componentes Vue preservando suas APIs, permissões e testes de jornada.',{exact:true}).waitFor();await page.goto(origin+'/');
  const csrfToken=await page.evaluate(async()=>(await (await fetch('/api/auth/sessao')).json()).csrf);
  assert.equal((await request(port,'/api/auth/logout',{'cookie':`${cookie.name}=${cookie.value}`,'origin':'https://example.invalid','content-type':'application/json','x-csrf-token':csrfToken},'POST','{}')).status,403);
  const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PDF',exact:true}).click();const download=await downloadEvent;assert.deepEqual(readFileSync(await download.path()),bytes);
