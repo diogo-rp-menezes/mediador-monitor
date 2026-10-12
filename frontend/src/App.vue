@@ -3,18 +3,21 @@ import {computed,onMounted,ref} from 'vue';
 import RegistryPanel from './components/RegistryPanel.vue';
 import WorkspaceSidebar from './components/WorkspaceSidebar.vue';
 import DocumentsPanel from './components/DocumentsPanel.vue';
+import PendingPanel from './components/PendingPanel.vue';
+import ClientPortal from './components/ClientPortal.vue';
+import {pending} from './pending';
 import {createApiTransport} from './services/api';
 
 type ContextOption={id:number;nome:string;tipo:'escritorio'|'cliente';membro?:boolean};
 type Session={csrf:string;usuario:{nome:string;email:string;papel_plataforma?:string|null};contextos:{escritorios:Array<{id:number;nome:string;membro?:boolean}>;clientes:Array<{id:number;razao_social:string;membro?:boolean}>}};
 const session=ref<Session|null>(null),context=ref<ContextOption|null>(null),notice=ref(''),failure=ref(''),active=ref('inicio');
 const options=computed<ContextOption[]>(()=>session.value?[...session.value.contextos.escritorios.map(item=>({id:item.id,nome:item.nome,tipo:'escritorio' as const,membro:item.membro})),...session.value.contextos.clientes.map(item=>({id:item.id,nome:item.razao_social,tipo:'cliente' as const,membro:item.membro}))]:[]);
-const areas=[['inicio','Visão geral'],['cadastros','Cadastros'],['monitoramento','Monitoramento'],['documentos','Documentos'],['envios','Envios'],['gestao','Escritório'],['plataforma','Plataforma']] as const;
+const areas=[['inicio','Visão geral'],['cadastros','Cadastros'],['monitoramento','Monitoramento'],['documentos','Documentos'],['envios','Envios'],['gestao','Escritório'],['plataforma','Plataforma'],['perfil','Minha conta']] as const;
 type ResolvedContext={tipo:'escritorio'|'cliente';escritorio_id:number;cliente_id:number|null;papel:string;concessao?:string};
 const resolved=ref<ResolvedContext|null>(null),switching=ref(false);
 let noticeTimer:ReturnType<typeof setTimeout>;
 function notify(message:string){clearTimeout(noticeTimer);notice.value=message;noticeTimer=setTimeout(()=>{notice.value='';},5000);}
-const visibleAreas=computed(()=>areas.filter(([key])=>key!=='plataforma'||session.value?.usuario.papel_plataforma==='administrador_plataforma'));
+const visibleAreas=computed(()=>areas.filter(([key])=>(resolved.value?.tipo!=='cliente'||['inicio','documentos','perfil'].includes(key))&&(key!=='plataforma'||session.value?.usuario.papel_plataforma==='administrador_plataforma')));
 const selectedValue=computed(()=>context.value?String(options.value.findIndex(item=>item.tipo===context.value?.tipo&&item.id===context.value?.id)):'');
 const theme=ref(localStorage.getItem('mediador_tema')==='light'?'light':'dark');
 function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.documentElement.dataset.theme=theme.value;localStorage.setItem('mediador_tema',theme.value);}
@@ -43,9 +46,10 @@ onMounted(async()=>{try{session.value=await api<Session>('/api/auth/sessao');}ca
       <div class="page-heading"><div><span class="eyebrow">Área de trabalho</span><h1>{{ areas.find(item=>item[0]===active)?.[1] }}</h1><p v-if="context">Trabalhando em {{ context.nome }}.</p><p v-else>Selecione um escritório ou empresa para começar.</p></div></div>
       <section v-if="active==='inicio'" class="bento-grid"><article class="hero-card"><span class="eyebrow">Seu escritório</span><h2>Seu dia, em perspectiva.</h2><p>Organize clientes, acompanhe instrumentos e confira as próximas decisões do escritório.</p></article><article class="metric-card"><span>Organização</span><strong>Cadastros</strong><small>Clientes, contatos e sindicatos.</small></article><article class="metric-card"><span>Consulta e conferência</span><strong>Documentos</strong><small>Instrumentos, análises e evidências.</small></article></section>
       <RegistryPanel v-else-if="active==='cadastros'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :context-key="String(resolved.escritorio_id)" :can-edit="['administrador','operador'].includes(resolved.papel)" :request="contextRequest" @success="notify" />
-      <DocumentsPanel v-else-if="active==='documentos'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :request="contextRequest" :download="contextDownload" />
-      <section v-else-if="active==='documentos'" class="transition-card"><h2>Documentos e revisões</h2><a class="secondary" href="/#documentos">Abrir Documentos na área operacional</a></section>
-      <section v-else class="transition-card"><h2>{{ areas.find(item=>item[0]===active)?.[1] }}</h2><p>Este domínio será migrado para componentes Vue preservando suas APIs, permissões e testes de jornada.</p></section>
+      <DocumentsPanel v-else-if="active==='documentos'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :can-edit="['administrador','operador'].includes(resolved.papel)" :can-publish="resolved.papel==='administrador'" :request="contextRequest" :download="contextDownload" @success="notify" />
+      <ClientPortal v-else-if="active==='documentos'&&resolved?.tipo==='cliente'" :key="'cliente-'+resolved.cliente_id" :request="contextRequest" :download="contextDownload" @success="notify" />
+      <PendingPanel v-else-if="pending[active]" :title="areas.find(item=>item[0]===active)?.[1]||''" :items="pending[active]" />
+      <section v-else class="transition-card"><h2>Selecione um espaço de trabalho</h2><p>Escolha um escritório ou empresa no seletor lateral para acessar os dados autorizados.</p></section>
     </section>
   </main>
   </WorkspaceSidebar>

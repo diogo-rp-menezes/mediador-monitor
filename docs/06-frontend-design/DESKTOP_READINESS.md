@@ -19,4 +19,4 @@ Referência: tela de 1366–1920px, lateral recolhível, conteúdo fluido, tabel
 
 ## Implementado neste incremento
 
-Transporte HTTP separado, download autenticado por contexto, catálogo de instrumentos Vue e ficha com visão geral, original, análise por template, evidências, aditivos e clientes. Consolidação/revisão, publicações e auditoria continuam no fluxo operacional anterior até migração e validação equivalentes.
+Transporte HTTP separado, download autenticado por contexto, catálogo de instrumentos Vue e ficha com visão geral, original, análise por template, evidências, aditivos e clientes. Consolidação, revisão versionada, relatórios, publicações, auditoria e gestão de vínculos de aditivos também estão em Vue. O portal do cliente também está em Vue, com abertura, download e ciência validados em PostgreSQL/HTTPS real. O workspace anterior deixou de ser servido.

@@ -1,123 +1,137 @@
-# Business Requirements Document (BRD) — Sistema de Gestão de Documentos e Autenticação
+# Business Requirements Document (BRD) — Sistema de Histórico e Gestão Documental (dist-historico)
 
-> **Versão:** 1.0 · **Status:** Draft | Em Revisão | Aprovado · **Owner:** Product Lead · **Última atualização:** 02/11/2025  
-> **Stakeholders:** Sponsor, Product, Engenharia, Design, Compliance  
+> **Versão:** 1.0 · **Status:** Draft · **Owner:** [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] · **Última atualização:** [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código]
+> **Stakeholders:** [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] — Sponsor, Product, Engenharia e Compliance são papéis esperados, mas os nomes não são deriváveis do código.
 
 ## 1. Executive Summary & Vision
-O sistema proposto visa centralizar a autenticação de usuários, o gerenciamento de documentos de clientes e o processamento de convenções coletivas de trabalho (CCT) em uma aplicação web/server‑side. Atualmente, as equipes enfrentam dificuldades para validar identidades de forma segura, armazenar e recuperar documentos variados (PDF, Word, imagens) e garantir a conformidade de cadastros escritoriais. A solução pretende utilizar o banco **better‑sqlite3** para persistência, **node‑cron** para tarefas agendadas, **nodemailer** para comunicações, **pdf‑parse** e **word‑extractor** para extração de conteúdo, **playwright** para automação de navegação quando necessário e **zod** para validação de dados, oferecendo uma plataforma confiável e auditável para operações de back‑office.
+
+Escritórios que lidam com Convenções Coletivas de Trabalho (CCT), aditivos e documentação sindical enfrentam dificuldade para organizar, vincular e auditar grandes volumes de documentos e cadastros de clientes. O sistema (contexto `dist-historico`) centraliza o histórico de vínculos, documentos e cadastros, com indexação, extração de cabeçalhos, validação de CNPJ, geração de relatórios (HTML/PDF) e trilha de auditoria de segurança. A visão é ser a fonte única e rastreável do histórico documental e cadastral, com vínculos automáticos revisáveis manualmente e controle de acesso por escritório (multi-tenant).
 
 ## 2. Problem Statement
-* **Problema central:** Falta de um módulo unificado que trate autenticação segura, validação de documentos e gerenciamento de cadastros de clientes, resultando em processos manuais, riscos de segurança e inconsistências de dados.  
-* **Evidências:** O glossário extraído do código revela termos como `login`, `logout`, `solicitarRecuperacao`, `criarHashSenha`, `verificarSenha`, `exigirCsrf`, `tratarCadastrosContexto`, `detalheCliente`, `salvarCliente`, `listarClientes`, `auditarCadastro`, `auditarSeguranca`, `normalizarCnpj`, `criarConsultaCnpj`, `processar documentos` (`pdf-parse`, `word-extractor`), `controlarDownloadsChromium`, `renderizarCctMarkdown`, `consolidarCct`, entre outros, indicando que o código já contém lógica para essas funcionalidades, porém sem um modelo de dados ou rotas definidas.  
-* **Custo de não agir (Cost of Inaction):** Continuação de processos manuais aumenta a probabilidade de fraudes, retrabalho na validação de CNPJ e documentos, perda de produtividade devido à falta de padronização e possível não‑conformidade com requisitos de auditoria e proteção de dados.
+
+* **Problema central:** A gestão do histórico de vínculos (empregados, CCTs, aditivos, sindicatos) e dos documentos associados é manual, dispersa e sem rastreabilidade: documentos baixados não ficam vinculados aos registros, aditivos não são associados às CCTs originais, e não há auditoria confiável de quem acessou ou alterou o quê.
+* **Evidências:** [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] Não há dados de pesquisa, tickets ou feedback no repositório. A existência de rotinas como `indexarArquivosExistentes` (migração retroativa de documentos já baixados) e `resolverReferenciasPendentes` (tratamento de vínculos pendentes) indica dores reais de desorganização documental, mas a quantificação do problema requer levantamento com o negócio.
+* **Custo de não agir:** [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Risco de inconsistência cadastral e documental (vínculos errados ou perdidos), impossibilidade de auditar acessos e alterações, retrabalho na localização de documentos e exposição a risco regulatório por falta de trilha de auditoria. Premissa: o domínio (CCTs, sindicatos, vínculos empregatícios) é sensível a conformidade.
 
 ## 3. Target Audience & Personas
-> `[ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código]`  
-> `[INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA]`  
-> **Premissas adotadas:** O produto será utilizado por equipes de back‑office de escritórios de contabilidade e advocacia que lidam com cadastro de clientes, validação de documentos e gestão de CCTs.  
+
+> [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] — personas são decisão de negócio/pesquisa de usuário, não algo derivável de `server/`.
+> [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] — As personas abaixo são hipóteses derivadas dos termos do glossário (ex.: `bootstrapAdministrador`, `exigirCadastroEscritorio`, `auditarCadastro`). Premissas: o sistema é multi-escritório (multi-tenant), com pelo menos um papel administrador e usuários operacionais de cadastro/documentos.
+
 | Persona | Perfil | Necessidade Principal | Ganho Esperado |
 | :--- | :--- | :--- | :--- |
-| Analista de Cadastro | Profissional responsável por inserir e validar informações de clientes e documentos. | Interface simples para upload, validação e consulta de documentos, com feedback imediato de erros. | Redução de tempo de cadastro de 30 % e diminuição de erros de digitação. |
-| Gerente de Compliance | Responsável por garantir que os processos atendam às normas de segurança e retenção de dados. | Logs de auditoria, controle de acesso baseado em permissões e validação de CSRF. | Evitar multas e garantir rastreabilidade completa das operações. |
-| Administrador de Sistema | Encargado de configurar o ambiente, gerenciar usuários e executar tarefas agendadas. | Ferramentas de criação de usuários, redefinição de senhas, agendamento de jobs e monitoramento de desempenho. | Maior controle sobre o ambiente e menor dependência de suporte externo. |
+| Administrador do Escritório | Responsável pela configuração inicial e gestão de usuários do escritório | Garantir que o escritório esteja cadastrado (`exigirCadastroEscritorio`) e que exista um administrador desde a primeira execução (`bootstrapAdministrador`) | Implantação rápida e controle de acesso desde o dia um |
+| Analista de Cadastros | Usuário operacional que mantém clientes, contatos e documentos | Cadastrar e consultar clientes/contatos (`salvarCliente`, `listarClientes`, `detalheCliente`, `salvarContato`, `listarContatos`) com dados normalizados (`normalizarCnpj`, `normalizarTexto`) | Cadastros consistentes e buscáveis, sem duplicidade por variação de formato |
+| Analista de Documentos/Vínculos | Responsável por indexar documentos e revisar vínculos automáticos | Indexar documentos (`indexarMetaDocumento`, `indexarVinculo`), revisar vínculos (`definirVinculo`, `rejeitarVinculo`) e resolver pendências (`resolverReferenciasPendentes`) | Histórico completo e vínculos corretos com intervenção manual quando necessário |
+| Auditor/Compliance | Verifica conformidade e rastreabilidade | Trilha de auditoria (`auditarSeguranca`, `auditarCadastro`) e integridade de arquivos (`hashBytes`) | Capacidade de responder "quem fez o quê e quando" com evidências |
 
 ## 4. Core Objectives & Success Metrics
+
+> [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] — Não há métricas, baselines ou metas no repositório. Os objetivos abaixo são propostas derivadas das capacidades observadas no glossário; todos os números precisam ser definidos pelo negócio.
+
 | Objetivo | KPI (Métrica) | Baseline Atual | Meta | Prazo |
 | :--- | :--- | :--- | :--- | :--- |
-| Implementar fluxo de autenticação seguro com MFA opcional | % de logins bem‑sucedidos sem incidentes de segurança | 0 % (não implementado) | ≥ 99,9 % de logins seguros | Q2/2026 |
-| Processar e validar documentos de clientes (PDF, Word, imagem) | Tempo médio de extração e validação por documento | N/A (processo manual) | ≤ 5 s por documento | Q2/2026 |
-| Garantir conformidade de cadastros escritoriais | % de cadastros com CNPJ validado e status “ativo” | 0 % (não validado) | ≥ 95 % dos cadastros válidos | Q3/2026 |
-| Automatizar geração de relatórios CCT em Markdown | Número de relatórios gerados por semana | 0 | ≥ 20 relatórios/semana | Q3/2026 |
+| Centralizar o histórico documental | % de documentos indexados no histórico (`indexarMetaDocumento`) | A definir | A definir | A definir |
+| Reduzir vínculos pendentes | Quantidade de referências pendentes não resolvidas (`resolverReferenciasPendentes`) | A definir | A definir | A definir |
+| Garantir rastreabilidade | % de ações sensíveis com registro de auditoria (`auditarSeguranca`, `auditarCadastro`) | A definir | 100% (proposta) | A definir |
+| Automatizar associação de aditivos a CCTs | % de aditivos vinculados automaticamente com `referenciasExplicitas` | A definir | A definir | A definir |
 
-* **North Star Metric:** Número de documentos de clientes processados com sucesso por mês.  
-* **Guardrail Metrics:** Taxa de falhas de autenticação (< 0,1 %), latência média de resposta da API (< 200 ms), custo de armazenamento não aumentar > 10 % ao trimestre.
+* **North Star Metric:** [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Proposta: percentual de registros do histórico com documento vinculado e verificado (integridade via `hashBytes`).
+* **Guardrail Metrics:** [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Zero perda de dados em migrações (`migrarCadastros`, `migrarAutenticacao`); nenhum vínculo revisado manualmente sobrescrito por automação (`indexarArquivosExistentes`); isolamento de dados entre escritórios (`withPostgresOfficeTransaction`).
 
 ## 5. Scope Boundaries
+
 ### In-Scope
-* Autenticação de usuários (login, logout, recuperação de senha, hash de senha, validação de CSRF).  
-* Validação e normalização de CNPJ.  
-* Upload, armazenamento, extração de texto e indexação de documentos (PDF, Word, imagens).  
-* Gerenciamento de cadastros de clientes e contatos (CRUD).  
-* Auditoria de cadastros e de segurança.  
-* Processamento e consolidação de convenções coletivas de trabalho (CCT) com geração de relatórios em Markdown.  
-* Controle de downloads do Chromium com limites configuráveis.  
-* Tarefas agendadas (node‑cron) para backup, limpeza de sessões e rotinas de manutenção.  
-* Envio de e‑mails via nodemailer para notificações e recuperação de senha.  
-* Validação de dados de entrada com zod.  
+* Gestão de cadastros de clientes e contatos (`salvarCliente`, `listarClientes`, `detalheCliente`, `excluirCadastro`, `salvarContato`, `listarContatos`), com validação e normalização (`cnpjValido`, `normalizarCnpj`, `normalizarTexto`).
+* Indexação e consulta de documentos no histórico (`indexarMetaDocumento`, `lerDocumento`, `lerDocumentoBytes`, `arquivoPermitido`, `detectarFormato`, `extrairCabecalho`), incluindo migração retroativa (`indexarArquivosExistentes`).
+* Gestão de vínculos: indexação (`indexarVinculo`), vínculo manual (`definirVinculo`), rejeição (`rejeitarVinculo`), consolidação e invalidação (`invalidarConsolidacao`), resolução de pendências (`resolverReferenciasPendentes`) e descoberta de documentos de clientes (`descobrirDocumentosClientes`, `decidirDocumentoCliente`, `contextoDocumentoCliente`).
+* Tratamento de CCTs e aditivos (`ehCct`, `ehAditivoCct`, `referenciasExplicitas`, `validarExtracaoCct`, `renderizarCctMarkdown`) e registro de documentos sindicais (`registrarSindicatoDocumento`).
+* Relatórios do histórico em HTML e PDF (`renderizarRelatorioHtml`, `gerarPdfRelatorio`, `escaparHtml`) e integridade de conteúdo (`hashBytes`).
+* Autenticação e administração de acesso (`login`, `logout`, `criarAutenticacao`, `definirCredencial`, `solicitarRecuperacao`, `recuperar`, `hashToken`, `bootstrapAdministrador`, `possuiAdministrador`, `migrarAutenticacao`).
+* Auditoria (`auditarSeguranca`, `auditarCadastro`) e monitoramento configurável (`loadWatchConfig`).
+* Operação multi-escritório com isolamento transacional (`exigirCadastroEscritorio`, `withPostgresOfficeTransaction`, `withPostgresGlobalTransaction`, `withPostgresTransaction`).
 
 ### Out-of-Scope
-* Aplicativo móvel ou PWA para usuários finais.  
-* Integração com sistemas de folha de pagamento ou ERP externos.  
-* Funcionalidades de assinatura digital avançada (ex: ICP‑Brasil).  
-* Análise preditiva ou machine learning sobre documentos.  
-* Suporte a múltiplos locatários (multi‑tenancy) em uma mesma instância.  
+* [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Extração de cabeçalho com inteligência artificial — o glossário afirma explicitamente que `extrairCabecalho` ocorre "sem uso de inteligência artificial".
+* [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Aplicativo desktop/empacotamento Tauri — o projeto não possui `src-tauri/Cargo.toml`.
+* [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] Demais exclusões de escopo (integrações externas, módulos futuros) não são deriváveis do código.
 
 ### Future Considerations (Not Now)
-* Implementação de refresh token e rota de revogação de sessões.  
-* Integração com provedores de identidade externos (OAuth2, SAML).  
-* Arquivamento de documentos em armazenamento frio (ex: S3 Glacier).  
-* Dashboard de métricas operacionais em tempo real.  
+* [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] Não há evidência no código de itens conscientemente adiados; esta lista deve ser preenchida pelo Product Lead.
 
 ## 6. Business Rules & Constraints
-> **Observação:** A varredura do repositório não identificou tabelas de banco de dados nem rotas/IPC definidas. Portanto, não há entidades ou fluxos concretos aos quais ancorar regras de negócio neste momento. As regras abaixo são placeholders que deverão ser revisadas após a modelagem do esquema e a definição das APIs.  
 
-* **BR-01:** Todo usuário deve possuir uma sessão válida identificada por `hashToken` armazenada em `cookieSessao` antes de acessar qualquer endpoint que manipule `detalheCliente`, `salvarCliente` ou `listarClientes`. *(Aguardando definição de tabelas de usuários e sessões.)*  
-* **BR-02:** Antes de permitir a operação `salvarCliente` ou `salvarContato`, o sistema deve validar que o campo CNPJ, quando presente, passe por `normalizarCnpj` e retorne `true` em `cnpjValido`. *(Aguardando definição de campos de cliente.)*  
-* **BR-03:** Qualquer requisição que altere dados de cadastro deve disparar a auditoria correspondente via `auditarCadastro` e registrar o resultado em um log imutável. *(Aguardando definição de tabela de logs de auditoria.)*  
-* **BR-04:** A operação `exigirCsrf` deve ser aplicada a todas as requisições de estado alterante (POST, PUT, DELETE, PATCH) que não sejam de leitura pura. *(Aguardando definição de middleware de CSRF.)*  
-* **BR-05:** O processo de consolidação de CCT (`consolidarCct`) somente pode ser iniciado quando todos os documentos fonte tiverem passado por `validarExtracaoCct` e `fingerprintDocumentos` gerado. *(Aguardando definição de entidade de documento e fluxo de consolidação.)*  
+> Observação de rastreabilidade: a varredura determinística não detectou tabelas nem rotas no código; as regras abaixo estão ancoradas nos fluxos/termos canônicos do Glossário (artefato-fonte), que é a fonte disponível de comportamento real.
 
-*Cada regra acima referencia explicitamente os termos do glossário (fonte: glossario) e deverá ser vinculada às entidades e endpoints assim que eles forem modelados.*  
+* **BR-01:** Todo CNPJ informado deve ser validado (`cnpjValido`) e normalizado (`normalizarCnpj`) antes de ser persistido, garantindo que o mesmo CNPJ seja reconhecido de forma idêntica em todo o sistema. Aplica-se aos fluxos `salvarCliente` e `descobrirDocumentosClientes`.
+* **BR-02:** Textos de cadastro (nomes, descrições) devem ser padronizados via `normalizarTexto` para permitir buscas e comparações consistentes. Aplica-se a `salvarCliente` e `salvarContato`.
+* **BR-03:** Nenhuma operação protegida pode prosseguir sem que o escritório esteja devidamente cadastrado (`exigirCadastroEscritorio`); a validação prévia bloqueia o andamento em caso de cadastro inexistente ou incompleto.
+* **BR-04:** Um vínculo definido manualmente (`definirVinculo`) prevalece sobre qualquer associação automática; processos de automação (ex.: `indexarArquivosExistentes`) não podem sobrescrever vínculos revisados manualmente.
+* **BR-05:** A associação automática de um aditivo a uma CCT (`ehAditivoCct`, `ehCct`) só pode ocorrer quando o aditivo faz referência formal ao registro da CCT original (`referenciasExplicitas`); caso contrário, o vínculo permanece pendente até `resolverReferenciasPendentes`.
+* **BR-06:** A confirmação automática em `descobrirDocumentosClientes` só é permitida quando há evidências suficientes; coincidências parciais geram candidatos para revisão, nunca confirmação direta.
+* **BR-07:** Somente arquivos que atendam aos critérios da empresa (`arquivoPermitido`) podem ser incluídos no relatório ou no histórico; o formato deve ser identificado por `detectarFormato` antes do processamento.
+* **BR-08:** O conteúdo processado de um documento deve corresponder fielmente ao que foi verificado: a leitura de bytes (`lerDocumentoBytes`) ocorre sobre o documento já conferido, e a integridade é comprovada por `hashBytes`.
+* **BR-09:** A extração de dados de CCT deve ser validada (`validarExtracaoCct`) para garantir que nenhum conteúdo presente no documento seja omitido no registro.
+* **BR-10:** O documento formal da CCT (`renderizarCctMarkdown`) contém apenas o layout contratual acordado; evidências e justificativas permanecem registradas separadamente no sistema.
+* **BR-11:** A geração de relatórios (`renderizarRelatorioHtml`, `gerarPdfRelatorio`) usa exclusivamente informações já registradas, sem nova consulta à inteligência artificial; textos exibidos devem passar por `escaparHtml`.
+* **BR-12:** Toda ação sensível de segurança (tentativas de acesso, autenticações) e de cadastro deve ser auditável (`auditarSeguranca`, `auditarCadastro`), permitindo rastrear quem fez o quê e quando.
+* **BR-13:** Tokens de acesso/recuperação nunca são armazenados em claro: devem passar por `hashToken` antes de persistência. A redefinição de credencial (`definirCredencial`) só ocorre após validação da identidade do solicitante no fluxo `solicitarRecuperacao`/`recuperar`.
+* **BR-14:** Deve existir ao menos um administrador no sistema (`possuiAdministrador`); na primeira execução, `bootstrapAdministrador` provisiona automaticamente a conta de administrador.
+* **BR-15:** A conta de runtime do banco de dados opera com permissões mínimas, nunca com a conta de administrador/migração (`postgresRuntimeConfigFromEnv`), e o isolamento de papéis é verificado por `validarPapelRuntimePostgres`.
+* **BR-16:** Operações no banco são executadas de forma transacional — ou tudo confirma, ou nada é aplicado (`withPostgresTransaction`); operações com escopo de escritório registram o escritório apenas durante a operação (`withPostgresOfficeTransaction`); consultas multi-tenant são restritas a tarefas de autenticação e administração central (`withPostgresGlobalTransaction`).
+* **BR-17:** Migrações (`migrarCadastros`, `migrarAutenticacao`) devem preservar integralmente registros, análises, configurações e vínculos anteriores, sem perda de dados.
+* **BR-18:** A exclusão de cadastro (`excluirCadastro`) é permanente; a decisão de excluir deve considerar os vínculos históricos associados. [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA quanto ao tratamento de vínculos órfãos — o glossário não detalha o comportamento em cascata.]
+* **BR-19:** A invalidação de consolidação (`invalidarConsolidacao`) deve fazer os registros consolidados voltarem ao estado anterior ou serem marcados como não válidos, preservando rastreabilidade da ação.
 
 ## 7. Assumptions & Dependencies
-* **Premissas:**  
-  * O banco **better‑sqlite3** oferece desempenho suficiente para o volume esperado de documentos e cadastros (até algumas dezenas de milhares de registros).  
-  * O ambiente Node.js (versão compatível com as dependências listadas) está disponível em servidores Linux ou Windows.  
-  * As variáveis de ambiente necessárias (ex: segredo para hash de senha, configuração de SMTP) serão fornecidas via **dotenv**.  
-  * Não haverá necessidade de escalabilidade horizontal imediata; o sistema será inicialmente verticalmente escalável.  
-* **Dependências externas:**  
-  * Servidor de SMTP para envio de e‑mails via **nodemailer**.  
-  * Acesso à internet para consulta de CNPJ em serviços públicos (se a validação for feita via API externa – atualmente a validação é feita apenas por algoritmo local, mas a dependência pode ser revisada).  
-  * Bibliotecas de terceiros listadas na seção de stack (better‑sqlite3, dotenv, html-entities, node-cron, nodemailer, pdf-parse, pg, playwright, word-extractor, zod).  
-  * Nenhuma dependência de ORM ou query builder; todo acesso ao banco será feito com SQL cru.  
+
+* **Premissas:**
+  * O sistema opera como aplicação web server-side, multi-escritório (multi-tenant), com isolamento de dados por escritório.
+  * O armazenamento operacional usa o motor `better-sqlite3` (conforme stack verificada), com SQL cru (sem ORM). O glossário menciona rotinas nomeadas "Postgres" e a dependência `pg` existe no `package.json`; a convivência dos dois motores e qual é efetivamente o banco de produção precisa ser confirmada com a engenharia. [REQUER VALIDAÇÃO HUMANA]
+  * Envio de e-mails (recuperação de senha) é feito via `nodemailer`; automações agendadas via `node-cron`; extração de documentos via `pdf-parse` e `word-extractor`; automação de navegador via `playwright` (provável captura/download de documentos — [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA]).
+* **Dependências externas:**
+  * Servidor de e-mail (SMTP) para os fluxos `solicitarRecuperacao`/`recuperar`.
+  * Fontes externas de documentos acessadas via automação (`playwright`) — detalhes não deriváveis do código. [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código]
+  * [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] Dependências regulatórias do domínio trabalhista/sindical (CCTs, aditivos) devem ser mapeadas pelo Compliance.
 
 ## 8. Risks & Mitigations (Business-Level)
+
 | Risco | Probabilidade | Impacto | Mitigação |
 | :--- | :--- | :--- | :--- |
-| Esquema de banco não definido levando a retrabalho | Média | Alto | Realizar workshops de modelagem de dados com stakeholders antes do início da implementação; gerar DDL a partir do glossário e validar com a equipe de engenharia. |
-| Falhas na extração de texto de PDFs/Word devido a layouts complexos | Média | Médio | Implementar testes de regressão com amostras reais de documentos; considerar uso de OCR (Tesseract) como fallback somente se necessário e aprovado. |
-| Vazamento de credenciais por armazenamento inadequado de hashToken | Baixa | Alto | Armazenar hashToken apenas em cookies HttpOnly, Secure e SameSite=Strict; usar algoritmo de hash forte (bcrypt/argon2) via criarHashSenha/verificarSenha. |
-| Não conformidade com leis de proteção de dados (LGPD/GDPR) | Baixa | Alto | Incluir cláusulas de consentimento e direito ao esquecimento no fluxo de cadastro; manter logs de auditoria (`auditarCadastro`, `auditarSeguranca`). |
-| Dependência de versão específica do Playwright causando quebras em atualizações | Baixa | Médio | Bloquear versão no package.json; criar suite de testes de smoke para validar funcionalidades de automação a cada atualização. |
+| Vínculos automáticos incorretos entre aditivos e CCTs comprometem o histórico | Média | Alto | Confirmação automática apenas com `referenciasExplicitas` (BR-05); revisão manual via `definirVinculo`/`rejeitarVinculo` com prevalência do manual (BR-04) |
+| Perda ou corrupção de dados em migrações de versão | Média | Alto | BR-17 exige preservação integral em `migrarCadastros`/`migrarAutenticacao`; execução transacional (BR-16) |
+| Falta de trilha de auditoria em ações sensíveis (risco regulatório) | Baixa | Alto | BR-12 torna auditoria obrigatória (`auditarSeguranca`, `auditarCadastro`) |
+| Exposição de credenciais/tokens | Baixa | Alto | BR-13 (`hashToken`), conta de runtime com permissões mínimas (BR-15) |
+| Documento alterado entre verificação e uso, gerando relatório inconsistente | Baixa | Médio | BR-08 (`lerDocumentoBytes` + `hashBytes`) |
+| Ambiguidade sobre o motor de banco real (SQLite vs. rotinas "Postgres" no glossário) | Média | Médio | Validação com engenharia antes de decisões de infraestrutura e licenciamento (ver Seção 7) |
 
 ## 9. Financial Considerations
-> `[ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código]`  
-> `[INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA]`  
-> **Premissas adotadas:** O projeto será desenvolvido por uma equipe interna de 3 engenheiros (full‑stack), 1 designer de UX e 1 analista de QA, com duração estimada de 4 meses para o MVP. Infraestrutura será provisionada em uma instância VM de médio porte (ex: 2 vCPU, 8 GB RAM, 100 GB SSD) em provedor de nuvem escolhido pela empresa.  
-* **Investimento estimado:** R$ 320.000 (inclui salários, licenças de ferramentas de desenvolvimento e custos de infraestrutura para 6 meses de operação).  
-* **ROI esperado / Payback:** Redução de 25 % no custo operacional de processos manuais de cadastro e validação de documentos, resultando em economia anual de aproximadamente R$ 150.000; payback previsto em 16 meses.  
-* **Modelo de custo recorrente:** Hospedagem VM (R$ 1.200/mês), serviço de SMTP (R$ 200/mês), backup e armazenamento de documentos (R$ 300/mês), totalizando aproximadamente R$ 1.700/mês.  
+
+> [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] — orçamento, ROI e headcount são decisão de negócio; não há nenhuma fonte no repositório que sustente um número aqui.
+> [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] — Premissas: aplicação server-side única, sem custos de licenciamento de dependências (todas as dependências listadas são open-source); custos recorrentes prováveis limitados a hospedagem e servidor SMTP.
+
+* **Investimento estimado:** A definir pelo Sponsor/Engenharia (esforço de desenvolvimento e implantação).
+* **ROI esperado / Payback:** A definir; sugerir quantificação a partir da redução de retrabalho na localização de documentos e da mitigação de risco regulatório (Seção 2).
+* **Modelo de custo recorrente:** [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Infraestrutura de hospedagem da aplicação web, serviço de e-mail (SMTP) e manutenção/evolução. Sem evidência de custos de licenças de software no repositório.
 
 ## 10. Go-to-Market Considerations
-> `[ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código]`  
-> `[INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA]`  
-> **Premissas adotadas:** O lançamento será direcionado inicialmente a escritórios de contabilidade parceiros da empresa, com programa de acesso antecipado (beta fechado) para coleta de feedback e ajuste de fluxos.  
-* **Estratégia de lançamento:** Beta fechado com 5 clientes piloto durante 6 semanas, seguido de rollout gradual para outras carteiras de clientes com base na adoção e nos níveis de satisfação.  
-* **Comunicação & Enablement:**  
-  * Material de treinamento (vídeos curtos e guias passo‑a‑passo) para analistas de cadastro e gestores de compliance.  
-  * Webinars de lançamento e sessões de perguntas e respostas com a equipe de produto.  
-  * Suporte dedicado via canal Slack e e‑mail durante as primeiras 8 semanas pós‑lançamento.  
+
+> [ENTRADA HUMANA NECESSÁRIA — não gerado a partir do código] — estratégia de lançamento/enablement é decisão de negócio, não algo derivável de `server/`.
+> [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] — Premissas: produto B2B para escritórios (multi-tenant), com onboarding que exige cadastro do escritório e provisionamento de administrador.
+
+* **Estratégia de lançamento:** [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Sugestão: rollout gradual por escritório (beta fechado com 1–2 escritórios), aproveitando que `bootstrapAdministrador` e `exigirCadastroEscritorio` já estruturam o onboarding por tenant; `indexarArquivosExistentes` permite migrar o acervo documental pré-existente de cada escritório no onboarding.
+* **Comunicação & Enablement:** [INFERIDO POR IA — REQUER VALIDAÇÃO HUMANA] Treinar analistas de cadastros e de vínculos nos fluxos de revisão manual (BR-04, BR-05) e o time de compliance nos relatórios de auditoria; materiais necessários: guia de onboarding do escritório e manual de revisão de vínculos.
 
 ## 11. Approval & Sign-off
+
 | Papel | Nome | Status | Data |
 | :--- | :--- | :--- | :--- |
-| Sponsor | [Nome do Sponsor] | Pendente/Aprovado | |
-| Product Lead | [Nome do Product Lead] | Pendente/Aprovado | |
-| Engineering Lead | [Nome do Engineering Lead] | Pendente/Aprovado | |
-| Design Lead | [Nome do Design Lead] | Pendente/Aprovado | |
-| Compliance Officer | [Nome do Compliance Officer] | Pendente/Aprovado | |
+| Sponsor | [ENTRADA HUMANA NECESSÁRIA] | Pendente | |
+| Product Lead | [ENTRADA HUMANA NECESSÁRIA] | Pendente | |
+| Engineering Lead | [ENTRADA HUMANA NECESSÁRIA] | Pendente | |
 
 ## 12. Revision History
+
 | Versão | Data | Autor | Mudanças |
 | :--- | :--- | :--- | :--- |
-| 1.0 | 02/11/2025 | [Seu Nome] | Criação inicial do BRD com base no glossário e na stack real. |
+| 1.0 | [ENTRADA HUMANA NECESSÁRIA] | Pipeline de documentação (geração assistida) | Criação inicial a partir do Glossário e da stack verificada |

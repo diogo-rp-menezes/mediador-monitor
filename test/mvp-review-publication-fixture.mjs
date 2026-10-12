@@ -9,6 +9,7 @@ import {criarPoolPostgresRuntime} from '../dist/postgres.js';
 import {executarAgendasPostgres} from '../dist/postgres-monitoring-agendas.js';
 import {validarConexaoIaNavegador} from './ia-connection-browser-fixture.mjs';
 import {validarColetaAnaliseMvp} from './mvp-collection-analysis-fixture.mjs';
+import {validarDocumentosVue} from './vue-documents-postgres-fixture.mjs';
 
 /** Real UI mutations in a disposable HTTPS database, with synthetic originals/analyses. */
 export async function validarRevisaoPublicacaoNavegador(setup,browser,origin){
@@ -274,6 +275,7 @@ export async function validarRevisaoPublicacaoNavegador(setup,browser,origin){
     const csv=readFileSync(await (await csvDownload).path(),'utf8');assert.ok(csv.includes('ciencia_confirmada'));assert.ok(csv.includes('127.0.0.1'));
     const visible=await page.evaluate(async office=>await (await fetch('/api/contexto/publicacoes/auditoria',{headers:{'x-context-type':'escritorio','x-context-id':String(office)}})).json(),office);
     assert.ok(visible.length>0);assert.ok(visible.every(e=>Number(e.publicacao_id)===Number(publication.id)));
+    await validarDocumentosVue(setup,page,origin,{office,customer,base,amendment,publication});
     assert.deepEqual(errors,[]);
     console.log('OK: jornada UI de vínculo, consolidação, pendência bloqueando publicação, revisão, publicação, download íntegro, ciência e consulta de auditoria.');
   }finally{await context.close();assert.ok(resolve(directory).startsWith(root+sep));rmSync(directory,{recursive:true,force:true,maxRetries:10,retryDelay:100});}

@@ -14,7 +14,7 @@ import {criarProxyHttpsLocal} from '../dist/local-https-proxy.js';
 import {criarPoolPostgres} from '../dist/postgres.js';
 import {migratePostgres} from '../dist/postgres-migrations.js';
 import {criarHashSenha} from '../dist/auth-core.js';
-import {validarRevisaoPublicacaoNavegador} from './mvp-review-publication-fixture.mjs';
+// The former workspace journey is retired; this suite targets the unique Vue interface.
 if(!process.env.MEDIADOR_SMTP_TEST_CERT){
   const certDir=mkdtempSync(join(tmpdir(),'mediador-smtp-test-'));
   try{
@@ -67,14 +67,14 @@ try{
  let ready=false;const deadline=Date.now()+15000;
  while(Date.now()<deadline){if(child.exitCode!==null)throw new Error('Servidor PostgreSQL encerrou no ensaio HTTPS.');try{if((await request(port,'/api/auth/estado')).status===200){ready=true;break;}}catch{}await delay(50);}assert.ok(ready,'Servidor deve iniciar pelo HTTPS');
  assert.equal((await request(port,'/api/portal/documentos')).status,401);
- await validarRevisaoPublicacaoNavegador(setup,browser,origin);
+
  for(const path of ['/data/mediador.db','/data/originais/privado.pdf','/../.env.docker'])assert.notEqual((await request(port,path)).status,200);
  const context=await browser.newContext({acceptDownloads:true}),page=await context.newPage();
  await page.goto(origin+'/login');await page.locator('#login-email').fill(email);await page.getByLabel('Senha',{exact:true}).fill(password);
  await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(origin+'/');
  const cookies=await context.cookies();const cookie=cookies.find(c=>c.name==='mediador_sessao');assert.ok(cookie,'Cookie real da sessão');assert.equal(cookie.secure,true);assert.equal(cookie.httpOnly,true);assert.equal(cookie.sameSite,'Strict');
- await page.getByLabel('Escritório ou empresa',{exact:true}).selectOption({label:'Empresa · Empresa HTTPS A'});
- await page.getByRole('heading',{name:'Documentos publicados para esta empresa',exact:true}).waitFor();await page.getByRole('button',{name:'Baixar PDF',exact:true}).waitFor();
+ await page.getByLabel('Seu espaço de trabalho').selectOption({label:'Empresa · Empresa HTTPS A'});
+ await page.getByRole('button',{name:'Documentos',exact:true}).click();await page.getByRole('heading',{name:'Documentos publicados para esta empresa',exact:true}).waitFor();await page.getByRole('button',{name:'Baixar PDF',exact:true}).waitFor();
  const checks=await page.evaluate(async({customer,foreign,otherCustomer})=>{
   const session=await (await fetch('/api/auth/sessao')).json();const headers={'content-type':'application/json','x-context-type':'cliente','x-context-id':String(customer),'x-csrf-token':session.csrf};
   const list=await (await fetch('/api/portal/documentos',{headers})).json();
@@ -84,7 +84,8 @@ try{
   return {ids:list.map(p=>String(p.id)),foreignStatus,otherContext,csrf};
  },{customer,foreign,otherCustomer});
  assert.deepEqual(checks.ids,[String(own)]);assert.equal(checks.foreignStatus,404);assert.equal(checks.otherContext,403);assert.equal(checks.csrf,403);
- await page.goto(origin+'/app/');await page.getByRole('heading',{name:'Visão geral',exact:true}).waitFor();await page.getByRole('button',{name:'Documentos',exact:true}).click();await page.getByRole('link',{name:'Abrir Documentos na área operacional'}).waitFor();await page.goto(origin+'/');
+ await page.goto(origin+'/acesso');await page.getByRole('button',{name:'Documentos',exact:true}).click();await page.getByRole('heading',{name:'Documentos publicados para esta empresa',exact:true}).waitFor();assert.equal((await request(port,'/gestao-ui.js')).status,404);
+ const opening=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/portal/documentos/'+own);await page.getByRole('button',{name:'Abrir documento',exact:true}).click();assert.equal((await opening).status(),200);await page.getByRole('dialog',{name:'Documento publicado'}).getByRole('button',{name:'Fechar modal'}).click();
  const csrfToken=await page.evaluate(async()=>(await (await fetch('/api/auth/sessao')).json()).csrf);
  assert.equal((await request(port,'/api/auth/logout',{'cookie':`${cookie.name}=${cookie.value}`,'origin':'https://example.invalid','content-type':'application/json','x-csrf-token':csrfToken},'POST','{}')).status,403);
  const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PDF',exact:true}).click();const download=await downloadEvent;assert.deepEqual(readFileSync(await download.path()),bytes);
@@ -100,7 +101,7 @@ try{
  await setup.query('UPDATE usuarios_clientes SET ativo=true WHERE usuario_id=$1',[user]);
  await setup.query("UPDATE publicacoes_documentos SET estado='revogada',revogada_em=now() WHERE id=$1",[own]);
  assert.equal((await request(port,'/api/portal/documentos/'+own,{'cookie':`${cookie.name}=${cookie.value}`,'x-context-type':'cliente','x-context-id':String(customer)})).status,404);
- await page.getByRole('button',{name:'Minha conta',exact:true}).click();await page.locator('#auth-sair').click();await page.waitForURL(origin+'/login');assert.equal((await request(port,'/api/auth/sessao',{cookie:`${cookie.name}=${cookie.value}`})).status,401);
+ await page.getByRole('button',{name:'Sair',exact:true}).click();await page.waitForURL(origin+'/login');assert.equal((await request(port,'/api/auth/sessao',{cookie:`${cookie.name}=${cookie.value}`})).status,401);
  console.log('OK: servidor PostgreSQL real + HTTPS + Chromium: login, cookie Secure/HttpOnly, contexto isolado, PDF íntegro, ciência/auditoria/IP, CSRF/origem, revogação de vínculo/publicação, logout e caminhos privados recusados.');
 }finally{
  await browser?.close();if(proxy){proxy.closeAllConnections();await new Promise(resolve=>proxy.close(resolve));}

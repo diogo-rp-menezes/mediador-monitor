@@ -42,8 +42,8 @@ const server=createServer(async(req,res)=>{
       }
     }
 
-    const arquivosAuth: Record<string, string> = { '/theme-ui.js':'theme-ui.js', '/workspace-ui.js':'workspace-ui.js', '/cadastros-ui.js':'cadastros-ui.js', '/uf-ui.js':'uf-ui.js', '/resumo-ui.js':'resumo-ui.js', '/workspace-conceito.css':'workspace-conceito.css', '/auth-ui.css': 'auth-ui.css', '/auth-ui.js': 'auth-ui.js', '/cliente-vinculos-ui.js':'cliente-vinculos-ui.js', '/cliente-cnpj-ui.js':'cliente-cnpj-ui.js', '/auth-client.js': 'auth-client.js', '/gestao-ui.js': 'gestao-ui.js', '/publicacoes-ui.js':'publicacoes-ui.js', '/monitoramento-ui.js':'monitoramento-ui.js', '/ia-plataforma-ui.js':'ia-plataforma-ui.js' };
-    if(req.method==='GET'&&(p==='/app'||p==='/app/')){
+    const arquivosAuth: Record<string,string> = {'/auth-ui.css':'auth-ui.css','/auth-ui.js':'auth-ui.js'};
+    if(req.method==='GET'&&(p==='/'||p==='/acesso'||p==='/app'||p==='/app/')){
       try{await comEscritorArquivosPostgres(postgresPool,()=>postgresAccess.identidade(req));}
       catch(error){if(!(error instanceof ErroCadastro)||error.status!==401)throw error;res.writeHead(303,{location:'/login','cache-control':'no-store'});res.end();return;}
       const html=viteDev?await viteDev.transformIndexHtml('/app/',readFileSync(new URL('../frontend/index.html',import.meta.url),'utf8')):readFileSync(resolve(vueBuildRoot,'index.html'));
@@ -65,11 +65,6 @@ const server=createServer(async(req,res)=>{
         'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" });
       return res.end(readFileSync(new URL('../web/login.html', import.meta.url)));
     }
- if(req.method==='GET'&&(p==='/'||p==='/acesso')){
-  try{await comEscritorArquivosPostgres(postgresPool,()=>postgresAccess.identidade(req));}
-  catch(error){if(!(error instanceof ErroCadastro)||error.status!==401)throw error;res.writeHead(303,{location:'/login','cache-control':'no-store'});res.end();return;}
-  res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(readFileSync(new URL('../web/acesso.html',import.meta.url)));return;
- }
  json(res,404,{erro:'Rota indisponível no modo PostgreSQL.'});
  }catch(error){
   if(res.headersSent){res.destroy();console.error('[HTTP] Falha após início da resposta.');return;}
