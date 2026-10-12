@@ -1,0 +1,479 @@
+<!doctype html><html lang="pt-BR"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mediador Monitor · Proposta unificada com barra lateral</title>
+
+<style>
+/* Layout: sidebar fixa + área bento 12 colunas. Cada tela é um grid de cards com tamanhos por importância. */
+:root{
+  --bg:#eef1f1;--panel:#fff;--soft:#e6eaea;--line:#d9dfdf;--ink:#14201f;--muted:#5b6a69;
+  --accent:#0d6b66;--accent-ink:#fff;--accent-soft:#d6ece9;
+  --ok:#17784a;--ok-soft:#d8f0e3;--warn:#8a5a00;--warn-soft:#fbe9c4;--bad:#b3261e;--bad-soft:#fadbd8;--info:#2457a6;--info-soft:#dce7f8;
+  --hero:#0d3f3c;--hero-ink:#e8f5f3;--shadow:0 1px 2px #14201f12,0 8px 24px -12px #14201f22;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;--f-body:'Instrument Sans',system-ui,sans-serif;--f-mono:'JetBrains Mono',ui-monospace,monospace;
+  --r:18px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1211;--panel:#131b1a;--soft:#1b2625;--line:#263332;--ink:#e9f0ef;--muted:#92a3a1;
+  --accent:#4fc4bb;--accent-ink:#04201e;--accent-soft:#16312f;
+  --ok:#5fd193;--ok-soft:#14301f;--warn:#f0b84a;--warn-soft:#352a0e;--bad:#ff8b82;--bad-soft:#3a1816;--info:#8db4f5;--info-soft:#16253f;
+  --hero:#123b38;--hero-ink:#e8f5f3;--shadow:0 1px 2px #0006,0 8px 24px -12px #000a;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1211;--panel:#131b1a;--soft:#1b2625;--line:#263332;--ink:#e9f0ef;--muted:#92a3a1;
+  --accent:#4fc4bb;--accent-ink:#04201e;--accent-soft:#16312f;
+  --ok:#5fd193;--ok-soft:#14301f;--warn:#f0b84a;--warn-soft:#352a0e;--bad:#ff8b82;--bad-soft:#3a1816;--info:#8db4f5;--info-soft:#16253f;
+  --hero:#123b38;--hero-ink:#e8f5f3;--shadow:0 1px 2px #0006,0 8px 24px -12px #000a;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-body);margin:0;padding-inline:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.92em;font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+/* sidebar */
+.side{position:sticky;top:0;height:100vh;padding:18px 14px;display:flex;flex-direction:column;gap:18px;border-right:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:10px;font:600 17px var(--f-display);padding:4px 8px}
+.logo{width:34px;height:34px;border-radius:11px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.ws{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--bg);width:100%;text-align:left}
+.ws .av{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:650;font-size:12px}
+.ws small{display:block;color:var(--muted);font-size:11px;line-height:1.2}
+.ws b{font-weight:600;line-height:1.2}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 10px 6px}
+.nav button{display:flex;align-items:center;gap:11px;padding:9px 10px;border:0;background:none;border-radius:11px;text-align:left;color:var(--muted);font-weight:500}
+.nav button:hover{background:var(--soft);color:var(--ink)}
+.nav button[aria-current=page]{background:var(--accent-soft);color:var(--accent)}
+.nav .count{margin-left:auto;font-size:11px;background:var(--soft);padding:1px 7px;border-radius:99px;color:var(--muted)}
+.nav .count.alert{background:var(--bad-soft);color:var(--bad)}
+.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px}
+.side-foot .av{width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:600}
+/* main */
+.main{padding:0 28px 48px;min-width:0}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:16px 0;background:var(--bg)}
+.btn.menu-btn{display:none}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:10px;padding:9px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--muted);text-align:left}
+.search kbd{margin-left:auto;font:11px var(--f-mono);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:11px;border:1px solid var(--line);background:var(--panel);font-weight:550}
+.btn:hover{background:var(--soft)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:9px}
+.btn.icon{padding:9px}
+.spacer{flex:1}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 22px}
+h1{font:600 clamp(26px,3.2vw,36px)/1.1 var(--f-display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+.head p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+h2{font:600 16px var(--f-display);margin:0;letter-spacing:-.01em}
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);min-width:0;display:flex;flex-direction:column;gap:14px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-h p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.r2{grid-row:span 2}
+.hero{background:var(--hero);color:var(--hero-ink);border-color:transparent;position:relative;overflow:hidden;justify-content:space-between}
+.hero:after{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:1px solid #ffffff22;box-shadow:0 0 0 36px #ffffff08,0 0 0 72px #ffffff05;pointer-events:none}
+.hero>*{position:relative;z-index:1}
+.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;font-weight:600}
+.hero h2{font-size:clamp(22px,2.4vw,30px);line-height:1.15;max-width:22ch;text-wrap:balance}
+.hero p{margin:0;opacity:.85;max-width:44ch}
+.hero .btn{background:#e8f5f3;color:#0d3f3c;border:0;align-self:flex-start}
+.kpi .n{font:600 46px/1 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--muted)}
+.kpi .d{font-size:12px;display:inline-flex;gap:4px;align-items:center;padding:2px 8px;border-radius:99px}
+.up{background:var(--ok-soft);color:var(--ok)}.dn{background:var(--bad-soft);color:var(--bad)}.fl{background:var(--soft);color:var(--muted)}
+.spark{width:100%;height:46px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:550;white-space:nowrap}
+.pill:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-bad{background:var(--bad-soft);color:var(--bad)}.p-info{background:var(--info-soft);color:var(--info)}.p-mute{background:var(--soft);color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.grow{flex:1;min-width:0}
+.grow b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grow small{color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px}
+.bars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%;font-size:11px;color:var(--muted)}
+.bars i{display:block;width:100%;border-radius:8px 8px 4px 4px;background:var(--accent-soft)}
+.bars div.on i{background:var(--accent)}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:10px;align-items:center}
+.step i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-style:normal;flex:none;background:var(--soft);color:var(--muted)}
+.step.ok i{background:var(--ok-soft);color:var(--ok)}.step.busy i{background:var(--info-soft);color:var(--info)}
+.meter{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}.meter i{display:block;height:100%;background:var(--accent);border-radius:99px}
+/* tabs, table, filters */
+.tabs{display:inline-flex;gap:4px;padding:4px;background:var(--soft);border-radius:13px;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:none;padding:7px 14px;border-radius:10px;color:var(--muted);font-weight:550;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);border-radius:11px;padding:8px 12px;min-width:0}
+.field input,.field select{border:0;background:none;outline:0;min-width:0;width:100%}
+.field select option{background:var(--panel)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:550;padding:11px 16px;background:var(--soft);white-space:nowrap}
+td{padding:14px 16px;border-top:1px solid var(--line);vertical-align:middle}
+tr.row:hover td{background:var(--soft)}
+td small{display:block;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:2px 9px;border-radius:8px;background:var(--soft);font-size:12px;color:var(--muted)}
+/* master-detail */
+.md{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,2fr);gap:16px;align-items:start}
+.pick{display:flex;flex-direction:column;max-height:640px;overflow:auto;padding:6px}
+.pick button{display:block;text-align:left;border:0;background:none;padding:14px;border-radius:12px;width:100%}
+.pick button:hover{background:var(--soft)}
+.pick button[aria-pressed=true]{background:var(--accent-soft)}
+.pick b{display:flex;justify-content:space-between;gap:8px}
+.pick small{color:var(--muted);display:block;margin-top:2px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.kv dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kv dd{margin:2px 0 0;font-weight:550}
+.field-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--bg)}
+.field-card .t{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field-card p{margin:4px 0 0}
+.field-card.nc p{color:var(--muted);font-style:italic}
+.cite{margin-top:8px;font-size:12.5px;color:var(--muted);border-left:2px solid var(--accent);padding-left:10px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+/* envios kanban */
+.kan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.col{background:var(--soft);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.col h3{margin:2px 4px;font-size:13px;display:flex;justify-content:space-between}
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msg b{font-weight:600}.msg small{color:var(--muted)}
+/* dialog + toast + cmd */
+dialog{border:1px solid var(--line);border-radius:22px;background:var(--panel);color:var(--ink);padding:0;width:min(560px,calc(100vw - 32px));box-shadow:0 30px 80px -20px #000a}
+dialog::backdrop{background:#0008;backdrop-filter:blur(3px)}
+.dlg{padding:24px;display:flex;flex-direction:column;gap:16px}
+.dlg label{display:flex;flex-direction:column;gap:6px;font-weight:550;font-size:13px}
+.dlg label .field{font-weight:400}
+.vinc{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px}
+.vinc input{margin-top:4px;accent-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;transition:.25s;z-index:30;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.cmd-list{list-style:none;margin:0;padding:6px;max-height:320px;overflow:auto}
+.cmd-list button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:10px}
+.cmd-list button:hover,.cmd-list button.on{background:var(--soft)}
+.scrim{display:none}
+@media (max-width:1100px){.c3{grid-column:span 6}.c4{grid-column:span 6}.c5,.c7,.c8{grid-column:span 12}.kan{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;inset:0 auto 0 0;width:270px;z-index:20;transform:translateX(-102%);transition:.25s;overflow:auto}
+  .side.open{transform:none}
+  .scrim.on{display:block;position:fixed;inset:0;background:#0007;z-index:15}
+  .btn.menu-btn{display:inline-flex}
+  .main{padding-inline:16px}
+  .md{grid-template-columns:minmax(0,1fr)}.pick{max-height:260px}
+  .search span.txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.search kbd{display:none}
+  .top .btn.hide-s{display:none}
+}
+@media (max-width:560px){.c3,.c4,.c6{grid-column:span 12}.kan{grid-template-columns:minmax(0,1fr)}.kpi .n{font-size:38px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* busca multi-campo */
+mark{background:var(--warn-soft);color:inherit;border-radius:3px;padding:0 1px;box-shadow:0 0 0 1px var(--warn-soft)}
+.sbar{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1}
+.sbar .field{max-width:560px}
+.sfields{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.sf{border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:99px;padding:2px 10px;font-size:12px}
+.sf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:550}
+.sf:hover{border-color:var(--accent)}
+.found{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.found b{color:var(--accent);font-weight:600}
+.rcount{font-size:12.5px;color:var(--muted)}
+.empty{padding:36px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+.grp{padding:8px 12px 2px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cmd-list button .grow small{white-space:normal}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f2 .w{grid-column:1/-1}
+.dlg select{border:0;background:none;width:100%;outline:0}
+.dlg select option{background:var(--panel)}
+@media (max-width:560px){.f2{grid-template-columns:1fr}}
+td small .mono,td .mono{white-space:nowrap}
+</style>
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Navegação principal">
+    <div class="brand"><span class="logo"><svg class="ico" viewBox="0 0 24 24"><path d="M4 18V8l8-4 8 4v10M9 18v-5h6v5M4 18h16"/></svg></span>Mediador Monitor</div>
+    <button class="ws" id="wsbtn" aria-label="Trocar escritório"><span class="av">CH</span><span class="grow"><b>Contábil Horizonte</b><small>Escritório · 38 clientes</small></span><svg class="ico" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg></button>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot"><span class="av">DM</span><span class="grow"><b>Diogo M.</b><small>Administrador</small></span></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <div class="top">
+      <button class="btn icon menu-btn" id="menu" aria-label="Abrir menu"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="search" id="open-cmd"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="txt">Buscar em todo o escritório</span><kbd>Ctrl K</kbd></button>
+      <span class="spacer"></span>
+      <button class="btn hide-s" id="run"><svg class="ico" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg>Verificar agora</button>
+      <button class="btn icon" id="theme" aria-label="Alternar tema"><svg class="ico" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg></button>
+    </div>
+    <div id="view"></div>
+  </div>
+</div>
+
+<dialog id="dlg-cli"><form method="dialog" class="dlg">
+  <div class="card-h"><div><h2 id="cli-t">Novo cliente</h2><p style="margin:2px 0 0;color:var(--muted);font-size:12.5px">Dados da empresa, envio e sindicatos vinculados.</p></div><button class="btn icon sm" value="x" aria-label="Fechar">✕</button></div>
+  <div class="f2">
+   <label class="w">CNPJ<span class="field"><input id="f-cnpj" value="12.345.678/0001-90" inputmode="numeric"><button type="button" class="btn sm" id="cnpj-b">Consultar</button></span></label>
+   <label class="w">Razão social<span class="field"><input id="f-rs" value="Padaria Estrela do Sul Ltda"></span></label>
+   <label>Nome fantasia<span class="field"><input id="f-nf" value="Padaria Estrela"></span></label>
+   <label>Modo de envio<span class="field"><select id="f-me"><option>Com revisão</option><option>Automático</option></select></span></label>
+   <label>UF<span class="field"><input id="f-uf" value="SP" maxlength="2"></span></label>
+   <label>Município<span class="field"><input id="f-mun" value="São Paulo"></span></label>
+  </div>
+  <div><b style="font-size:13px">Sindicatos vinculados</b>
+    <div style="display:grid;gap:8px;margin-top:8px">
+      <div class="vinc"><input type="checkbox" checked aria-label="Vincular Panificadores"><span class="grow"><b>Sind. dos Panificadores de SP</b><small>Categoria: Panificação · UF SP · município São Paulo</small><div class="chips" style="margin-top:8px"><label class="chip"><input type="radio" name="pr" checked> Principal</label><label class="chip"><input type="checkbox" checked> Enquadramento confirmado</label></div></span></div>
+      <div class="vinc"><input type="checkbox" aria-label="Vincular Comerciários"><span class="grow"><b>Sind. dos Comerciários de SP</b><small>Não vinculado</small></span></div>
+    </div></div>
+  <div class="tools" style="justify-content:flex-end"><button class="btn" value="x">Cancelar</button><button class="btn primary" value="ok">Salvar cliente</button></div>
+</form></dialog>
+<dialog id="dlg-gen"><form method="dialog" class="dlg"><div class="card-h"><h2 id="g-t"></h2><button class="btn icon sm" value="x" aria-label="Fechar">✕</button></div><div class="f2" id="g-f"></div><div class="tools" style="justify-content:flex-end"><button class="btn" value="x">Cancelar</button><button class="btn primary" value="ok" id="g-ok">Salvar</button></div></form></dialog>
+<dialog id="dlg-cmd"><div style="padding:12px 12px 0"><label class="field"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cmd-in" placeholder="Buscar em clientes, contatos, sindicatos, registros e envios" autocomplete="off"></label></div><ul class="cmd-list" id="cmd-list"></ul></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const I={home:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',reg:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h6',cad:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M20 21v-2a4 4 0 0 0-3-4M16 3a4 4 0 0 1 0 8',mon:'M3 12h4l3-8 4 16 3-8h4',env:'M22 2 9 15M22 2l-7 20-6-7-7-6z',cfg:'M4 7h16M4 17h16M9 4v6M15 14v6',plus:'M12 5v14M5 12h14',arr:'M5 12h14m-6-6 6 6-6 6',chk:'m5 12 5 5 9-10',warn:'M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',srch:'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5'};
+const ic=(k,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24"><path d="${I[k]}"/></svg>`;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pill=(k,t)=>`<span class="pill ${k}">${t}</span>`;
+
+/* ===== Dados fictícios (campos espelham o backend: ClienteRow, ContatoRow, sindicatos, instrumentos, envios) ===== */
+const CLI=[
+ {id:1,razao:'Padaria Estrela do Sul Ltda',fantasia:'Padaria Estrela',cnpj:'12.345.678/0001-90',uf:'SP',mun:'São Paulo',ativo:1,modo:'Com revisão',cnae:'1091-1/02 Padaria e confeitaria',sind:['Sind. Panificadores SP'],cont:['Marina Lopes']},
+ {id:2,razao:'Comercial Bom Preço Eireli',fantasia:'Mercado Bom Preço',cnpj:'23.456.789/0001-01',uf:'SP',mun:'Guarulhos',ativo:1,modo:'Automático',cnae:'4711-3/02 Supermercado',sind:['Sind. Comerciários SP'],cont:['Carlos Abreu']},
+ {id:3,razao:'Andrade Usinagem e Ferramentas SA',fantasia:'Usinagem Andrade',cnpj:'34.567.890/0001-12',uf:'MG',mun:'Belo Horizonte',ativo:1,modo:'Com revisão',cnae:'2539-0/01 Usinagem, tornearia e solda',sind:['Sind. Metalúrgicos BH'],cont:['Paula Andrade']},
+ {id:4,razao:'Livraria Nobre Ltda',fantasia:'Livraria Nobre',cnpj:'45.678.901/0001-23',uf:'SP',mun:'São Paulo',ativo:1,modo:'Com revisão',cnae:'4761-0/01 Comércio varejista de livros',sind:['Sind. Comerciários SP'],cont:['Renato Nobre'],pend:'Vigência do ACT termina em 20 dias'},
+ {id:5,razao:'Vista Mar Hotelaria Ltda',fantasia:'Hotel Vista Mar',cnpj:'56.789.012/0001-34',uf:'RJ',mun:'Rio de Janeiro',ativo:1,modo:'Com revisão',cnae:'5510-8/01 Hotéis',sind:['Sind. Hoteleiros RJ'],cont:[],pend:'Sem contato com e-mail'},
+ {id:6,razao:'Pão & Cia Alimentos Ltda',fantasia:'Pão e Cia',cnpj:'67.890.123/0001-45',uf:'SP',mun:'Campinas',ativo:0,modo:'Com revisão',cnae:'1091-1/02 Padaria e confeitaria',sind:['Sind. Panificadores SP'],cont:['Joana Reis']}
+];
+CLI.forEach(c=>{c.sindTxt=c.sind.join(' ');c.contTxt=c.cont.join(' ')});
+const CONT=[
+ {id:1,nome:'Marina Lopes',email:'marina@estrela.com.br',tel:'(11) 91234-5678',cargo:'Financeiro',ativo:1,cli:['Padaria Estrela do Sul']},
+ {id:2,nome:'Carlos Abreu',email:'carlos@bompreco.com.br',tel:'(11) 98888-1200',cargo:'Gerente de RH',ativo:1,cli:['Mercado Bom Preço']},
+ {id:3,nome:'Paula Andrade',email:'paula@andrade.ind.br',tel:'(31) 99777-0044',cargo:'Sócia-administradora',ativo:1,cli:['Usinagem Andrade']},
+ {id:4,nome:'Renato Nobre',email:'renato@livrarianobre.com',tel:'(11) 3222-1020',cargo:'Proprietário',ativo:1,cli:['Livraria Nobre']},
+ {id:5,nome:'Joana Reis',email:'joana@paoecia.com.br',tel:'(19) 99111-3030',cargo:'Contadora interna',ativo:0,cli:['Pão & Cia']}
+];
+CONT.forEach(c=>c.cliTxt=c.cli.join(' '));
+const SIND=[
+ {id:1,nome:'Sindicato dos Panificadores de São Paulo',cnpj:'61.100.200/0001-10',ativo:1,cat:'Panificação e confeitaria',uf:'SP',mun:'São Paulo',tipos:'CCT, Termo aditivo',n:2},
+ {id:2,nome:'Sindicato dos Comerciários de São Paulo',cnpj:'60.900.800/0001-20',ativo:1,cat:'Comércio varejista',uf:'SP',mun:'São Paulo',tipos:'CCT, ACT, Termo aditivo',n:2},
+ {id:3,nome:'Sindicato dos Metalúrgicos de Belo Horizonte',cnpj:'17.300.400/0001-30',ativo:1,cat:'Metalurgia',uf:'MG',mun:'Belo Horizonte',tipos:'CCT',n:1},
+ {id:4,nome:'Sindicato dos Hoteleiros do Rio de Janeiro',cnpj:'33.500.600/0001-40',ativo:1,cat:'Hotelaria e turismo',uf:'RJ',mun:'Rio de Janeiro',tipos:'CCT',n:1},
+ {id:5,nome:'Sindicato dos Gráficos de Campinas',cnpj:'46.700.800/0001-50',ativo:0,cat:'Indústria gráfica',uf:'SP',mun:'Campinas',tipos:'CCT',n:0}
+];
+const REG=[
+ {id:1,num:'SP002318/2026',sol:'MR045120/2026',tipo:'CCT',partes:'Sind. Panificadores SP × Sindipan',vig:'01/05/2026 a 30/04/2027',cat:'Panificação e confeitaria',abr:'São Paulo/SP',cnpjs:'61.100.200/0001-10',s:'revisar',a:'Analisado',cl:['Padaria Estrela do Sul','Pão & Cia'],nov:'Reajuste de 5,2% e piso de R$ 2.140,00'},
+ {id:2,num:'SP002411/2026',sol:'MR047733/2026',tipo:'Termo aditivo',partes:'Sind. Comerciários SP × Fecomércio',vig:'01/09/2026 a 31/08/2027',cat:'Comércio varejista',abr:'São Paulo/SP',cnpjs:'60.900.800/0001-20',s:'novo',a:'Analisando',cl:['Comercial Bom Preço'],nov:'Cláusula de adicional noturno alterada'},
+ {id:3,num:'MG001077/2026',sol:'MR041002/2026',tipo:'CCT',partes:'Sind. Metalúrgicos BH × Fiemg',vig:'01/03/2026 a 28/02/2027',cat:'Metalurgia',abr:'Belo Horizonte/MG',cnpjs:'17.300.400/0001-30',s:'ok',a:'Analisado',cl:['Andrade Usinagem'],nov:'Sem alterações pendentes'},
+ {id:4,num:'SP001902/2025',sol:'MR039881/2025',tipo:'ACT',partes:'Sind. Comerciários SP × Livraria Nobre',vig:'01/11/2025 a 31/10/2026',cat:'Comércio varejista',abr:'São Paulo/SP',cnpjs:'60.900.800/0001-20',s:'venc',a:'Analisado',cl:['Livraria Nobre'],nov:'Vigência termina em 20 dias'},
+ {id:5,num:'RJ000845/2026',sol:'MR044510/2026',tipo:'CCT',partes:'Sind. Hoteleiros RJ × SHRBS',vig:'01/06/2026 a 31/05/2027',cat:'Hotelaria e turismo',abr:'Rio de Janeiro/RJ',cnpjs:'33.500.600/0001-40',s:'ok',a:'Falhou',cl:['Vista Mar Hotelaria'],nov:'Análise falhou, tentar novamente'}
+];
+REG.forEach(r=>r.clTxt=r.cl.join(' '));
+const ST={revisar:['p-warn','Revisão pendente'],novo:['p-info','Novo'],ok:['p-ok','Publicado'],venc:['p-bad','Vence em breve']};
+const ENV=[
+ {id:1,col:'rev',ass:'Reajuste da CCT dos Panificadores 2026',cli:'Padaria Estrela do Sul',para:'marina@estrela.com.br',contato:'Marina Lopes',reg:'SP002318/2026',obs:'2 anexos'},
+ {id:2,col:'rev',ass:'Aditivo: adicional noturno',cli:'Comercial Bom Preço',para:'carlos@bompreco.com.br',contato:'Carlos Abreu',reg:'SP002411/2026',obs:'1 anexo'},
+ {id:3,col:'fila',ass:'Vencimento do ACT da Livraria',cli:'Livraria Nobre',para:'renato@livrarianobre.com',contato:'Renato Nobre',reg:'SP001902/2025',obs:'Agenda 08:00'},
+ {id:4,col:'ok',ass:'Reajuste Metalúrgicos 2026',cli:'Andrade Usinagem',para:'paula@andrade.ind.br',contato:'Paula Andrade',reg:'MG001077/2026',obs:'Aberto hoje 09:12'},
+ {id:5,col:'ok',ass:'CCT Panificadores 2025',cli:'Pão & Cia',para:'joana@paoecia.com.br',contato:'Joana Reis',reg:'SP001201/2025',obs:'Ciência confirmada'},
+ {id:6,col:'ok',ass:'Piso salarial 2026',cli:'Comercial Bom Preço',para:'carlos@bompreco.com.br',contato:'Carlos Abreu',reg:'SP002090/2026',obs:'Aberto ontem'},
+ {id:7,col:'att',ass:'Aviso Hoteleiros RJ',cli:'Vista Mar Hotelaria',para:'',contato:'Sem contato',reg:'RJ000845/2026',obs:'Cliente sem e-mail cadastrado'}
+];
+const EXE=[
+ {id:215,ini:'Hoje 09:40',dur:'em curso',novos:'—',st:'executando'},{id:214,ini:'Hoje 06:00',dur:'3 min 12 s',novos:'3',st:'concluída'},{id:213,ini:'Ontem 06:00',dur:'2 min 48 s',novos:'0',st:'concluída'},{id:212,ini:'09/10 06:00',dur:'1 min 05 s',novos:'—',st:'falhou'},{id:211,ini:'08/10 06:00',dur:'2 min 31 s',novos:'1',st:'concluída'}
+];
+EXE.forEach(e=>e.num='#'+e.id);
+
+/* ===== Motor de busca multi-campo =====
+   Cada consulta declara campos com peso de relevância. Todos os termos digitados precisam ser
+   encontrados (E), em qualquer campo ativo; acentos e maiúsculas são ignorados; CNPJ aceita só dígitos. */
+const norm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const DEF={
+ cli:[['razao','Razão social',5],['fantasia','Nome fantasia',5],['cnpj','CNPJ',6,'n'],['mun','Município',2],['uf','UF',2,'x'],['cnae','CNAE',2],['sindTxt','Sindicato',3],['contTxt','Contato',3]],
+ cont:[['nome','Nome',5],['email','E-mail',5],['tel','Telefone',3,'n'],['cargo','Cargo',2],['cliTxt','Cliente vinculado',3]],
+ sind:[['nome','Nome',5],['cnpj','CNPJ',6,'n'],['cat','Categoria',3],['uf','UF',2,'x'],['mun','Município',2],['tipos','Tipos de documento',1]],
+ reg:[['num','Nº do registro',6],['sol','Nº da solicitação',4],['partes','Partes',4],['tipo','Tipo',2],['cat','Categoria',3],['abr','Abrangência',2],['cnpjs','CNPJ do sindicato',3,'n'],['clTxt','Cliente enquadrado',3],['vig','Vigência',1]],
+ env:[['ass','Assunto',5],['cli','Cliente',5],['contato','Contato',3],['para','E-mail',4],['reg','Nº do registro',4],['obs','Situação',1]],
+ exe:[['num','Número',5],['st','Situação',3],['ini','Data',3]]
+};
+const S={q:{},off:{}};
+const toks=q=>norm(q).split(/\s+/).filter(Boolean);
+function fieldHit(t,f,val){const v=norm(val);if(!v)return 0;if(f[3]==='x')return v===t?1:0;
+ if(f[3]==='n'&&/\d/.test(t)){const d=t.replace(/\D/g,'');if(d&&String(val).replace(/\D/g,'').includes(d))return 1}
+ if(!v.includes(t))return 0;return v.split(/[\s\-\/.,]+/).some(w=>w.startsWith(t))?1.6:1}
+function search(e,items){const q=S.q[e]||'',T=toks(q),off=S.off[e]||new Set();if(!T.length)return items.map(item=>({item,hits:[]}));
+ const out=[];for(const item of items){let score=0,hits=new Set(),ok=true;
+  for(const t of T){let best=0,bf=null;for(const f of DEF[e]){if(off.has(f[0]))continue;const h=fieldHit(t,f,item[f[0]]);if(h&&h*f[2]>best){best=h*f[2];bf=f[0]}}
+   if(!bf){ok=false;break}score+=best;hits.add(bf)}
+  if(ok)out.push({item,score,hits:[...hits]})}
+ return out.sort((a,b)=>b.score-a.score)}
+function hl(text,e,key){const T=toks(S.q[e]||''),s=String(text??'');if(!T.length)return esc(s);
+ const f=DEF[e].find(x=>x[0]===key);const n=[...s].map(c=>norm(c)[0]||c.toLowerCase());const mark=new Array(s.length).fill(0);const str=n.join('');
+ for(const t of T){if(f&&f[3]==='x'){if(str===t)mark.fill(1);continue}
+  if(f&&f[3]==='n'&&/\d/.test(t)){const d=t.replace(/\D/g,'');const idx=[],ds=[];[...s].forEach((c,i)=>{if(/\d/.test(c)){idx.push(i);ds.push(c)}});const p=ds.join('').indexOf(d);if(d&&p>=0){for(let i=idx[p];i<=idx[p+d.length-1];i++)mark[i]=1;continue}}
+  let p=0;while((p=str.indexOf(t,p))>=0){for(let i=p;i<p+t.length;i++)mark[i]=1;p+=t.length}}
+ let o='',on=false;[...s].forEach((c,i)=>{if(mark[i]&&!on){o+='<mark>';on=true}if(!mark[i]&&on){o+='</mark>';on=false}o+=esc(c)});return o+(on?'</mark>':'')}
+function found(e,r,shown){const extra=r.hits.filter(k=>!shown.includes(k));if(!extra.length)return '';
+ return `<span class="found">Encontrado em ${extra.map(k=>{const f=DEF[e].find(x=>x[0]===k);return `<b>${f[1]}</b>: ${hl(r.item[k],e,k)}`}).join(' · ')}</span>`}
+function sbar(e,ph,extra=''){const off=S.off[e]||(S.off[e]=new Set());
+ return `<div class="tools" style="width:100%;align-items:flex-start"><div class="sbar"><label class="field">${ic('srch')}<input id="q-${e}" type="search" placeholder="${ph}" value="${esc(S.q[e]||'')}" autocomplete="off" aria-describedby="sf-${e}"></label>
+ <div class="sfields" id="sf-${e}"><span>Pesquisa em:</span>${DEF[e].map(f=>`<button type="button" class="sf" data-sf="${e}:${f[0]}" aria-pressed="${!off.has(f[0])}">${f[1]}</button>`).join('')}</div></div>${extra}</div>`}
+function wire(e,paint){const i=$('#q-'+e);if(i)i.oninput=()=>{S.q[e]=i.value;paint()};
+ $$(`[data-sf^="${e}:"]`).forEach(b=>b.onclick=()=>{const k=b.dataset.sf.split(':')[1],off=S.off[e];off.has(k)?off.delete(k):off.add(k);b.setAttribute('aria-pressed',String(!off.has(k)));paint()})}
+const empty=(t='Nenhum resultado',d='Tente menos termos ou ative mais campos em “Pesquisa em”.')=>`<div class="empty"><b>${t}</b>${d}</div>`;
+
+/* ===== Telas ===== */
+const NAV=[['home','Visão geral','home'],['reg','Registros','reg',3],['cad','Cadastros','cad'],['mon','Monitoramento','mon'],['env','Envios','env',4,1],['cfg','Escritório','cfg']];
+const sparkSvg=(d,c='var(--accent)')=>{const w=200,h=46,m=Math.max(...d),s=d.map((v,i)=>[i*(w/(d.length-1)),h-4-(v/m)*(h-12)]);const l=s.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${l} L${w} ${h} L0 ${h}Z" fill="${c}" opacity=".12"/><path d="${l}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`};
+const V={},P={};
+
+V.home=()=>`
+<div class="head"><div><h1>Bom dia, Diogo.</h1><p>Domingo, 11 de outubro. 2 aditivos aguardam revisão e 1 envio precisa de atenção.</p></div><button class="btn primary" data-go="reg">${ic('reg')}Revisar registros</button></div>
+<div class="bento">
+ <article class="card hero c5 r2"><div><span class="eyebrow">Próxima ação</span><h2 style="margin-top:10px">3 clientes aguardam a atualização do reajuste.</h2></div><p>A CCT dos Panificadores de SP foi analisada pela IA. Confira os campos extraídos e aprove os envios.</p><button class="btn" data-go="env">Revisar envios ${ic('arr')}</button></article>
+ <article class="card kpi c3"><div class="l">Clientes ativos</div><div class="n">38</div>${sparkSvg([30,31,33,33,35,36,38])}<span class="d up">+3 no mês</span></article>
+ <article class="card kpi c4"><div class="l">Instrumentos monitorados</div><div class="n">17</div>${sparkSvg([10,12,12,14,15,16,17])}<span class="d fl">12 CCTs · 5 aditivos</span></article>
+ <article class="card kpi c3"><div class="l">Envios pendentes</div><div class="n">4</div><div class="chips"><span class="pill p-warn">2 revisão</span><span class="pill p-bad">1 atenção</span></div></article>
+ <article class="card c4"><div class="card-h"><div><h2>Última coleta</h2><p>Execução #214 · hoje, 06:00</p></div>${pill('p-ok','Concluída')}</div>
+  <div class="steps"><div class="step ok"><i>${ic('chk')}</i>Consulta ao Mediador</div><div class="step ok"><i>${ic('chk')}</i>Download dos PDFs (3)</div><div class="step busy"><i>…</i>Análise por IA (1 de 3)</div></div></article>
+ <article class="card c8"><div class="card-h"><div><h2>Atividade recente</h2><p>O que mudou nos seus clientes</p></div><button class="btn sm" data-go="mon">Ver tudo</button></div>
+  <ul class="list">
+   <li><span class="dot p-warn">${ic('warn')}</span><span class="grow"><b>Aditivo SP002411/2026 encontrado</b><small>Sind. Comerciários SP · aguardando análise</small></span><small class="mono">há 2 h</small></li>
+   <li><span class="dot p-ok">${ic('chk')}</span><span class="grow"><b>Reajuste Metalúrgicos aberto pelo cliente</b><small>Usinagem Andrade · Paula Andrade</small></span><small class="mono">há 5 h</small></li>
+   <li><span class="dot p-info">${ic('reg')}</span><span class="grow"><b>CCT SP002318/2026 analisada</b><small>60 campos extraídos · 4 sem citação</small></span><small class="mono">ontem</small></li>
+  </ul></article>
+ <article class="card c4"><div class="card-h"><div><h2>Vigências</h2><p>Instrumentos que vencem por mês</p></div></div>
+  <div class="bars"><div><i style="height:20%"></i>Out</div><div class="on"><i style="height:55%"></i>Nov</div><div><i style="height:30%"></i>Dez</div><div><i style="height:75%"></i>Jan</div><div><i style="height:40%"></i>Fev</div><div><i style="height:90%"></i>Mar</div></div></article>
+ <article class="card c4"><div class="card-h"><div><h2>Cobertura de contatos</h2><p>Clientes aptos a receber avisos</p></div></div>
+  <div class="kpi"><div class="n">34<span style="font-size:20px;color:var(--muted)"> / 38</span></div></div><div class="meter"><i style="width:89%"></i></div><small style="color:var(--muted)">4 clientes sem e-mail principal</small><button class="btn sm" style="align-self:flex-start" data-go="cad">Completar cadastros</button></article>
+ <article class="card c4"><div class="card-h"><h2>Atalhos</h2></div>
+  <div class="grid2" style="grid-template-columns:1fr 1fr"><button class="btn" id="sc-cli">${ic('plus')}Cliente</button><button class="btn" data-go="mon">${ic('mon')}Coleta</button><button class="btn" data-go="reg">${ic('reg')}Registros</button><button class="btn" data-go="env">${ic('env')}Envios</button></div></article>
+</div>`;
+
+/* Registros */
+let sel=1,regTab='Informações';
+V.reg=()=>`<div class="head"><div><h1>Registros</h1><p>Instrumentos coletivos, análise por IA, aditivos e revisões em um só lugar.</p></div></div>
+<article class="card" style="margin-bottom:16px;gap:10px">${sbar('reg','Busque por número, partes, categoria, cliente ou CNPJ do sindicato',`<label class="field"><select id="rt" aria-label="Tipo"><option value="">Todos os tipos</option><option>CCT</option><option>Termo aditivo</option><option>ACT</option></select></label>`)}</article>
+<div id="rmd"></div>`;
+P.reg=()=>{const tp=$('#rt').value;let res=search('reg',REG).filter(r=>!tp||r.item.tipo===tp);
+ if(!res.length){$('#rmd').innerHTML=`<section class="card">${empty()}</section>`;return}
+ if(!res.some(r=>r.item.id===sel))sel=res[0].item.id;const r=REG.find(x=>x.id===sel),rr=res.find(x=>x.item.id===sel);
+ $('#rmd').innerHTML=`<div class="md"><section class="card pick" aria-label="Lista de registros"><div class="rcount" style="padding:8px 12px 4px">${res.length} de ${REG.length} registros</div>${res.map(x=>`<button aria-pressed="${x.item.id==sel}" data-i="${x.item.id}"><b><span class="mono">${hl(x.item.num,'reg','num')}</span></b><small>${esc(x.item.tipo)} · ${hl(x.item.partes,'reg','partes')}</small>${found('reg',x,['num','partes','tipo'])}<span style="display:block;margin-top:8px">${pill(...ST[x.item.s])}</span></button>`).join('')}</section>
+ <section class="card" style="gap:18px"><div class="card-h" style="align-items:flex-start;flex-wrap:wrap"><div><div class="tools"><h2 class="mono" style="font-size:22px">${hl(r.num,'reg','num')}</h2>${pill(...ST[r.s])}</div><p>${hl(r.partes,'reg','partes')}</p></div><div class="tools"><button class="btn sm" data-t="Baixando o original…">Baixar original</button><button class="btn primary sm" data-t="Abriria o painel de revisão do conflito">Revisar</button></div></div>
+ <div class="tabs" role="tablist">${['Informações','Análise IA','Aditivos','Publicação'].map(t=>`<button role="tab" aria-selected="${t==regTab}" data-tab="${t}">${t}</button>`).join('')}</div>
+ ${regTab==='Informações'?`<dl class="kv"><div><dt>Tipo</dt><dd>${r.tipo}</dd></div><div><dt>Solicitação</dt><dd class="mono">${hl(r.sol,'reg','sol')}</dd></div><div><dt>Vigência</dt><dd>${r.vig}</dd></div><div><dt>Categoria</dt><dd>${hl(r.cat,'reg','cat')}</dd></div><div><dt>Abrangência</dt><dd>${hl(r.abr,'reg','abr')}</dd></div><div><dt>CNPJ do sindicato</dt><dd class="mono">${hl(r.cnpjs,'reg','cnpjs')}</dd></div></dl>
+ <div class="field-card"><div class="t">O que mudou</div><p>${r.nov}</p></div>
+ <div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Clientes enquadrados</div><div class="chips">${r.cl.map(c=>`<span class="chip">${hl(c,'reg','clTxt')}</span>`).join('')}</div></div>`:''}
+ ${regTab==='Análise IA'?`<div class="grid2"><div class="field-card"><div class="t">Reajuste salarial</div><p>5,2% sobre salários de 01/05/2026</p><div class="cite">Cláusula 3ª · “Os salários serão reajustados em 5,2%…”</div></div><div class="field-card"><div class="t">Piso da categoria</div><p>R$ 2.140,00</p><div class="cite">Cláusula 4ª, parágrafo único</div></div><div class="field-card"><div class="t">Adicional noturno</div><p>30% sobre a hora normal</p><div class="cite">Cláusula 12ª</div></div><div class="field-card nc"><div class="t">Plano de saúde</div><p>Não consta na CCT</p></div></div><small style="color:var(--muted)">60 campos em 9 seções. Campos ausentes aparecem como “Não consta na CCT”.</small>`:''}
+ ${regTab==='Aditivos'?`<ul class="list"><li><span class="dot p-info">${ic('reg')}</span><span class="grow"><b class="mono">SP002411/2026</b><small>Vinculado a esta CCT · adicional noturno</small></span>${pill('p-warn','Revisar vínculo')}</li></ul>`:''}
+ ${regTab==='Publicação'?`<div class="field-card"><div class="t">Portal do cliente</div><p>Disponível para ${r.cl.length} cliente(s) · 1 ciência confirmada</p></div>`:''}</section></div>`;
+ $$('#rmd [data-i]').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;P.reg()});$$('#rmd [data-tab]').forEach(b=>b.onclick=()=>{regTab=b.dataset.tab;P.reg()});$$('#rmd [data-t]').forEach(b=>b.onclick=()=>toast(b.dataset.t))};
+
+/* Cadastros */
+let ctab='clientes';
+const CT={clientes:'cli',contatos:'cont',sindicatos:'sind'};
+V.cad=()=>{const e=CT[ctab];return `<div class="head"><div><h1>Cadastros</h1><p>Clientes, contatos e consultas por sindicato do seu escritório.</p></div><button class="btn primary" id="new">${ic('plus')}${{clientes:'Novo cliente',contatos:'Novo contato',sindicatos:'Nova consulta'}[ctab]}</button></div>
+<div class="bento"><article class="card c4"><div class="rcount">Clientes</div><div class="kpi"><div class="n">38</div></div><div class="chips"><span class="pill p-ok">34 ativos</span><span class="pill p-warn">2 pendências</span><span class="pill p-mute">2 inativos</span></div></article>
+<article class="card c4"><div class="rcount">Contatos</div><div class="kpi"><div class="n">52</div></div><small style="color:var(--muted)">4 clientes sem contato com e-mail</small></article>
+<article class="card c4"><div class="rcount">Consultas por sindicato</div><div class="kpi"><div class="n">9</div></div><small style="color:var(--muted)">Filtros por tipo, categoria e UF</small></article>
+<article class="card c12"><div class="tabs" role="tablist" style="align-self:flex-start">${Object.keys(CT).map(t=>`<button role="tab" aria-selected="${t==ctab}" data-ctab="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+${sbar(e,{cli:'Busque por razão social, fantasia, CNPJ, município, CNAE, sindicato ou contato',cont:'Busque por nome, e-mail, telefone, cargo ou cliente',sind:'Busque por nome, CNPJ, categoria, UF ou município'}[e],`<label class="field"><select id="cs" aria-label="Situação"><option value="">Todas as situações</option><option value="1">Ativos</option><option value="0">Inativos</option></select></label>`)}
+<div class="rcount" id="ccount"></div><div class="tablewrap"><table><thead id="chead"></thead><tbody id="cbody"></tbody></table></div></article></div>`};
+P.cad=()=>{const e=CT[ctab],data={cli:CLI,cont:CONT,sind:SIND}[e],sv=$('#cs').value;const res=search(e,data).filter(r=>!sv||String(r.item.ativo)===sv);
+ $('#ccount').textContent=`${res.length} de ${data.length} ${ctab}`;
+ const sit=r=>r.item.ativo?(r.item.pend?pill('p-warn','Pendência'):pill('p-ok','Ativo')):pill('p-mute','Inativo');
+ const act=`<td style="text-align:right;white-space:nowrap"><button class="btn sm" data-edit>Editar</button></td>`;
+ let head,rows;
+ if(e==='cli'){head='<tr><th>Cliente</th><th>Local</th><th>Sindicato</th><th>Contato</th><th>Situação</th><th></th></tr>';
+  rows=res.map(r=>{const c=r.item;return `<tr class="row"><td><b>${hl(c.razao,e,'razao')}</b><small>${hl(c.fantasia,e,'fantasia')} · <span class="mono">${hl(c.cnpj,e,'cnpj')}</span></small>${found(e,r,['razao','fantasia','cnpj','mun','uf','sindTxt','contTxt'])}</td><td>${hl(c.mun,e,'mun')}/${hl(c.uf,e,'uf')}</td><td>${hl(c.sindTxt,e,'sindTxt')}</td><td>${c.cont.length?hl(c.contTxt,e,'contTxt'):'<span style="color:var(--muted)">Sem contato</span>'}</td><td>${sit(r)}${c.pend?`<small>${c.pend}</small>`:''}</td>${act}</tr>`})}
+ if(e==='cont'){head='<tr><th>Contato</th><th>E-mail</th><th>Telefone</th><th>Clientes</th><th>Situação</th><th></th></tr>';
+  rows=res.map(r=>{const c=r.item;return `<tr class="row"><td><b>${hl(c.nome,e,'nome')}</b><small>${hl(c.cargo,e,'cargo')}</small></td><td>${hl(c.email,e,'email')}</td><td class="mono">${hl(c.tel,e,'tel')}</td><td>${hl(c.cliTxt,e,'cliTxt')}</td><td>${sit(r)}</td>${act}</tr>`})}
+ if(e==='sind'){head='<tr><th>Sindicato</th><th>Categoria</th><th>Local</th><th>Clientes</th><th>Situação</th><th></th></tr>';
+  rows=res.map(r=>{const c=r.item;return `<tr class="row"><td><b>${hl(c.nome,e,'nome')}</b><small class="mono">${hl(c.cnpj,e,'cnpj')}</small>${found(e,r,['nome','cnpj','cat','mun','uf'])}</td><td>${hl(c.cat,e,'cat')}<small>${hl(c.tipos,e,'tipos')}</small></td><td>${hl(c.mun,e,'mun')}/${hl(c.uf,e,'uf')}</td><td>${c.n}</td><td>${sit(r)}</td>${act}</tr>`})}
+ $('#chead').innerHTML=head;$('#cbody').innerHTML=rows.length?rows.join(''):`<tr><td colspan="6">${empty()}</td></tr>`;$$('[data-edit]').forEach(b=>b.onclick=()=>openFor());};
+
+/* Monitoramento */
+V.mon=()=>`<div class="head"><div><h1>Monitoramento</h1><p>Coletas no portal do Mediador, agendas e limites de execução.</p></div><button class="btn primary" id="run2">${ic('mon')}Solicitar coleta</button></div>
+<div class="bento">
+ <article class="card c8"><div class="card-h"><div><h2>Execuções recentes</h2><p>Últimas coletas deste escritório</p></div>${pill('p-info','1 em andamento')}</div>${sbar('exe','Busque por número, situação ou data')}
+  <div class="tablewrap"><table><thead><tr><th>Execução</th><th>Início</th><th>Duração</th><th>Novos</th><th>Situação</th></tr></thead><tbody id="ebody"></tbody></table></div></article>
+ <article class="card c4"><div class="card-h"><div><h2>Agenda semanal</h2><p>Fuso America/Sao_Paulo</p></div>${pill('p-ok','Ativa')}</div>
+  <div class="tools" style="gap:6px">${['D','S','T','Q','Q','S','S'].map((d,i)=>`<span class="dot ${[1,2,3,4,5].includes(i)?'p-ok':'p-mute'}" style="width:32px;height:32px;font-weight:600">${d}</span>`).join('')}</div>
+  <div class="kpi"><div class="n" style="font-size:36px">06:00</div></div><button class="btn sm" style="align-self:flex-start">Editar agenda</button></article>
+ <article class="card c4"><h2>Limites de coleta</h2><dl class="kv" style="grid-template-columns:1fr 1fr"><div><dt>Páginas</dt><dd>20</dd></div><div><dt>Timeout</dt><dd>45 s</dd></div><div><dt>Janela</dt><dd>Oculta</dd></div><div><dt>Canal</dt><dd>Chromium</dd></div></dl></article>
+ <article class="card c8"><div class="card-h"><div><h2>Duração das coletas</h2><p>Minutos, últimas 7 execuções</p></div></div>${sparkSvg([2.5,2.8,1.1,3.2,2.9,2.5,3.2])}</article></div>`;
+P.mon=()=>{const m={executando:['p-info','Em execução'],'concluída':['p-ok','Concluída'],falhou:['p-bad','Falhou']};const res=search('exe',EXE);
+ $('#ebody').innerHTML=res.length?res.map(r=>`<tr class="row"><td class="mono">${hl(r.item.num,'exe','num')}</td><td>${hl(r.item.ini,'exe','ini')}</td><td>${r.item.dur}</td><td>${r.item.novos}</td><td>${pill(...m[r.item.st])}${r.hits.includes('st')?`<small>${hl(r.item.st,'exe','st')}</small>`:''}</td></tr>`).join(''):`<tr><td colspan="5">${empty()}</td></tr>`};
+
+/* Envios */
+V.env=()=>`<div class="head"><div><h1>Envios</h1><p>Toda mensagem passa por revisão antes de sair. Aprove, acompanhe e recupere falhas.</p></div><div class="tools"><button class="btn" data-t="Abriria o histórico de tentativas">Histórico de tentativas</button><button class="btn primary" data-t="2 mensagens aprovadas">${ic('chk')}Aprovar todos (2)</button></div></div>
+<article class="card" style="margin-bottom:16px">${sbar('env','Busque por assunto, cliente, contato, e-mail ou nº do registro')}</article><div class="kan" id="kan"></div>`;
+P.env=()=>{const res=search('env',ENV);const cols=[['Aguardando revisão','rev','p-warn'],['Na fila','fila','p-info'],['Entregues','ok','p-ok'],['Atenção','att','p-bad']];
+ $('#kan').innerHTML=cols.map(([t,k,p])=>{const L=res.filter(r=>r.item.col===k);return `<section class="col"><h3><span>${t}</span><span class="pill ${p}" style="padding:0 8px">${L.length}</span></h3>${L.map(r=>{const m=r.item;return `<article class="msg"><b>${hl(m.ass,'env','ass')}</b><small>${hl(m.cli,'env','cli')} · ${hl(m.contato,'env','contato')}</small><small class="mono">${hl(m.reg,'env','reg')}</small><small>${hl(m.obs,'env','obs')}</small>${found('env',r,['ass','cli','contato','reg','obs'])}${k==='rev'?`<div class="tools"><button class="btn sm primary" data-ap>Aprovar</button><button class="btn sm" data-t="Abriria a prévia da mensagem">Prévia</button></div>`:''}${k==='att'?`<button class="btn sm" data-t="Abriria o cadastro do cliente">Corrigir contato</button>`:''}</article>`}).join('')||'<small style="padding:6px 8px;color:var(--muted)">Nada aqui</small>'}</section>`}).join('');
+ $$('#kan [data-ap]').forEach(b=>b.onclick=()=>{b.closest('.msg').style.opacity=.45;b.disabled=true;toast('Mensagem aprovada e enviada para a fila')});$$('#kan [data-t]').forEach(b=>b.onclick=()=>toast(b.dataset.t))};
+
+V.cfg=()=>`<div class="head"><div><h1>Escritório</h1><p>Dados, canal de envio e equipe.</p></div></div>
+<div class="bento"><article class="card c6"><div class="card-h"><h2>Dados do escritório</h2><button class="btn sm">Editar</button></div><dl class="kv"><div><dt>Nome</dt><dd>Contábil Horizonte</dd></div><div><dt>CNPJ</dt><dd class="mono">98.765.432/0001-10</dd></div><div><dt>Cidade</dt><dd>São Paulo, SP</dd></div></dl></article>
+<article class="card c6"><div class="card-h"><h2>E-mail de envio (SMTP)</h2>${pill('p-ok','Conectado')}</div><dl class="kv"><div><dt>Conta</dt><dd>avisos@horizonte.com.br</dd></div><div><dt>Servidor</dt><dd class="mono">smtp.gmail.com:587</dd></div></dl><button class="btn sm" style="align-self:flex-start">Enviar teste</button></article>
+<article class="card c12"><div class="card-h"><h2>Equipe</h2><button class="btn sm">${ic('plus')}Convidar</button></div><ul class="list">${[['Diogo M.','Administrador','p-ok'],['Marina L.','Analista','p-info'],['Paulo R.','Somente leitura','p-mute']].map(m=>`<li><span class="dot p-mute" style="font-weight:600">${m[0][0]}</span><span class="grow"><b>${m[0]}</b></span>${pill(m[2],m[1])}</li>`).join('')}</ul></article></div>`;
+
+/* ===== Navegação, diálogos, toasts, paleta global ===== */
+function go(k){$('#nav').innerHTML=`<div class="lbl">Trabalho</div>`+NAV.map(n=>`<button data-go="${n[0]}" ${n[0]===k?'aria-current="page"':''}>${ic(n[2])}${n[1]}${n[3]?`<span class="count ${n[4]?'alert':''}">${n[3]}</span>`:''}</button>`).join('');
+ $('#view').innerHTML=V[k]();bind();const e={reg:'reg',cad:CT[ctab],mon:'exe',env:'env'}[k];if(e){wire(e,P[k]);$('#rt')&&($('#rt').onchange=P.reg);$('#cs')&&($('#cs').onchange=P.cad);P[k]()}
+ $('#side').classList.remove('open');$('#scrim').classList.remove('on');scrollTo(0,0);try{history.replaceState(null,'','#'+k)}catch(x){}}
+function bind(){$$('#view [data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));$$('#view [data-ctab]').forEach(b=>b.onclick=()=>{ctab=b.dataset.ctab;go('cad')});
+ $('#new')&&($('#new').onclick=()=>openFor(true));$('#sc-cli')&&($('#sc-cli').onclick=()=>$('#dlg-cli').showModal());$('#run2')&&($('#run2').onclick=()=>toast('Coleta solicitada. Acompanhe em Execuções recentes.'));
+ $$('#view [data-t]').forEach(b=>b.onclick=()=>toast(b.dataset.t))}
+function openFor(novo){if(ctab==='clientes'||cur0()!=='cad'){$('#cli-t').textContent=novo?'Novo cliente':'Editar cliente';$('#dlg-cli').showModal();return}
+ const F={contatos:['Contato',[['Nome','Marina Lopes',1],['E-mail','marina@estrela.com.br'],['Telefone','(11) 91234-5678'],['Cargo','Financeiro'],['Situação','Ativo']]],sindicatos:['Consulta por sindicato',[['Sindicato','Sindicato dos Panificadores de São Paulo',1],['Categoria','Panificação e confeitaria'],['UF','SP'],['Município','São Paulo'],['Tipos de documento','CCT, Termo aditivo',1]]]}[ctab];
+ $('#g-t').textContent=(novo?'Novo: ':'Editar: ')+F[0];$('#g-f').innerHTML=F[1].map((f,i)=>`<label class="${f[2]?'w':''}">${f[0]}<span class="field"><input id="g${i}" value="${novo?'':f[1]}"></span></label>`).join('');$('#dlg-gen').showModal()}
+const cur0=()=>(location.hash||'#home').slice(1);
+let cur;
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),3500)}
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go)});
+$('#theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=d?'light':'dark'};
+$('#menu').onclick=()=>{$('#side').classList.add('open');$('#scrim').classList.add('on')};
+$('#scrim').onclick=()=>{$('#side').classList.remove('open');$('#scrim').classList.remove('on')};
+$('#run').onclick=()=>toast('Verificando o portal do Mediador…');
+$('#wsbtn').onclick=()=>toast('Troca de escritório (visível só para suporte e administradores)');
+$('#cnpj-b').onclick=()=>toast('Dados preenchidos pela consulta de CNPJ');
+$('#dlg-cli').addEventListener('close',()=>{if($('#dlg-cli').returnValue==='ok')toast('Cliente salvo')});
+$('#dlg-gen').addEventListener('close',()=>{if($('#dlg-gen').returnValue==='ok')toast('Salvo')});
+/* paleta global: pesquisa em todas as entidades, com os mesmos campos e pesos */
+const GL=[['cli','Clientes',CLI,c=>c.razao,c=>c.cnpj+' · '+c.mun+'/'+c.uf,()=>{ctab='clientes';go('cad')}],['cont','Contatos',CONT,c=>c.nome,c=>c.email,()=>{ctab='contatos';go('cad')}],['sind','Sindicatos',SIND,c=>c.nome,c=>c.cnpj+' · '+c.cat,()=>{ctab='sindicatos';go('cad')}],['reg','Registros',REG,c=>c.num,c=>c.partes,c=>{sel=c.id;S.q.reg='';go('reg')}],['env','Envios',ENV,c=>c.ass,c=>c.cli,()=>go('env')]];
+function drawCmd(){const q=$('#cmd-in').value;let html='',acts=[];
+ if(!toks(q).length){NAV.forEach(n=>acts.push({t:'Ir para '+n[1],f:()=>go(n[0])}));html=acts.map((a,i)=>`<li><button data-c="${i}" class="${i?'':'on'}">${a.t}</button></li>`).join('')}
+ else{GL.forEach(([e,t,data,main,sub,f])=>{const sv=S.q[e];S.q[e]=q;const r=search(e,data).slice(0,3);S.q[e]=sv;if(!r.length)return;
+  const sq=S.q[e];S.q[e]=q;html+=`<li class="grp">${t}</li>`+r.map(x=>{const i=acts.length;acts.push({f:()=>f(x.item)});return `<li><button data-c="${i}" class="${i?'':'on'}"><span class="grow"><b>${hl(main(x.item),e,DEF[e][0][0])}</b><small>${esc(sub(x.item))}</small>${found(e,x,[DEF[e][0][0]])}</span></button></li>`}).join('');S.q[e]=sq});
+  if(!acts.length)html='<li class="empty">Nada encontrado em nenhuma consulta.</li>'}
+ $('#cmd-list').innerHTML=html;$$('#cmd-list [data-c]').forEach(b=>b.onclick=()=>{$('#dlg-cmd').close();acts[+b.dataset.c].f()})}
+const openCmd=()=>{$('#cmd-in').value='';drawCmd();$('#dlg-cmd').showModal();$('#cmd-in').focus()};
+$('#open-cmd').onclick=openCmd;$('#cmd-in').oninput=drawCmd;$('#cmd-in').onkeydown=e=>{if(e.key==='Enter')$('#cmd-list .on')?.click()};
+$('#dlg-cmd').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCmd()}});
+const h=(location.hash||'').slice(1);go(V[h]?h:'home');
+</script>
+
+
+<style>
+:root,:root[data-theme="light"]{--bg:#f4f4f8;--panel:#fff;--soft:#ededf5;--line:#dddde9;--ink:#222235;--muted:#69697d;--accent:#6554db;--accent-ink:#fff;--accent-soft:#eae6ff;--hero:#42328f;--hero-ink:#f4f0ff;--f-display:'Segoe UI',sans-serif;--f-body:'Segoe UI',sans-serif;--f-mono:Consolas,monospace;--shadow:none}
+:root[data-theme="dark"]{--bg:#09090d;--panel:#14141b;--soft:#1d1d28;--line:#292936;--ink:#f4f4fa;--muted:#9b9bad;--accent:#a39aff;--accent-ink:#211b42;--accent-soft:#26203f;--hero:#30264f;--hero-ink:#f4f0ff;--shadow:none}
+.app{grid-template-columns:256px minmax(0,1fr)}.main{padding-inline:32px}.side{overflow-y:auto}.brand{min-height:40px}.brand>span:last-child{white-space:nowrap}.collapse{margin-left:auto}.side .ws{display:grid;grid-template-columns:1fr;gap:4px}.side .ws select{width:100%;min-width:0;padding:7px 0;border:0;background:transparent;color:var(--ink);font-weight:600}.side .ws label{font-size:10px;text-transform:uppercase;color:var(--muted)}.preview-tag{color:var(--muted);font-size:11px}.toast{transition:none;transform:translateX(-50%)}.hero .btn{background:var(--panel);color:var(--accent)}.collapsed .app{grid-template-columns:80px minmax(0,1fr)}.collapsed .side{padding-inline:10px}.collapsed .brand{padding:0;justify-content:center;flex-wrap:wrap}.collapsed .brand>span:last-child,.collapsed .ws,.collapsed .side-foot .grow,.collapsed .nav .lbl,.collapsed .nav .count{display:none}.collapsed .nav button{font-size:0;justify-content:center;padding:13px}.collapsed .nav button svg{width:20px;height:20px}.collapsed .collapse{margin:0}.side-foot{cursor:pointer}.side-foot:hover{background:var(--soft)}dialog{max-height:90dvh;overflow:auto}.preview-context{font-size:12px;color:var(--muted)}
+@media(max-width:820px){.app,.collapsed .app{grid-template-columns:minmax(0,1fr)}.side,.collapsed .side{width:270px;padding:18px 14px}.collapsed .side .ws{display:grid}.collapsed .side .nav button{font-size:14px;justify-content:flex-start}.collapsed .side .nav .lbl,.collapsed .side .side-foot .grow,.collapsed .side .brand>span:last-child{display:block}.main{padding-inline:16px}.collapse{display:none}.preview-tag{display:none}}
+</style>
+<script>
+document.documentElement.dataset.theme='dark';
+const side=document.getElementById('side');
+const brand=side.querySelector('.brand');
+brand.innerHTML='<span class="logo">◆</span><span>Mediador Monitor</span><button id="collapse-side" type="button" class="btn icon sm collapse" aria-label="Recolher barra lateral" aria-expanded="true">«</button>';
+const collapse=document.getElementById('collapse-side');collapse.onclick=()=>{const collapsed=document.documentElement.classList.toggle('collapsed');collapse.textContent=collapsed?'»':'«';collapse.setAttribute('aria-expanded',String(!collapsed));collapse.setAttribute('aria-label',collapsed?'Expandir barra lateral':'Recolher barra lateral');document.querySelectorAll('#nav [data-go]').forEach(button=>button.title=button.textContent.trim());};
+const old=document.getElementById('wsbtn');const workspace=document.createElement('div');workspace.className='ws';workspace.innerHTML='<label for="preview-office">Seu espaço de trabalho</label><select id="preview-office"><option>Gescon</option><option>Gconta</option></select><small>Escritório · acesso administrativo</small>';old.replaceWith(workspace);
+document.getElementById('preview-office').onchange=event=>{document.querySelectorAll('.preview-context').forEach(item=>item.textContent=event.target.value+' · dados demonstrativos');toast('Contexto alterado para '+event.target.value+'.');};
+document.querySelector('.top').insertAdjacentHTML('beforeend','<span class="preview-tag">Prévia visual · dados demonstrativos</span>');
+document.querySelector('.side-foot').setAttribute('role','button');document.querySelector('.side-foot').tabIndex=0;document.querySelector('.side-foot').setAttribute('aria-label','Minha conta');
+const account=document.createElement('dialog');account.setAttribute('aria-label','Minha conta');account.innerHTML='<form method="dialog" class="dlg"><div class="card-h"><h2>Minha conta</h2><button class="btn sm" aria-label="Fechar minha conta">Fechar</button></div><p>Diogo · Administrador</p><label>Nome<span class="field"><input value="Diogo" required minlength="2"></span></label><button class="btn primary">Salvar nome</button></form>';document.body.append(account);document.querySelector('.side-foot').onclick=()=>account.showModal();document.querySelector('.side-foot').onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();account.showModal();}};
+new MutationObserver(()=>{document.querySelectorAll('#nav [data-go]').forEach(button=>{button.title=button.textContent.trim();button.setAttribute('aria-label',button.textContent.trim());});document.querySelectorAll('.head').forEach(heading=>{if(!heading.querySelector('.preview-context')){const hint=document.createElement('span');hint.className='preview-context';hint.textContent=document.getElementById('preview-office').value+' · dados demonstrativos';heading.append(hint);}});}).observe(document.getElementById('view'),{childList:true});
+</script></body></html>

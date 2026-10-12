@@ -10,7 +10,7 @@ O frontend operacional original usa HTML servido pelo Node e módulos que manipu
 | --- | --- | --- |
 | V01 | Vue 3, Vite, TypeScript, compilação e rota estática `/app/` | Concluída |
 | V02 | Shell: sessão, seletor de contexto, navegação, tema, toast e componentes-base | Em andamento |
-| V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Pendente |
+| V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Em andamento: listagens reais, subáreas, busca, situação e isolamento concluídos; CRUDs e fichas pendentes |
 | V04 | Documentos: catálogo, ficha, análise, revisões, publicações e auditoria | Pendente |
 | V05 | Monitoramento, envios, escritório e plataforma | Pendente |
 | V06 | Troca definitiva da rota operacional e remoção dos módulos de UI legados | Pendente |
@@ -24,5 +24,8 @@ Uma área somente deixa a UI legada depois de suportar seu fluxo completo, permi
 - `npm run build:frontend`
 - `npm run typecheck`
 - `npm run test:postgres-https`
+- `npm run test:vue-ui`: seleção estável, CSRF, cabeçalhos contextuais, troca entre escritórios com/sem dados, tema e mobile.
+
+O shell revalida o contexto salvo no servidor. A troca administrativa reutiliza a concessão auditada existente, sem exigir justificativa manual. O build Docker inclui o frontend Vue e seus artefatos compilados.
 
 O último inclui acesso autenticado à rota Vue sob HTTPS, preservando cookie Secure/HttpOnly e as verificações do fluxo PostgreSQL.

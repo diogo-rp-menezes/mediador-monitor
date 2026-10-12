@@ -43,12 +43,15 @@ const server=createServer(async(req,res)=>{
 
     const arquivosAuth: Record<string, string> = { '/theme-ui.js':'theme-ui.js', '/workspace-ui.js':'workspace-ui.js', '/cadastros-ui.js':'cadastros-ui.js', '/uf-ui.js':'uf-ui.js', '/resumo-ui.js':'resumo-ui.js', '/workspace-conceito.css':'workspace-conceito.css', '/auth-ui.css': 'auth-ui.css', '/auth-ui.js': 'auth-ui.js', '/cliente-vinculos-ui.js':'cliente-vinculos-ui.js', '/cliente-cnpj-ui.js':'cliente-cnpj-ui.js', '/auth-client.js': 'auth-client.js', '/gestao-ui.js': 'gestao-ui.js', '/publicacoes-ui.js':'publicacoes-ui.js', '/monitoramento-ui.js':'monitoramento-ui.js', '/ia-plataforma-ui.js':'ia-plataforma-ui.js' };
     if(req.method==='GET'&&(p==='/app'||p==='/app/')){
+      try{await comEscritorArquivosPostgres(postgresPool,()=>postgresAccess.identidade(req));}
+      catch(error){if(!(error instanceof ErroCadastro)||error.status!==401)throw error;res.writeHead(303,{location:'/login','cache-control':'no-store'});res.end();return;}
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});return res.end(readFileSync(resolve(vueBuildRoot,'index.html')));
     }
     if(req.method==='GET'&&p.startsWith('/app/')){
       const asset=resolve(vueBuildRoot,decodeURIComponent(p.slice('/app/'.length)));if(relative(vueBuildRoot,asset).startsWith('..')){json(res,404,{erro:'Arquivo não encontrado.'});return;}
       const types:Record<string,string>={'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'};
-      try{res.writeHead(200,{'content-type':types[extname(asset)]||'application/octet-stream','cache-control':'no-store'});return res.end(readFileSync(asset));}catch{json(res,404,{erro:'Arquivo não encontrado.'});return;}
+      let bytes;try{bytes=readFileSync(asset);}catch{json(res,404,{erro:'Arquivo não encontrado.'});return;}
+      res.writeHead(200,{'content-type':types[extname(asset)]||'application/octet-stream','cache-control':'no-store'});return res.end(bytes);
     }
     if (req.method === 'GET' && arquivosAuth[p]) {
       res.writeHead(200, { 'content-type': p.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });

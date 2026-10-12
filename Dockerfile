@@ -4,6 +4,8 @@ COPY package.json package-lock.json tsconfig.json ./
 RUN npm ci --ignore-scripts
 COPY scripts/build-operacional.mjs scripts/build-operacional.mjs
 COPY src src
+COPY vite.config.ts ./
+COPY frontend frontend
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runtime
@@ -12,6 +14,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npx playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/dist dist
+COPY --from=build /app/web/vue web/vue
 COPY migrations/postgres migrations/postgres
 COPY web/acesso.html web/login.html web/theme-ui.js web/workspace-ui.js web/cadastros-ui.js web/uf-ui.js web/resumo-ui.js web/workspace-conceito.css web/auth-ui.css web/auth-ui.js web/auth-client.js web/cliente-vinculos-ui.js web/cliente-cnpj-ui.js web/gestao-ui.js web/publicacoes-ui.js web/monitoramento-ui.js web/ia-plataforma-ui.js web/
 RUN mkdir -p data downloads && chown -R node:node /app

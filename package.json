@@ -32,6 +32,7 @@
     "postgres:ia:consumir": "tsx src/postgres-ia-worker-cli.ts",
     "dev": "tsx watch src/server.ts",
     "build:frontend": "vite build --config vite.config.ts",
+    "test:vue-ui": "npm run build:frontend && node test/vue-shell.e2e.mjs",
     "build": "npm run build:frontend && node scripts/build-operacional.mjs",
     "start": "node dist/server.js",
     "db:up": "docker compose --env-file .env.docker up -d postgres",
