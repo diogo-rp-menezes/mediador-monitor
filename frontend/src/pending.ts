@@ -18,6 +18,5 @@ export const pending:Record<string,Array<{title:string;behavior:string;implement
     {title:'Escritórios e catálogo',behavior:'Gerenciar escritórios e catálogo compartilhado de sindicatos.',implementation:'CRUDs /api/plataforma com formulários tipados; atualizar contextos disponíveis após salvar escritório. Exclusões respeitam restrições do servidor.'},
     {title:'Inteligência artificial',behavior:'Configurar provedor/modelo, testar conexão e solicitar análise ou reanálise.',implementation:'Migrar /api/plataforma/ia, testar, solicitacoes e tentativas. Segredos ficam no servidor; revisão otimista das configurações preservada.'},
     {title:'Operações da plataforma',behavior:'Acompanhar coleta global, filas e recuperar tarefas interrompidas.',implementation:'Componentes por fila usando os handlers atuais, com justificativas, confirmação e histórico. Acesso exclusivo ao administrador da plataforma.'}
-  ],
-  perfil:[{title:'Perfil e segurança',behavior:'Editar nome e gerenciar os dados pessoais da sessão.',implementation:'Migrar atualização do perfil a partir dos contratos /api/auth; recuperação e redefinição de senha continuam disponíveis na tela de acesso.'}]
+  ]
 };

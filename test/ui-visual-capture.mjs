@@ -3,6 +3,22 @@ import {mkdirSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 
 /** Optional visual evidence from real pages in the disposable HTTPS journey. */
+export async function capturarMinhaConta(page){
+  if(!process.env.MEDIADOR_UI_VISUAL_DIR)return;
+  const directory=resolve(process.env.MEDIADOR_UI_VISUAL_DIR);mkdirSync(directory,{recursive:true});
+  const previous=await page.evaluate(()=>document.documentElement.dataset.theme);
+  for(const theme of ['light','dark']){
+    if(await page.evaluate(()=>document.documentElement.dataset.theme)!==theme)await page.getByRole('button',{name:theme==='light'?'Ativar tema claro':'Ativar tema escuro'}).click();
+    for(const width of [1440,390]){
+      await page.setViewportSize({width,height:width===390?844:1000});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+      await page.screenshot({path:join(directory,`${theme}-${width}-minha-conta.png`),fullPage:true});
+    }
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  if(await page.evaluate(()=>document.documentElement.dataset.theme)!==previous)await page.getByRole('button',{name:previous==='light'?'Ativar tema claro':'Ativar tema escuro'}).click();
+}
+
 export async function capturarUiIntegrada(page){
   if(!process.env.MEDIADOR_UI_VISUAL_DIR)return;
   const directory=resolve(process.env.MEDIADOR_UI_VISUAL_DIR);

@@ -56,6 +56,38 @@ try{
  await page.getByRole('button',{name:'Instrumentos',exact:true}).click();await page.getByRole('button',{name:'Gerenciar vínculos de aditivos'}).click();const linksDialog=page.getByRole('dialog',{name:'Gerenciar vínculos de aditivos'});await linksDialog.getByRole('combobox',{name:/^Aditivo/}).selectOption('DF000526/2026');await linksDialog.getByLabel('CCT de destino').selectOption(document.numero_registro);await linksDialog.getByLabel('Justificativa da decisão').fill('Conferido no documento original.');await linksDialog.getByRole('button',{name:'Salvar decisão'}).click();await linksDialog.getByRole('alert').waitFor();assert.equal(await linksDialog.getByLabel('Justificativa da decisão').inputValue(),'Conferido no documento original.');assert.equal(linkPosts[0].revisao,0);linkConflict=false;await linksDialog.getByRole('button',{name:'Salvar decisão'}).click();await linksDialog.waitFor({state:'hidden'});await page.getByRole('button',{name:'Gerenciar vínculos de aditivos'}).click();await linksDialog.getByRole('combobox',{name:/^Aditivo/}).selectOption('DF000526/2026');await linksDialog.getByText('Vinculado à CCT '+document.numero_registro,{exact:true}).waitFor();await linksDialog.getByLabel('CCT de destino').selectOption('');await linksDialog.getByLabel('Justificativa da decisão').fill('Vínculo removido após conferência.');await linksDialog.getByRole('button',{name:'Salvar decisão'}).click();await linksDialog.waitFor({state:'hidden'});assert.equal(linkPosts.at(-1).base,null);assert.equal(linkPosts.at(-1).revisao,1);console.log('OK: vínculos de aditivos com conflito, justificativa preservada e remoção versionada.');
  contextRole='suporte';await select.selectOption('0');await select.selectOption('1');await page.getByRole('button',{name:'Abrir ficha de DF000525/2026'}).waitFor();assert.equal(await page.getByRole('button',{name:'Gerenciar vínculos de aditivos'}).count(),0);assert.equal(await page.getByRole('button',{name:'Publicações',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Acessos e ciência',exact:true}).count(),0);await page.getByRole('button',{name:'Cadastros',exact:true}).click();await page.getByRole('button',{name:'Contatos',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Novo contato',exact:true}).count(),0);assert.deepEqual(errors,[]);console.log('OK: suporte sem ações de publicação, auditoria ou escrita em cadastros.');
  assert.equal(await page.getByRole('button',{name:'Escritório',exact:true}).count(),0);
- for(const area of ['Monitoramento','Envios','Minha conta']){await page.getByRole('button',{name:area,exact:true}).click();await page.getByText('Implementação pendente',{exact:true}).waitFor();assert.equal(await page.getByRole('link',{name:/área operacional/}).count(),0);}console.log('OK: estruturas navegáveis identificadas e sem fallback.');
+ for(const area of ['Monitoramento','Envios']){await page.getByRole('button',{name:area,exact:true}).click();await page.getByText('Implementação pendente',{exact:true}).waitFor();assert.equal(await page.getByRole('link',{name:/área operacional/}).count(),0);}console.log('OK: estruturas navegáveis identificadas e sem fallback.');
+ await page.getByRole('button',{name:'Minha conta',exact:true}).click();
+ let profileCalls=0;
+ let releaseProfile;
+ const profileGate=new Promise(resolve=>{releaseProfile=resolve;});
+ await page.route('http://vue.test/api/auth/perfil',async route=>{
+   profileCalls++;
+   assert.equal(route.request().method(),'PUT');
+   assert.equal(route.request().headers()['x-csrf-token'],'test-token');
+   assert.deepEqual(route.request().postDataJSON(),{nome:'Nome conferido'});
+   if(profileCalls===1){await profileGate;return route.fulfill({status:503,json:{erro:'Perfil temporariamente indisponível.'}});}
+   if(profileCalls===3)return route.fulfill({status:401,json:{erro:'Sessão expirada.'}});
+   return route.fulfill({json:{csrf:'test-token',usuario:{nome:'Nome conferido',email:'teste@example.invalid'},contextos:{escritorios:[{id:1,nome:'Gescon',membro:true},{id:2,nome:'Gconta',membro:true}],clientes:[]}}});
+ });
+ await page.getByLabel('Nome',{exact:true}).fill('  Nome conferido  ');
+ await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+ await page.getByRole('button',{name:'Salvando…',exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Salvando…',exact:true}).isDisabled(),true);
+ assert.equal(await page.getByLabel('Nome',{exact:true}).isDisabled(),true);
+ releaseProfile();
+ await page.getByRole('alert').getByText('Perfil temporariamente indisponível.').waitFor();
+ assert.equal(await page.getByLabel('Nome',{exact:true}).inputValue(),'  Nome conferido  ');
+ await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+ await page.getByRole('status').getByText('Nome atualizado.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Nome',{exact:true}).inputValue(),'Nome conferido');
+ assert.equal(await page.locator('.topbar-account strong').textContent(),'Nome conferido');
+ assert.equal(profileCalls,2);
+ await page.route('http://vue.test/login',route=>route.fulfill({contentType:'text/html',body:'<h1>Acesso</h1>'}));
+ await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+ await page.waitForURL('http://vue.test/login');
+ assert.equal(await page.evaluate(()=>sessionStorage.getItem('mediador_contexto')),null);
+ assert.deepEqual(errors,[]);
+ console.log('OK: perfil envia somente nome com CSRF, bloqueia envio ocupado, preserva rascunho na falha, atualiza identidade após retry e redireciona na expiração.');
  await validarFalhasContexto(browser);
 }finally{await browser.close();}

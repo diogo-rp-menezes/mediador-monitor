@@ -5,6 +5,7 @@ import WorkspaceSidebar from './components/WorkspaceSidebar.vue';
 import DocumentsPanel from './components/DocumentsPanel.vue';
 import PendingPanel from './components/PendingPanel.vue';
 import ClientPortal from './components/ClientPortal.vue';
+import AccountPanel from './components/AccountPanel.vue';
 import {pending} from './pending';
 import {createApiTransport} from './services/api';
 
@@ -55,6 +56,7 @@ function contextHeaders(current:ResolvedContext):Record<string,string>{return {'
 async function contextRequest<T>(path:string,method='GET',body?:unknown){const current=resolved.value;if(!current||switching.value)throw new Error('Selecione um escritório.');const result=await api<T>(path,method,body,contextHeaders(current));if(resolved.value!==current)throw new Error('O contexto mudou. Atualize a tela para continuar.');return result;}
 const transport=createApiTransport({csrf:()=>session.value?.csrf||'',unauthorized:()=>{sessionStorage.removeItem('mediador_contexto');location.assign('/login');}});
 async function api<T>(path:string,method='GET',body?:unknown,headers:Record<string,string>={}){return transport.json<T>(path,method,body,headers);}
+async function saveProfile(nome:string){session.value=await api<Session>('/api/auth/perfil','PUT',{nome});}
 async function contextDownload(path:string){const current=resolved.value;if(!current)throw new Error('Selecione um escritório.');const file=await transport.file(path,contextHeaders(current));if(resolved.value!==current)throw new Error('O contexto mudou. Abra o documento novamente.');return file;}
 async function chooseContext(value:string){
   if(switching.value||booting.value||loggingOut.value)return;
@@ -103,11 +105,12 @@ onBeforeUnmount(()=>{clearTimeout(noticeTimer);window.removeEventListener('hashc
     <section v-if="failure" class="alert" role="alert">{{ failure }}</section>
     <section v-if="booting||switching" class="workspace-content" role="status" aria-live="polite">{{ booting?'Carregando sua sessão…':'Alterando espaço de trabalho…' }}</section>
     <section v-else class="workspace-content">
-      <div class="page-heading"><div><span class="eyebrow">Área de trabalho</span><h1>{{ areas.find(item=>item[0]===active)?.[1] }}</h1><p v-if="context">Trabalhando em {{ context.nome }}.</p><p v-else>Selecione um escritório ou empresa para começar.</p></div></div>
+      <div class="page-heading"><div><span class="eyebrow">Área de trabalho</span><h1>{{ areas.find(item=>item[0]===active)?.[1] }}</h1><p v-if="active==='perfil'">Atualize seus dados pessoais e confira as informações de acesso.</p><p v-else-if="context">Trabalhando em {{ context.nome }}.</p><p v-else>Selecione um escritório ou empresa para começar.</p></div></div>
       <section v-if="active==='inicio'" class="bento-grid"><article class="hero-card"><span class="eyebrow">Seu escritório</span><h2>Seu dia, em perspectiva.</h2><p>Organize clientes, acompanhe instrumentos e confira as próximas decisões do escritório.</p></article><article class="metric-card"><span>Organização</span><strong>Cadastros</strong><small>Clientes, contatos e sindicatos.</small></article><article class="metric-card"><span>Consulta e conferência</span><strong>Documentos</strong><small>Instrumentos, análises e evidências.</small></article></section>
       <RegistryPanel v-else-if="active==='cadastros'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :context-key="String(resolved.escritorio_id)" :can-edit="['administrador','operador'].includes(resolved.papel)" :request="contextRequest" @success="notify" />
       <DocumentsPanel v-else-if="active==='documentos'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :can-edit="['administrador','operador'].includes(resolved.papel)" :can-publish="resolved.papel==='administrador'" :request="contextRequest" :download="contextDownload" @success="notify" />
       <ClientPortal v-else-if="active==='documentos'&&resolved?.tipo==='cliente'" :key="'cliente-'+resolved.cliente_id" :request="contextRequest" :download="contextDownload" @success="notify" />
+      <AccountPanel v-else-if="active==='perfil'&&session" :user="session.usuario" :role="globalRoleLabel" :save="saveProfile" />
       <PendingPanel v-else-if="pending[active]" :title="areas.find(item=>item[0]===active)?.[1]||''" :items="pending[active]" />
       <section v-else class="transition-card"><h2>Selecione um espaço de trabalho</h2><p>Escolha um escritório ou empresa no seletor do topo para acessar os dados autorizados.</p></section>
     </section>

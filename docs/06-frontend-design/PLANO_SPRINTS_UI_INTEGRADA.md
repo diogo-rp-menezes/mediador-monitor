@@ -1,6 +1,6 @@
 # Plano de sprints — Vue operacional com o visual aprovado
 
-Data-base: 11/10/2026. Atualizado em 12/10/2026: Sprint 00 e S01-T01–T03 concluídas; demais tarefas pendentes.
+Data-base: 11/10/2026. Atualizado em 12/10/2026: Sprints 00 e 01 e S02-T01 concluídas tecnicamente; demais tarefas pendentes.
 
 ## 1. Objetivo e fontes de verdade
 
@@ -66,7 +66,7 @@ T e V acompanham tasks de código frontend. U/E/P/X são exigidos onde constam n
 
 ## 3. Backlog por sprint
 
-S00-T01, S00-T02, S00-T03, S01-T01, S01-T02 e S01-T03 estão **CONCLUÍDAS**; demais tasks estão **PENDENTES**. A coluna Dep. contém IDs exatos; além dela, a sprint anterior deve estar encerrada, salvo antecipação expressa.
+S00-T01, S00-T02, S00-T03, S01-T01–T04 e S02-T01 estão **CONCLUÍDAS**; demais tasks estão **PENDENTES**. A coluna Dep. contém IDs exatos; além dela, a sprint anterior deve estar encerrada, salvo antecipação expressa.
 
 ### Sprint 00 — Base rastreável e ambiente de validação
 
@@ -247,6 +247,10 @@ Preencher uma linha por execução. O status de uma task não muda por mera exis
 | Execução 05 — 12/10/2026 | S01-T02 | CONCLUÍDA | [Entrega e evidências](ENTREGA_S01_T02.md): sidebar, topo/contexto/conta, menu móvel nativo e encerramento de suporte | Typecheck, build, Vue controlado e PostgreSQL/HTTPS aprovados; foco/resize, recolhimento persistido, permissões, falhas/retry e revogação real; 16 capturas | Próxima: S01-T03 |
 
 | Execução 06 — 12/10/2026 | S01-T03 | CONCLUÍDA | [Entrega e evidências](ENTREGA_S01_T03.md): hash das áreas, histórico e fallback autorizado | T/E/P/V e build aprovados; links/recarga, voltar/avançar, papéis, portal, troca com limpeza de filtro e contexto atual preservado no histórico; 16 capturas | Próxima: S01-T04 |
+
+| Execução 07 — 12/10/2026 | S01-T04 | CONCLUÍDA | [Minha conta e evidências](ENTREGA_S01_T04.md): atualização real do nome, e-mail somente leitura e identidade sincronizada | T/B/E/P/V aprovados; persistência por sessão/recarga nos quatro perfis, falha/retry, CSRF, envio ocupado e expiração; 4 capturas da conta e 16 de regressão | Sprint 01 encerrada tecnicamente; próxima: S02-T01 |
+
+| Execução 08 — 12/10/2026 | S02-T01 | CONCLUÍDA | [Listas e ficha](ENTREGA_S02_T01.md): cabeçalhos/ação principal, contagem, limpeza de filtros, busca CNPJ e identidade da ficha | T/E/P/V e build aprovados; CRUD de contato com recarga, cliente inativado/restaurado, exclusão com histórico recusada, suporte somente leitura e isolamento; 28 capturas | Próxima: S02-T02 |
 
 Modelo de evidência: comandos com resultado, cenário testado, URL local, caminho de captura/relatório quando gerado e limitações. Não incluir segredos ou dados pessoais reais.
 

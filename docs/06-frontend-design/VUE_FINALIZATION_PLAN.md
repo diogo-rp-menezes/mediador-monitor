@@ -8,7 +8,7 @@ Atualizado em 11/10/2026. Cada tarefa entrega uma tela ou comportamento verific�
 | --- | --- | --- |
 | F01 | `/`, `/acesso` e `/app/` servem a mesma Vue autenticada | Implementada; alias /acesso e login na raiz validados com PostgreSQL/HTTPS |
 | F02 | Remover navegação/fallback para workspace antigo e parar de servir seus scripts | Implementada; script antigo retorna 404 no teste real |
-| F03 | Painéis pendentes explicam comportamento e implementação | Implementada para Monitoramento, Envios, Escritório, Plataforma e Perfil; ficha do cliente identifica documentos pendentes |
+| F03 | Painéis pendentes explicam comportamento e implementação | Implementada para Monitoramento, Envios, Escritório e Plataforma; Perfil substituído pela entrega S01-T04; ficha do cliente identifica documentos pendentes |
 | F04 | Portal: listar, abrir PDF, baixar e ciência explícita, com contexto da empresa | Implementada; jornada PostgreSQL/HTTPS cobre PDF íntegro, ciência, IP, isolamento e revogações |
 | F05 | Documentos por cliente: lista e filtros de aplicabilidade | Pendente |
 | F06 | Decisão de aplicabilidade com motivo e confirmação | Pendente |
@@ -22,7 +22,7 @@ Atualizado em 11/10/2026. Cada tarefa entrega uma tela ou comportamento verific�
 | F14 | Escritório: convites e configurações de canais | Pendente |
 | F15 | Plataforma: escritórios e catálogo sindical | Pendente |
 | F16 | Plataforma: configuração/teste IA e filas/recuperação | Pendente |
-| F17 | Perfil e visão geral com dados reais contextuais | Pendente |
+| F17 | Perfil e visão geral com dados reais contextuais | Parcial: perfil concluído em S01-T04 com persistência PostgreSQL; visão geral contextual permanece pendente em S09-T01 |
 | F18 | Ensaios Vue reais das mutações de revisão, publicação e cadastros | Pendente; testes simulados existentes preservados |
 | F19 | Remover arquivos antigos sem uso e atualizar inventário/testes/documentação | Pendente; arquivos antigos já não são servidos como workspace |
 

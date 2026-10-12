@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
 import {criarHashSenha} from '../dist/auth-core.js';
-import {capturarUiIntegrada} from './ui-visual-capture.mjs';
+import {capturarUiIntegrada,capturarMinhaConta} from './ui-visual-capture.mjs';
 import {validarEstruturaWorkspace,validarNavegacaoAreas} from './workspace-shell-checks.mjs';
+import {validarListasCadastros} from './registry-integrated-checks.mjs';
 
 /** Shared synthetic identities. Refuses every database outside the HTTPS test namespace. */
 export async function prepararFixtureUiIntegrada(setup){
@@ -46,6 +47,18 @@ export async function validarFixtureUiIntegrada(browser,origin,fixture,setup){
       await page.getByLabel('Senha',{exact:true}).fill(users[key].password);
       await page.getByRole('button',{name:'Entrar',exact:true}).click();
       await page.waitForURL(origin+'/');
+      await page.getByRole('button',{name:'Minha conta',exact:true}).click();
+      const profileName=`Conta conferida ${key}`;
+      await page.getByLabel('Nome',{exact:true}).fill(profileName);
+      assert.equal(await page.getByLabel('E-mail',{exact:true}).getAttribute('readonly'),'');
+      await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+      await page.getByRole('status').getByText('Nome atualizado.',{exact:true}).waitFor();
+      assert.equal(await page.evaluate(async()=>(await (await fetch('/api/auth/sessao')).json()).usuario.nome),profileName);
+      await page.reload();
+      await page.getByRole('heading',{name:'Dados pessoais',exact:true}).waitFor();
+      assert.equal(await page.getByLabel('Nome',{exact:true}).inputValue(),profileName);
+      assert.equal(await page.getByLabel('E-mail',{exact:true}).inputValue(),users[key].email);
+      if(key==='admin')await capturarMinhaConta(page);
       const selector=page.getByLabel('Seu espaço de trabalho');
       await selector.selectOption({label:'Escritório · Escritório HTTPS A'});
       await page.getByRole('status').filter({hasText:'Contexto alterado'}).waitFor();
@@ -73,8 +86,18 @@ export async function validarFixtureUiIntegrada(browser,origin,fixture,setup){
       assert.equal(checks.platform,key==='platform'?200:403);
       assert.ok([403,404].includes(checks.cross));
       if(key==='support')assert.equal(checks.write,403);
+      if(key==='support'){
+        await page.getByRole('button',{name:'Ver ficha de Empresa HTTPS A',exact:true}).click();
+        const sheet=page.getByRole('dialog',{name:'Ficha do cliente',exact:true});
+        await sheet.getByRole('heading',{name:'Dados e envio',exact:true}).waitFor();
+        assert.equal(await sheet.getByRole('button',{name:'Editar cliente',exact:true}).count(),0);
+        await sheet.getByRole('button',{name:'Fechar modal',exact:true}).click();
+        await page.getByRole('button',{name:'Contatos',exact:true}).click();
+        assert.equal(await page.getByRole('button',{name:'Novo contato',exact:true}).count(),0);
+        await page.getByRole('button',{name:'Clientes',exact:true}).click();
+      }
       await validarNavegacaoAreas(page,{restricted:['operator','support'].includes(key)});
-      if(key==='admin'){await validarEstruturaWorkspace(page);await capturarUiIntegrada(page);}
+      if(key==='admin'){await validarListasCadastros(page);await validarEstruturaWorkspace(page);await capturarUiIntegrada(page);}
       if(key!=='operator'){
         await page.getByLabel('Buscar cadastro',{exact:true}).fill('Empresa HTTPS A');
         await selector.selectOption({label:'Escritório · Escritório HTTPS B'});
