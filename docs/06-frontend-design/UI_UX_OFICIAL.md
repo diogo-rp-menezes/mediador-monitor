@@ -62,11 +62,15 @@ O seletor contém somente escritórios ou empresas aos quais o usuário tem aces
 
 ### Navegação principal
 
+**Atualização aprovada — barra lateral:** a navegação principal passa a ocupar uma barra lateral recolhível no desktop. Ao recolher, manter ícones com nomes acessíveis e indicação da área ativa. No celular, usar gaveta aberta pelo botão Menu, com fechamento por Escape ou toque fora. O seletor de contexto fica na lateral expandida. O conteúdo aproveita toda a largura restante. Esta decisão substitui a faixa horizontal de navegação principal; as subáreas continuam dentro de cada painel.
+
+O mockup lateral orienta somente a estrutura aprovada: manter **Documentos** (e não “Registros”), suas subáreas e a ficha de análise estruturada já implementada. A identidade violeta, os modais, o dropdown de contexto e os toasts permanecem oficiais.
+
 Áreas oficiais: **Visão geral**, **Cadastros**, **Monitoramento**, **Documentos**, **Envios**, **Escritório** e, para quem tem permissão, **Plataforma**. “Minha conta” abre pelo avatar como modal e não ocupa item permanente na navegação.
 
 - A área ativa usa `aria-current="page"`, superfície secundária e ícone em `--accent`.
 - Áreas sem permissão não aparecem.
-- Em mobile, a navegação permite rolagem horizontal; não deve encolher os rótulos até ficarem ilegíveis.
+- Em mobile, a navegação principal usa gaveta. As subnavegações podem rolar horizontalmente sem encolher os rótulos.
 
 ### Subnavegação
 

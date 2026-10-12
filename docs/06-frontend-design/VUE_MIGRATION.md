@@ -10,12 +10,18 @@ O frontend operacional original usa HTML servido pelo Node e módulos que manipu
 | --- | --- | --- |
 | V01 | Vue 3, Vite, TypeScript, compilação e rota estática `/app/` | Concluída |
 | V02 | Shell: sessão, seletor de contexto, navegação, tema, toast e componentes-base | Em andamento |
-| V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Em andamento: listagens reais, subáreas, busca, situação e isolamento concluídos; CRUDs e fichas pendentes |
+| V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Em andamento: Contatos e consultas sindicais com CRUD em Vue; formulário e vínculos de Clientes e fichas pendentes |
 | V04 | Documentos: catálogo, ficha, análise, revisões, publicações e auditoria | Pendente |
 | V05 | Monitoramento, envios, escritório e plataforma | Pendente |
 | V06 | Troca definitiva da rota operacional e remoção dos módulos de UI legados | Pendente |
 
 ## Regras de corte
+
+Incremento da barra lateral aprovada: componente Vue `WorkspaceSidebar.vue`, recolhimento no desktop, gaveta no celular, navegação acessível por ícones e contexto na lateral. Documentos mantém seu nome e organização oficiais; acesso à ficha operacional continua disponível durante V04.
+
+Contatos: modais de criação/edição com nome, e-mail, telefone, cargo e situação; confirmação de exclusão e erro persistente no modal; escrita disponível para administrador/operador; desmontagem fecha modais e invalida respostas anteriores. `test:vue-ui` cobre POST, PUT/inativação, cancelamento e DELETE por API simulada, conferindo cabeçalhos de contexto e CSRF. Regras de histórico e autorização continuam aplicadas pela API PostgreSQL existente.
+
+Consultas sindicais: `UnionPanel.vue` consulta o catálogo compartilhado e as configurações privadas; permite criar/editar/inativar/excluir configuração, preservando sindicato, CNPJ, categoria, UF, título, vigência e tipos. O sindicato não pode ser trocado na edição. O fluxo não cria/exclui sindicato no catálogo e não solicita coleta automaticamente. O teste de navegador com API simulada cobre campos, filtro obrigatório, UF, tipos e operações POST/PUT/DELETE com CSRF/contexto.
 
 Uma área somente deixa a UI legada depois de suportar seu fluxo completo, permissões, estados vazios/erro, desktop/mobile e teste Playwright equivalente. Durante a migração, `/app/` contém a versão Vue em evolução e a rota operacional atual segue como referência funcional.
 

@@ -15,6 +15,7 @@ const bindHost=process.env.UI_BIND_HOST||'127.0.0.1';
 if(!['127.0.0.1','0.0.0.0'].includes(bindHost))throw new Error('UI_BIND_HOST inválido.');
 const publicUrl=process.env.AUTH_PUBLIC_URL||`http://localhost:${PORT}`;
 const vueBuildRoot=resolve(fileURLToPath(new URL('../web/vue/',import.meta.url)));
+let viteDev:import('vite').ViteDevServer|undefined;
 const postgresPool=criarPoolPostgresRuntime();
 try {await validarPapelRuntimePostgres(postgresPool);} catch(error) {await postgresPool.end();throw error;}
 
@@ -45,8 +46,10 @@ const server=createServer(async(req,res)=>{
     if(req.method==='GET'&&(p==='/app'||p==='/app/')){
       try{await comEscritorArquivosPostgres(postgresPool,()=>postgresAccess.identidade(req));}
       catch(error){if(!(error instanceof ErroCadastro)||error.status!==401)throw error;res.writeHead(303,{location:'/login','cache-control':'no-store'});res.end();return;}
-      res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});return res.end(readFileSync(resolve(vueBuildRoot,'index.html')));
+      const html=viteDev?await viteDev.transformIndexHtml('/app/',readFileSync(new URL('../frontend/index.html',import.meta.url),'utf8')):readFileSync(resolve(vueBuildRoot,'index.html'));
+      res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});return res.end(html);
     }
+    if(viteDev&&p.startsWith('/app/')){viteDev.middlewares(req,res,()=>json(res,404,{erro:'Arquivo não encontrado.'}));return;}
     if(req.method==='GET'&&p.startsWith('/app/')){
       const asset=resolve(vueBuildRoot,decodeURIComponent(p.slice('/app/'.length)));if(relative(vueBuildRoot,asset).startsWith('..')){json(res,404,{erro:'Arquivo não encontrado.'});return;}
       const types:Record<string,string>={'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'};
@@ -76,6 +79,11 @@ const server=createServer(async(req,res)=>{
  }
 });
 server.on('error',()=>{void postgresPool.end();});
+if(process.env.MEDIADOR_VITE_DEV==='1'){
+  const {createServer:createViteServer}=await import('vite');
+  viteDev=await createViteServer({server:{middlewareMode:true,hmr:{server}},appType:'custom'});
+  console.log('Vue HMR ativo em /app/; backend em modo watch.');
+}
 server.listen(PORT,bindHost,()=>console.log(`Painel: http://localhost:${PORT} (PostgreSQL)`));
 
 
