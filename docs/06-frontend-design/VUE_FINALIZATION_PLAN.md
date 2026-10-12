@@ -1,5 +1,7 @@
 # Plano de finalização — UI única para MVP local
 
+Planejamento das próximas execuções: [Plano de sprints da UI integrada](PLANO_SPRINTS_UI_INTEGRADA.md), aprovado em 11/10/2026. Ele detalha tarefas unitárias, dependências e aceite para aplicar o visual de referência ao Vue operacional e completar os itens abaixo, preservando os estados/evidências já registrados.
+
 Atualizado em 11/10/2026. Cada tarefa entrega uma tela ou comportamento verificável; estruturas incompletas são sinalizadas. Referência funcional: [UI_FUNCTIONAL_PARITY.md](UI_FUNCTIONAL_PARITY.md).
 
 | Ordem | Tarefa atômica / aceite | Estado |

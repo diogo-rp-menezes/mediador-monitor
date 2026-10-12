@@ -13,7 +13,7 @@ import {chromium} from 'playwright';
 import {criarProxyHttpsLocal} from '../dist/local-https-proxy.js';
 import {criarPoolPostgres} from '../dist/postgres.js';
 import {migratePostgres} from '../dist/postgres-migrations.js';
-import {criarHashSenha} from '../dist/auth-core.js';
+import {prepararFixtureUiIntegrada,validarFixtureUiIntegrada} from './ui-integrated-fixture.mjs';
 // The former workspace journey is retired; this suite targets the unique Vue interface.
 if(!process.env.MEDIADOR_SMTP_TEST_CERT){
   const certDir=mkdtempSync(join(tmpdir(),'mediador-smtp-test-'));
@@ -44,14 +44,9 @@ try{
  await setup.query(`GRANT USAGE ON SCHEMA public TO "${role}"`);
  await setup.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO "${role}"`);
  await setup.query(`GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO "${role}"`);
- const office=(await setup.query("INSERT INTO escritorios(nome) VALUES('Escritório HTTPS A') RETURNING id")).rows[0].id;
- const other=(await setup.query("INSERT INTO escritorios(nome) VALUES('Escritório HTTPS B') RETURNING id")).rows[0].id;
- const customer=(await setup.query("INSERT INTO clientes(escritorio_id,razao_social,cnpj) VALUES($1,'Empresa HTTPS A','11222333000181') RETURNING id",[office])).rows[0].id;
- const otherCustomer=(await setup.query("INSERT INTO clientes(escritorio_id,razao_social,cnpj) VALUES($1,'Empresa HTTPS B','11444777000161') RETURNING id",[other])).rows[0].id;
- const email='representante-https@example.invalid',password='Senha de ensaio HTTPS 2026!';
- const user=(await setup.query("INSERT INTO usuarios(nome,email) VALUES('Representante HTTPS',$1) RETURNING id",[email])).rows[0].id;
- await setup.query('INSERT INTO credenciais_usuarios(usuario_id,senha_hash,atualizado_em) VALUES($1,$2,$3)',[user,await criarHashSenha(password),Date.now()]);
- await setup.query('INSERT INTO usuarios_clientes(usuario_id,cliente_id,escritorio_id) VALUES($1,$2,$3)',[user,customer,office]);
+ const fixture=await prepararFixtureUiIntegrada(setup);
+ const {office,other,customer,otherCustomer}=fixture;
+ const {email,password,id:user}=fixture.users.customer;
  const cert=readFileSync(process.env.MEDIADOR_SMTP_TEST_CERT),key=readFileSync(process.env.MEDIADOR_SMTP_TEST_KEY);
  const spki=createHash('sha256').update(new X509Certificate(cert).publicKey.export({type:'spki',format:'der'})).digest('base64');
  browser=await chromium.launch({headless:true,args:[`--ignore-certificate-errors-spki-list=${spki}`]});
@@ -67,6 +62,7 @@ try{
  let ready=false;const deadline=Date.now()+15000;
  while(Date.now()<deadline){if(child.exitCode!==null)throw new Error('Servidor PostgreSQL encerrou no ensaio HTTPS.');try{if((await request(port,'/api/auth/estado')).status===200){ready=true;break;}}catch{}await delay(50);}assert.ok(ready,'Servidor deve iniciar pelo HTTPS');
  assert.equal((await request(port,'/api/portal/documentos')).status,401);
+ await validarFixtureUiIntegrada(browser,origin,fixture,setup);
 
  for(const path of ['/data/mediador.db','/data/originais/privado.pdf','/../.env.docker'])assert.notEqual((await request(port,path)).status,200);
  const context=await browser.newContext({acceptDownloads:true}),page=await context.newPage();
@@ -106,7 +102,15 @@ try{
 }finally{
  await browser?.close();if(proxy){proxy.closeAllConnections();await new Promise(resolve=>proxy.close(resolve));}
  if(child){child.kill();await childClosed;}
- if(setup)await setup.end();if(created){assert.match(database,/^mediador_https_test_[a-f0-9]{32}$/);await admin.query(`DROP DATABASE "${database}" WITH (FORCE)`);}await admin.end();
+ if(setup)await setup.end();
+ try{
+   if(created){
+     assert.match(database,/^mediador_https_test_[a-f0-9]{32}$/);
+     await admin.query(`DROP DATABASE "${database}" WITH (FORCE)`);
+     assert.equal((await admin.query('SELECT 1 FROM pg_database WHERE datname=$1',[database])).rowCount,0);
+     console.log('OK: banco descartável desta execução removido e ausência confirmada.');
+   }
+ }finally{await admin.end();}
 }
 }
 
