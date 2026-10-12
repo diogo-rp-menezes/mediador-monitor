@@ -11,11 +11,13 @@ O frontend operacional original usa HTML servido pelo Node e módulos que manipu
 | V01 | Vue 3, Vite, TypeScript, compilação e rota estática `/app/` | Concluída |
 | V02 | Shell: sessão, seletor de contexto, navegação, tema, toast e componentes-base | Em andamento |
 | V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Em andamento: CRUDs e ficha de Clientes, consulta CNPJ e vínculos implementados; documentos/aplicabilidade do cliente e conferência PostgreSQL das novas jornadas ainda pendentes |
-| V04 | Documentos: catálogo, ficha, análise, revisões, publicações e auditoria | Pendente |
+| V04 | Documentos: catálogo, ficha, análise, revisões, publicações e auditoria | Em andamento: catálogo e ficha de leitura Vue; revisões, publicações e auditoria pendentes |
 | V05 | Monitoramento, envios, escritório e plataforma | Pendente |
 | V06 | Troca definitiva da rota operacional e remoção dos módulos de UI legados | Pendente |
 
 ## Regras de corte
+
+Diretriz desktop first e fronteiras para possível host desktop: [DESKTOP_READINESS.md](DESKTOP_READINESS.md). O transporte JSON/arquivos foi extraído para `services/api.ts`, mantendo autenticação, CSRF e contexto. A ficha Vue normaliza a apresentação dos metadados e mostra a análise com seções/evidências; downloads usam a API privada existente. A migração de Documentos permanece parcial; o backend real das novas jornadas ainda precisa de conferência dedicada.
 
 Incremento da barra lateral aprovada: componente Vue `WorkspaceSidebar.vue`, recolhimento no desktop, gaveta no celular, navegação acessível por ícones e contexto na lateral. Documentos mantém seu nome e organização oficiais; acesso à ficha operacional continua disponível durante V04.
 

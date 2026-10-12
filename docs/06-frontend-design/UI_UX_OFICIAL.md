@@ -157,6 +157,8 @@ Erros são alertas persistentes, com explicação e nova tentativa quando segura
 
 ## 9. Responsividade e acessibilidade
 
+**Diretriz desktop first aprovada:** projetar primeiro para uso operacional em desktop (1366–1920px), com conteúdo ocupando a largura disponível após a lateral, ferramentas compactas, tabelas legíveis e modais amplos. A versão estreita adapta essa estrutura sem eliminar ações. O produto deve parecer uma aplicação ERP/SaaS única, com densidade útil e hierarquia consistente. A possibilidade de empacotamento desktop não autoriza dependências Tauri/Electron nesta fase.
+
 | Faixa | Comportamento |
 | --- | --- |
 | Acima de 1100px | Bento multi-coluna, mestre-detalhe lado a lado, navegação lateral da análise. |
