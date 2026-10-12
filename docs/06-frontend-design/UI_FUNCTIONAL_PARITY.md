@@ -22,12 +22,14 @@ Referências literais de endpoints estão em [UI_FUNCTIONAL_SOURCE_INVENTORY.md]
 
 ## Matriz por domínio
 
+S01-T01: [aparência compartilhada aplicada e validada](ENTREGA_S01_T01.md), com temas claro/escuro, tokens únicos, estados e capturas reais desktop/mobile. Essa entrega preserva os fluxos existentes e não conclui os painéis pendentes.
+
 Baseline de ensaio S00-T03: [ambiente descartável e evidências](AMBIENTE_VALIDACAO_UI_INTEGRADA.md). Login, navegação contextual, troca/recarga, isolamento e permissões dos papéis reais passaram em PostgreSQL/HTTPS/Chromium. Essa evidência não encerra as telas funcionais ainda pendentes.
 
 | Domínio | Comportamentos a preservar ou substituir explicitamente | Vue atual / trabalho restante |
 | --- | --- | --- |
 | Acesso | Login, recuperação e redefinição de senha, logout, sessão expirada, perfil/nome | Login externo ao Vue funcional; perfil ainda precisa de painel. Preservar autenticação existente; remover apenas navegação ao workspace antigo |
-| Contexto | Escritórios/empresas disponíveis, troca automática, concessão administrativa auditada, isolamento, término da concessão | Dropdown e troca implementados; conferir encerramento explícito, navegação por papel e invalidação das telas |
+| Contexto | Escritórios/empresas disponíveis, troca automática, concessão administrativa auditada, isolamento, término da concessão | S01-T02: seletor no topo, papel/contexto explícitos, troca/recarga isoladas e encerramento por limpeza/botão validados no PostgreSQL; falha de encerramento preserva contexto para retry |
 | Visão geral | Indicadores, últimos documentos, atividade, pendências e atalhos | Conteúdo Vue ainda introdutório; consumir APIs contextuais, sem restaurar indicadores globais indevidos |
 | Clientes | Razão social/fantasia, CNPJ, localidade/UF, situação, modo de envio, consulta cadastral explícita, detalhe, exclusão | Implementados; documentação/aplicabilidade e histórico de envios da empresa faltam |
 | Vínculos do cliente | Contatos com função, recebimento e tipos; sindicatos com categoria, UF, município, principal e confirmação | Formulários e ficha implementados; ampliar ensaio real de persistência |
@@ -47,7 +49,7 @@ Baseline de ensaio S00-T03: [ambiente descartável e evidências](AMBIENTE_VALID
 | Escritório | Dados cadastrais, membros/papéis, convites/acessos, canais/configurações de e-mail e limites | Pendente. Convites não possuem contrato vigente (D06); SMTP não possui teste de conexão (D07). Formular com schemas atuais; segredos nunca retornados em texto; modais por responsabilidade e testar conexão quando API oferecer |
 | Plataforma | Escritórios CRUD, catálogo sindical, coleta global/fila, IA/configuração/teste/solicitações/tentativas/recuperação | Pendente. Coleta global expõe somente leitura de configuração (D08). API global apenas para administrador da plataforma; separar subáreas, configurações em modal e auditoria preservada |
 | Configurações históricas | Scheduler, canais Slack/e-mail, IA/modelo/provedor, filtros e opções globais | Classificar por endpoint atual: escritório ou plataforma. Não copiar configurações obsoletas nem expor credenciais globais ao escritório; registrar cada decisão na matriz antes de encerrar migração |
-| Shell | Tema, recolhimento, mobile de apoio, largura disponível, teclado/foco, toast, modais | Implementados parcialmente; completar perfil, rotas diretas/estado de navegação e painel explícito de pendências |
+| Shell | Tema, recolhimento, mobile de apoio, largura disponível, teclado/foco, toast, modais | S01-T01/T02/T03: tokens/temas, recolhimento persistido, topo/conta, menu móvel e hash com recarga/histórico/fallback autorizado validados; completar perfil. [Shell](ENTREGA_S01_T02.md), [navegação](ENTREGA_S01_T03.md) |
 
 ## Sequência de corte e implementação
 

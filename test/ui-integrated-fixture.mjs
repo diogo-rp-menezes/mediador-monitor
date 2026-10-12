@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
 import {criarHashSenha} from '../dist/auth-core.js';
+import {capturarUiIntegrada} from './ui-visual-capture.mjs';
+import {validarEstruturaWorkspace,validarNavegacaoAreas} from './workspace-shell-checks.mjs';
 
 /** Shared synthetic identities. Refuses every database outside the HTTPS test namespace. */
 export async function prepararFixtureUiIntegrada(setup){
@@ -51,6 +53,7 @@ export async function validarFixtureUiIntegrada(browser,origin,fixture,setup){
       await page.getByText('Empresa HTTPS A',{exact:true}).waitFor();
       assert.equal(await page.getByRole('button',{name:'Novo cliente',exact:true}).count(),key==='support'?0:1);
       assert.equal(await page.getByRole('button',{name:'Plataforma',exact:true}).count(),key==='platform'?1:0);
+      assert.equal(await page.getByRole('button',{name:'Escritório',exact:true}).count(),['admin','platform'].includes(key)?1:0);
       const checks=await page.evaluate(async({other,customer,key})=>{
         const current=JSON.parse(sessionStorage.getItem('mediador_contexto'));
         const session=await (await fetch('/api/auth/sessao')).json();
@@ -70,10 +73,17 @@ export async function validarFixtureUiIntegrada(browser,origin,fixture,setup){
       assert.equal(checks.platform,key==='platform'?200:403);
       assert.ok([403,404].includes(checks.cross));
       if(key==='support')assert.equal(checks.write,403);
+      await validarNavegacaoAreas(page,{restricted:['operator','support'].includes(key)});
+      if(key==='admin'){await validarEstruturaWorkspace(page);await capturarUiIntegrada(page);}
       if(key!=='operator'){
+        await page.getByLabel('Buscar cadastro',{exact:true}).fill('Empresa HTTPS A');
         await selector.selectOption({label:'Escritório · Escritório HTTPS B'});
         await page.getByText('Empresa HTTPS B',{exact:true}).waitFor();
+        assert.equal(await page.getByLabel('Buscar cadastro',{exact:true}).inputValue(),'');
         assert.equal(await page.getByText('Empresa HTTPS A',{exact:true}).count(),0);
+        await page.getByRole('button',{name:'Minha conta',exact:true}).click();
+        await page.goBack();await page.getByText('Empresa HTTPS B',{exact:true}).waitFor();
+        assert.equal(await selector.inputValue(),'1');
         await page.reload();
         await page.getByLabel('Seu espaço de trabalho').waitFor();
         await page.getByRole('button',{name:'Cadastros',exact:true}).click();
@@ -83,16 +93,16 @@ export async function validarFixtureUiIntegrada(browser,origin,fixture,setup){
           assert.equal(revoked.revogada,true);
         }
       }
-      // Explicitly end the remaining support grant, then verify it cannot resolve a context.
+      // End through the UI: deselection and the explicit button must revoke the grant.
       if(['support','platform'].includes(key)){
-        const result=await page.evaluate(async()=>{
-          const current=JSON.parse(sessionStorage.getItem('mediador_contexto'));
-          const session=await (await fetch('/api/auth/sessao')).json();
-          const ended=await fetch('/api/auth/suporte/encerrar',{method:'POST',headers:{'content-type':'application/json','x-csrf-token':session.csrf},body:JSON.stringify({concessao:current.concessao})});
-          const read=await fetch('/api/contexto/clientes',{headers:{'x-context-type':'escritorio','x-context-id':String(current.escritorio_id),'x-support-grant':current.concessao}});
-          return {ended:ended.status,read:read.status};
-        });
-        assert.deepEqual(result,{ended:200,read:403});
+        const current=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('mediador_contexto')));
+        if(key==='support')await selector.selectOption('');
+        else await page.getByRole('button',{name:'Encerrar acesso de suporte'}).click();
+        await page.getByRole('status').getByText('Acesso de suporte encerrado.').waitFor();
+        assert.equal(await page.evaluate(()=>sessionStorage.getItem('mediador_contexto')),null);
+        assert.equal((await setup.query('SELECT revogada FROM concessoes_suporte WHERE id=$1',[current.concessao])).rows[0].revogada,true);
+        const read=await page.evaluate(async current=>(await fetch('/api/contexto/clientes',{headers:{'x-context-type':'escritorio','x-context-id':String(current.escritorio_id),'x-support-grant':current.concessao}})).status,current);
+        assert.equal(read,403);
       }
       await page.getByRole('button',{name:'Sair',exact:true}).click();
       await page.waitForURL(origin+'/login');

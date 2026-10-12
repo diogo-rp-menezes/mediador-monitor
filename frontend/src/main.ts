@@ -1,6 +1,7 @@
 import {createApp} from 'vue';
 import App from './App.vue';
-import './styles.css';
+import './tokens.css';
+import './shared.css';
 import './sidebar.css';
 import './dialog.css';
 import './documents.css';

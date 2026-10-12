@@ -1,0 +1,66 @@
+:root {
+  color-scheme: light;
+  --color-canvas: #f4f6f5;
+  --color-surface: #fff;
+  --color-surface-subtle: #edf1ef;
+  --color-border: #dce4e0;
+  --color-text: #1b302a;
+  --color-text-muted: #5e6e67;
+  --color-accent: #176b54;
+  --color-accent-ink: #fff;
+  --color-accent-subtle: #e1f0e9;
+  --color-success: #17784a;
+  --color-success-subtle: #d8f0e3;
+  --color-warning: #825500;
+  --color-warning-subtle: #f8e7c3;
+  --color-danger: #b3261e;
+  --color-danger-subtle: #fadbd8;
+  --color-info: #2457a6;
+  --color-info-subtle: #dce7f8;
+  --font-body: Inter, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --radius-control: 8px;
+  --radius-group: 12px;
+  --radius-card: 16px;
+  --radius-dialog: 20px;
+  --shadow-card: 0 2px 4px rgb(20 32 31 / 4%);
+  --shadow-dialog: 0 28px 80px rgb(0 0 0 / 28%);
+  --z-toast: 40;
+  /* Existing domain styles consume these aliases during the gradual migration. */
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --soft: var(--color-surface-subtle);
+  --line: var(--color-border);
+  --ink: var(--color-text);
+  --muted: var(--color-text-muted);
+  --accent: var(--color-accent);
+}
+:root[data-theme=dark] {
+  color-scheme: dark;
+  --color-canvas: #0c1211;
+  --color-surface: #131b1a;
+  --color-surface-subtle: #1b2625;
+  --color-border: #2b3937;
+  --color-text: #e9f0ef;
+  --color-text-muted: #a5b4b1;
+  --color-accent: #5fd0ad;
+  --color-accent-ink: #05241c;
+  --color-accent-subtle: #16362c;
+  --color-success: #72dca2;
+  --color-success-subtle: #14301f;
+  --color-warning: #f0c266;
+  --color-warning-subtle: #352a0e;
+  --color-danger: #ff9a92;
+  --color-danger-subtle: #3a1816;
+  --color-info: #9abcf5;
+  --color-info-subtle: #16253f;
+  --shadow-card: 0 2px 4px rgb(0 0 0 / 12%);
+}

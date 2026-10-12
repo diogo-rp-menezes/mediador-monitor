@@ -1,24 +1,38 @@
 <script setup lang="ts">
-import {ref,onBeforeUnmount} from 'vue';
+import {onBeforeUnmount,ref} from 'vue';
+import WorkspaceSidebarContent from './WorkspaceSidebarContent.vue';
 defineProps<{active:string;areas:ReadonlyArray<readonly [string,string]>}>();
 const emit=defineEmits<{navigate:[key:string]}>();
-const collapsed=ref(false),mobileOpen=ref(false);
-const profilePath='M20 21v-2a7 7 0 0 0-14 0v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8';
-const paths:Record<string,string>={inicio:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',cadastros:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',documentos:'M14 2H6v20h14V8z M14 2v6h6 M8 13h8 M8 17h6',monitoramento:'M3 12h4l3-8 4 16 3-8h4',envios:'M22 2 9 15 M22 2l-7 20-6-7-7-6z',gestao:'M4 7h16 M4 17h16 M9 4v6 M15 14v6',plataforma:'M3 21h18 M5 21V7l7-4 7 4v14'};
-function select(key:string){emit('navigate',key);mobileOpen.value=false;}
-function close(event:KeyboardEvent){if(event.key==='Escape')mobileOpen.value=false;}
-window.addEventListener('keydown',close);onBeforeUnmount(()=>window.removeEventListener('keydown',close));
+const media=window.matchMedia('(max-width:820px)');
+const isMobile=ref(media.matches),drawer=ref<HTMLDialogElement>(),drawerOpen=ref(false);
+let savedCollapsed=false;
+try{savedCollapsed=localStorage.getItem('mediador_sidebar_recolhida')==='true';}catch{/* Optional visual preference. */}
+const collapsed=ref(savedCollapsed);
+let previousOverflow:string|null=null;
+function toggle(){collapsed.value=!collapsed.value;try{localStorage.setItem('mediador_sidebar_recolhida',String(collapsed.value));}catch{/* Optional visual preference. */}}
+function openMenu(){if(!isMobile.value||!drawer.value||drawer.value.open)return;drawer.value.showModal();drawerOpen.value=true;previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';}
+function restoreScroll(){drawerOpen.value=false;if(previousOverflow!==null){document.body.style.overflow=previousOverflow;previousOverflow=null;}}
+function closeMenu(){drawer.value?.close();restoreScroll();}
+function navigate(key:string){emit('navigate',key);closeMenu();}
+function resize(event:MediaQueryListEvent){closeMenu();isMobile.value=event.matches;}
+media.addEventListener('change',resize);
+onBeforeUnmount(()=>{media.removeEventListener('change',resize);closeMenu();});
 </script>
+
 <template>
-  <div class="sidebar-layout" :class="{'sidebar-collapsed':collapsed}">
-    <button v-if="mobileOpen" class="sidebar-scrim" aria-label="Fechar menu" @click="mobileOpen=false"></button>
-    <aside id="workspace-sidebar" class="workspace-sidebar" :class="{'mobile-open':mobileOpen}">
-      <div class="sidebar-brand"><a href="/" aria-label="Mediador Monitor"><span class="brand-symbol">◆</span><span class="sidebar-label">Mediador Monitor</span></a></div>
-      <button class="sidebar-toggle" :aria-label="collapsed?'Expandir barra lateral':'Recolher barra lateral'" :aria-expanded="!collapsed" @click="collapsed=!collapsed">{{ collapsed?'»':'«' }}</button>
-      <div class="sidebar-context sidebar-label"><slot name="context" /></div>
-      <nav class="sidebar-nav" aria-label="Áreas de trabalho"><button v-for="[key,label] in areas" :key="key" type="button" :title="label" :aria-label="label" :aria-current="active===key?'page':undefined" @click="select(key)"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="key==='perfil'?profilePath:paths[key]" /></svg><span class="sidebar-label">{{ label }}</span></button></nav>
-      <div class="sidebar-footer sidebar-label"><slot name="account" /></div>
+  <div class="sidebar-layout" :class="{'sidebar-collapsed':collapsed&&!isMobile}">
+    <aside v-if="!isMobile" id="workspace-sidebar" class="workspace-sidebar" aria-label="Navegação principal">
+      <WorkspaceSidebarContent :active="active" :areas="areas" :collapsed="collapsed" @toggle="toggle" @navigate="navigate">
+        <template #context><slot name="context" :closeMenu="closeMenu" /></template><template #account><slot name="account" /></template>
+      </WorkspaceSidebarContent>
     </aside>
-    <div class="sidebar-main"><button class="mobile-menu secondary" type="button" :aria-expanded="mobileOpen" aria-controls="workspace-sidebar" aria-label="Abrir menu" @click="mobileOpen=true">☰ Menu</button><slot /></div>
+    <dialog v-else id="workspace-sidebar" ref="drawer" class="mobile-drawer" aria-label="Menu principal" @close="restoreScroll" @cancel.prevent="closeMenu" @click.self="closeMenu">
+      <div class="workspace-sidebar">
+        <WorkspaceSidebarContent :active="active" :areas="areas" :collapsed="false" mobile @close="closeMenu" @navigate="navigate">
+          <template #context><slot name="context" :closeMenu="closeMenu" /></template><template #account><slot name="account" /></template>
+        </WorkspaceSidebarContent>
+      </div>
+    </dialog>
+    <div class="sidebar-main"><slot :openMenu="openMenu" :isMobile="isMobile" :menuOpen="drawerOpen" /></div>
   </div>
 </template>

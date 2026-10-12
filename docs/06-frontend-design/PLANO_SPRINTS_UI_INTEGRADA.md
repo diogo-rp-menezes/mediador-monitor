@@ -1,6 +1,6 @@
 # Plano de sprints — Vue operacional com o visual aprovado
 
-Data-base: 11/10/2026. Estado atual: Sprint 00 concluída (S00-T01, S00-T02 e S00-T03); demais tarefas pendentes.
+Data-base: 11/10/2026. Atualizado em 12/10/2026: Sprint 00 e S01-T01–T03 concluídas; demais tarefas pendentes.
 
 ## 1. Objetivo e fontes de verdade
 
@@ -66,7 +66,7 @@ T e V acompanham tasks de código frontend. U/E/P/X são exigidos onde constam n
 
 ## 3. Backlog por sprint
 
-S00-T01, S00-T02 e S00-T03 estão **CONCLUÍDAS**; demais tasks estão **PENDENTES**. A coluna Dep. contém IDs exatos; além dela, a sprint anterior deve estar encerrada, salvo antecipação expressa.
+S00-T01, S00-T02, S00-T03, S01-T01, S01-T02 e S01-T03 estão **CONCLUÍDAS**; demais tasks estão **PENDENTES**. A coluna Dep. contém IDs exatos; além dela, a sprint anterior deve estar encerrada, salvo antecipação expressa.
 
 ### Sprint 00 — Base rastreável e ambiente de validação
 
@@ -243,6 +243,10 @@ Preencher uma linha por execução. O status de uma task não muda por mera exis
 | Execução 01 — 11/10/2026 | S00-T01 | CONCLUÍDA | [Baseline funcional](BASELINE_UI_INTEGRADA.md), matriz reconciliada e lacunas D01–D10 | Inspeção estática de componentes/handlers/schemas; links locais e diff conferidos; sem mutações operacionais | Próxima: S00-T02 |
 | Execução 02 — 11/10/2026 | S00-T02 | CONCLUÍDA | [Especificação visual](ESPECIFICACAO_VISUAL_UI_INTEGRADA.md) com tokens, componentes, composição, responsividade e acessibilidade | Referência e CSS operacional comparados; links locais e diff conferidos; sem alteração executável | Próxima: S00-T03 |
 | Execução 03 — 11/10/2026 | S00-T03 | CONCLUÍDA | Fixture compartilhada `test/ui-integrated-fixture.mjs`, integração ao runner HTTPS e [guia de validação](AMBIENTE_VALIDACAO_UI_INTEGRADA.md) | T/B/E/P aprovados: typecheck, Vue controlado e PostgreSQL/HTTPS/Chromium real; login, papéis, troca/recarga, isolamento, concessões e portal | Sprint 00 encerrada tecnicamente; próxima: S01-T01 |
+| Execução 04 — 12/10/2026 | S01-T01 | CONCLUÍDA | [Entrega visual e evidências](ENTREGA_S01_T01.md), tokens/CSS comuns, tema inicial e variantes de ações | Typecheck, build, Vue controlado e PostgreSQL/HTTPS aprovados; 12 capturas claro/escuro em 1440/390 px; contraste textual conferido | Próxima: S01-T02 |
+| Execução 05 — 12/10/2026 | S01-T02 | CONCLUÍDA | [Entrega e evidências](ENTREGA_S01_T02.md): sidebar, topo/contexto/conta, menu móvel nativo e encerramento de suporte | Typecheck, build, Vue controlado e PostgreSQL/HTTPS aprovados; foco/resize, recolhimento persistido, permissões, falhas/retry e revogação real; 16 capturas | Próxima: S01-T03 |
+
+| Execução 06 — 12/10/2026 | S01-T03 | CONCLUÍDA | [Entrega e evidências](ENTREGA_S01_T03.md): hash das áreas, histórico e fallback autorizado | T/E/P/V e build aprovados; links/recarga, voltar/avançar, papéis, portal, troca com limpeza de filtro e contexto atual preservado no histórico; 16 capturas | Próxima: S01-T04 |
 
 Modelo de evidência: comandos com resultado, cenário testado, URL local, caminho de captura/relatório quando gerado e limitações. Não incluir segredos ou dados pessoais reais.
 

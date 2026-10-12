@@ -29,7 +29,7 @@ Os tokens devem morar em uma única camada global. Componentes consomem variáve
 | `--color-surface-subtle` | `#edf1ef` | `#1b2625` | Filtros, hover, cabeçalhos de tabela |
 | `--color-border` | `#dce4e0` | `#2b3937` | Contornos e divisores |
 | `--color-text` | `#1b302a` | `#e9f0ef` | Texto principal |
-| `--color-text-muted` | `#66766f` | `#a5b4b1` | Texto secundário; contraste mínimo preservado |
+| `--color-text-muted` | `#5e6e67` | `#a5b4b1` | Texto secundário; tom claro ajustado na S01-T01 para contraste AA sobre canvas e superfície sutil |
 | `--color-accent` | `#176b54` | `#5fd0ad` | Ação primária, foco, seleção |
 | `--color-accent-ink` | `#ffffff` | `#05241c` | Texto sobre o destaque |
 | `--color-accent-subtle` | `#e1f0e9` | `#16362c` | Item selecionado e destaque discreto |
@@ -79,7 +79,7 @@ Estados de interação seguem esta ordem: padrão, hover, foco visível, ativo/s
 ### Desktop, 1280–1600 px
 
 - Sidebar com 236 px, recolhível para 80 px. Marca oficial, contexto autorizado, navegação por papel e identidade real ficam em regiões separadas.
-- Topbar com menu móvel oculto, título curto do contexto, ações globais reais e tema. Busca global só aparece quando S01-T03 conectar resultados reais.
+- Topbar com menu móvel oculto, título curto do contexto, ações globais reais e tema. Busca global só aparece quando houver implementação conectada a resultados reais.
 - Cabeçalho da página contém breadcrumb curto, título, descrição e ação principal autorizada.
 - Área bento serve ao dashboard. Telas transacionais usam cabeçalho, ferramentas, tabela ou master-detail; não forçar todas as telas a cartões.
 

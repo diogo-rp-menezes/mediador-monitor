@@ -53,6 +53,7 @@ try{
  const pdfPage=await browser.newPage();await pdfPage.setContent('<h1>Publicação sintética HTTPS</h1><p>Documento exclusivo do ensaio local.</p>');const bytes=await pdfPage.pdf();await pdfPage.close();
  const base='DF000001/2026',hash=createHash('sha256').update(bytes).digest('hex');
  await setup.query("INSERT INTO registros(numero_registro,watch,tipo,vigencia) VALUES($1,'teste','Convenção Coletiva de Trabalho','')",[base]);
+ await setup.query("INSERT INTO clientes_documentos(escritorio_id,cliente_id,numero_registro,status,motivo,contexto_hash) VALUES($1,$2,$3,'confirmado','Associação sintética para conferência visual',$4)",[office,customer,base,'a'.repeat(64)]);
  async function publication(office,customer){return (await setup.query(`INSERT INTO publicacoes_documentos(escritorio_id,cliente_id,base,versao,hash_pdf,relatorio_json,pdf,ator_id) VALUES($1,$2,$3,'https-v1',$4,'{}'::jsonb,$5,$6) RETURNING id`,[office,customer,base,hash,bytes,user])).rows[0].id;}
  const own=await publication(office,customer),foreign=await publication(other,otherCustomer);
  const upstreamPort=await freePort(),port=await freePort(),origin=`https://localhost:${port}`;
@@ -70,6 +71,7 @@ try{
  await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(origin+'/');
  const cookies=await context.cookies();const cookie=cookies.find(c=>c.name==='mediador_sessao');assert.ok(cookie,'Cookie real da sessão');assert.equal(cookie.secure,true);assert.equal(cookie.httpOnly,true);assert.equal(cookie.sameSite,'Strict');
  await page.getByLabel('Seu espaço de trabalho').selectOption({label:'Empresa · Empresa HTTPS A'});
+ for(const area of ['Cadastros','Monitoramento','Envios','Escritório','Plataforma'])assert.equal(await page.getByRole('button',{name:area,exact:true}).count(),0);
  await page.getByRole('button',{name:'Documentos',exact:true}).click();await page.getByRole('heading',{name:'Documentos publicados para esta empresa',exact:true}).waitFor();await page.getByRole('button',{name:'Baixar PDF',exact:true}).waitFor();
  const checks=await page.evaluate(async({customer,foreign,otherCustomer})=>{
   const session=await (await fetch('/api/auth/sessao')).json();const headers={'content-type':'application/json','x-context-type':'cliente','x-context-id':String(customer),'x-csrf-token':session.csrf};
@@ -80,7 +82,14 @@ try{
   return {ids:list.map(p=>String(p.id)),foreignStatus,otherContext,csrf};
  },{customer,foreign,otherCustomer});
  assert.deepEqual(checks.ids,[String(own)]);assert.equal(checks.foreignStatus,404);assert.equal(checks.otherContext,403);assert.equal(checks.csrf,403);
- await page.goto(origin+'/acesso');await page.getByRole('button',{name:'Documentos',exact:true}).click();await page.getByRole('heading',{name:'Documentos publicados para esta empresa',exact:true}).waitFor();assert.equal((await request(port,'/gestao-ui.js')).status,404);
+ await page.goto(origin+'/acesso#/cadastros');
+ await page.getByRole('heading',{name:'Visão geral',exact:true,level:1}).waitFor();
+ assert.equal(new URL(page.url()).hash,'#/inicio');
+ await page.goto(origin+'/acesso#/documentos');
+ await page.getByRole('heading',{name:'Documentos publicados para esta empresa',exact:true}).waitFor();
+ await page.reload();await page.getByRole('button',{name:'Baixar PDF',exact:true}).waitFor();
+ assert.equal(new URL(page.url()).hash,'#/documentos');
+ assert.equal((await request(port,'/gestao-ui.js')).status,404);
  const opening=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/portal/documentos/'+own);await page.getByRole('button',{name:'Abrir documento',exact:true}).click();assert.equal((await opening).status(),200);await page.getByRole('dialog',{name:'Documento publicado'}).getByRole('button',{name:'Fechar modal'}).click();
  const csrfToken=await page.evaluate(async()=>(await (await fetch('/api/auth/sessao')).json()).csrf);
  assert.equal((await request(port,'/api/auth/logout',{'cookie':`${cookie.name}=${cookie.value}`,'origin':'https://example.invalid','content-type':'application/json','x-csrf-token':csrfToken},'POST','{}')).status,403);
