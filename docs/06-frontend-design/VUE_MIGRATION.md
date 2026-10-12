@@ -10,7 +10,7 @@ O frontend operacional original usa HTML servido pelo Node e módulos que manipu
 | --- | --- | --- |
 | V01 | Vue 3, Vite, TypeScript, compilação e rota estática `/app/` | Concluída |
 | V02 | Shell: sessão, seletor de contexto, navegação, tema, toast e componentes-base | Em andamento |
-| V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Em andamento: Contatos e consultas sindicais com CRUD em Vue; formulário e vínculos de Clientes e fichas pendentes |
+| V03 | Cadastros: clientes, contatos, sindicatos, formulários e fichas | Em andamento: CRUDs e ficha de Clientes, consulta CNPJ e vínculos implementados; documentos/aplicabilidade do cliente e conferência PostgreSQL das novas jornadas ainda pendentes |
 | V04 | Documentos: catálogo, ficha, análise, revisões, publicações e auditoria | Pendente |
 | V05 | Monitoramento, envios, escritório e plataforma | Pendente |
 | V06 | Troca definitiva da rota operacional e remoção dos módulos de UI legados | Pendente |
@@ -26,6 +26,10 @@ Consultas sindicais: `UnionPanel.vue` consulta o catálogo compartilhado e as co
 Uma área somente deixa a UI legada depois de suportar seu fluxo completo, permissões, estados vazios/erro, desktop/mobile e teste Playwright equivalente. Durante a migração, `/app/` contém a versão Vue em evolução e a rota operacional atual segue como referência funcional.
 
 ## Validação da fundação
+
+Hot reload integrado ao `npm run dev`: [DEV_HOT_RELOAD.md](DEV_HOT_RELOAD.md). Clientes usa `ClientEditor.vue`, com abas Dados e envio, Contatos e Sindicatos. A edição busca o detalhe e preserva função, recebimento por e-mail, tipos, categoria, localidade, sindicato principal e enquadramento confirmado. Erros de carregamento impedem salvar dados incompletos.
+
+`CnpjLookup.vue` consulta a API existente, apresenta os dados antes de aplicar e invalida resultados ao alterar CNPJ ou desmontar o componente. Os dados aplicados são enviados somente ao salvar. `ClientSheet.vue` mostra a ficha em bento; documentos/aplicabilidade ainda são acessados na área operacional histórica. A exclusão de Clientes tem confirmação e apresenta o bloqueio retornado pelo backend sem remover a linha localmente. `test:vue-ui` cobre estes fluxos usando API simulada; não representa validação das novas jornadas contra PostgreSQL real.
 
 - `npm run build:frontend`
 - `npm run typecheck`
