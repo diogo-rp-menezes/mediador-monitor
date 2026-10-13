@@ -59,7 +59,7 @@ try{
   await setup.query(`GRANT USAGE ON SCHEMA public TO "${role}"`);
   await setup.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO "${role}"`);
   await setup.query(`GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO "${role}"`);
-  runtime=criarPoolPostgresRuntime({...process.env,PGDATABASE:database,PGPOOL_MAX:'1'});
+  runtime=criarPoolPostgresRuntime({...process.env,PGDATABASE:database,PGPOOL_MAX:'2'});
   directory=mkdtempSync(resolve('data','pg-delivery-test-'));
   const path=join(directory,'original.pdf'),bytes=Buffer.from('%PDF-1.7\nTest original');writeFileSync(path,bytes);
   const office=(await setup.query("INSERT INTO escritorios(nome) VALUES('Teste A') RETURNING id")).rows[0].id;
@@ -125,7 +125,7 @@ try{
     writeFileSync(raw.anexos[0].path,'corrompido');
   });
   await approved('concorrencia');
-  secondRuntime=criarPoolPostgresRuntime({...process.env,PGDATABASE:database,PGPOOL_MAX:'1'});
+  secondRuntime=criarPoolPostgresRuntime({...process.env,PGDATABASE:database,PGPOOL_MAX:'2'});
   const before=messages.length;
   const settled=await Promise.allSettled([processarFilaPostgres(runtime,office),processarFilaPostgres(secondRuntime,office)]);
   const results=settled.map(result=>{if(result.status==='rejected')throw result.reason;return result.value;});

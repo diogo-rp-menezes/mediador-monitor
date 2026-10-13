@@ -88,7 +88,7 @@ export function renderizarConsolidadoMarkdown(resultado:ResultadoConsolidado):st
     `- **${campo}** · ${a.instrumento} · ${a.acao}${a.aplicada?' (aplicada)':' (revisão necessária)'}\n  - Cláusula: ${a.clausula}\n  - Citação: ${a.citacao.replace(/\n/g,' ')}\n  - Antes: ${a.anterior.replace(/\n/g,' | ')}\n  - Depois: ${a.posterior.replace(/\n/g,' | ')}`)).join('\n');
   return `# CCT consolidada — ${resultado.base}\n\n**CCT original:** ${resultado.base}\n\n**Aditivos vinculados:**\n${lista}\n\n${resultado.observacao}\n\n${renderizarCctMarkdown(resultado.padrao)}\n## Rastreabilidade por campo\n\n${hist}\n\n## Decisões humanas de revisão
 
-${((resultado as ResultadoConsolidado & {pendenciasDetalhadas?:import('./revisoes.js').PendenciaDetalhada[]}).pendenciasDetalhadas||[]).filter(p=>p.decisao).map(p=>`- **${p.rotulo}** (${p.instrumento}): ${p.decisao}. Responsável: ${p.revisor}. Justificativa: ${p.justificativa}. ${p.valor_decidido ? 'Valor decidido: '+p.valor_decidido : 'Regra existente preservada.'}`).join('\n')||'Nenhuma decisão humana registrada.'}
+${((resultado as ResultadoConsolidado & {pendenciasDetalhadas?:Array<import('./revisoes.js').PendenciaDetalhada & {aditivo?:string}>}).pendenciasDetalhadas||[]).filter(p=>p.decisao).map(p=>`- **${p.rotulo}** (${p.instrumento||p.aditivo||'Não informado'}): ${p.decisao}. Responsável: ${p.revisor}. Justificativa: ${p.justificativa}. ${p.valor_decidido ? 'Valor decidido: '+p.valor_decidido : 'Regra existente preservada.'}`).join('\n')||'Nenhuma decisão humana registrada.'}
 
 ## Pendências de revisão
 

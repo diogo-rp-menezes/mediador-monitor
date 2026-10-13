@@ -18,6 +18,8 @@ it('recusa escritório inativo, filtro alheio/inativo e duplicação pendente',a
 it('lista somente formato novo e cancela apenas solicitação pendente do escritório',async()=>{
   const db=client([{rows:[{id:1}]},{rowCount:1},{rowCount:0},{rowCount:0}]);
   expect(await listarSolicitacoesMonitoramentoPostgres(db,3)).toEqual([{id:1}]);
+  expect(db.query).toHaveBeenLastCalledWith(expect.stringContaining("(status='solicitada' OR (status='executando' AND detalhes_json ? 'reserva_token')) AND NOT COALESCE"),[3]);
+  expect(db.query).toHaveBeenLastCalledWith(expect.stringContaining("status='executando' AS recuperavel"),[3]);
   await cancelarSolicitacaoMonitoramentoPostgres(db,3,1);
   expect(db.query).toHaveBeenLastCalledWith(expect.stringContaining("status='solicitada'"),[1,3]);
   await expect(cancelarSolicitacaoMonitoramentoPostgres(db,3,2)).rejects.toThrow('worker');

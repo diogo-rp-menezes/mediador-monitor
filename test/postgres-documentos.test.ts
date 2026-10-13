@@ -42,7 +42,7 @@ it('marca decisão obsoleta como candidata e escopa a consulta ao escritório',a
     .mockResolvedValueOnce({rows:[{arquivo_hash:'hash',documento_meta_json:{cnpjs:[]},tipo:'Acordo',vigencia:''}],rowCount:1})
     .mockResolvedValueOnce({rows:[],rowCount:0}));
   const [item]=await listarDocumentosClientePostgres(pool,22,5) as Array<Record<string,unknown>>;
-  expect(item).toMatchObject({status:'candidato',desatualizado:true,origem:'regra',responsavel:null,justificativa:null});
+  expect(item).toMatchObject({status:'candidato',desatualizado:true,origem:'regra',responsavel:null,justificativa:null,incluir_envio:true});
   expect(item.versao).toMatch(/^[a-f0-9]{64}$/);
   expect(pool.query).toHaveBeenNthCalledWith(4,expect.stringContaining('WHERE id=$1 AND escritorio_id=$2'),[5,22]);
   expect(pool.query).toHaveBeenNthCalledWith(5,expect.stringContaining('d.escritorio_id=$2'),[5,22]);

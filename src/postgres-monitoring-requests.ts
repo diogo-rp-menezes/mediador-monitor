@@ -14,6 +14,8 @@ export async function solicitarMonitoramentoPostgres(client:PoolClient,office:nu
 export async function listarSolicitacoesMonitoramentoPostgres(client:PoolClient,office:number){
   return (await client.query(`SELECT id,solicitada_por,status,iniciada_em,concluida_em,detalhes_json->>'monitoramento_id' AS monitoramento_id,
     COALESCE(detalhes_json->>'cancelamento_solicitado'='true',false) AS cancelamento_solicitado,
+    (status='solicitada' OR (status='executando' AND detalhes_json ? 'reserva_token')) AND NOT COALESCE(detalhes_json->>'cancelamento_solicitado'='true',false) AS cancelavel,
+    status='executando' AS recuperavel,
     COALESCE(detalhes_json->>'limite_duracao_excedido'='true',false) AS limite_duracao_excedido,
     COALESCE(detalhes_json->>'limite_volume_excedido'='true',false) AS limite_volume_excedido
     FROM execucoes_escritorio WHERE escritorio_id=$1 AND detalhes_json->>'formato'='monitoramento-execucao-v1' ORDER BY id DESC LIMIT 100`,[office])).rows;

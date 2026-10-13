@@ -6,7 +6,7 @@ import {gerarPdfRelatorio,hashBytes} from './relatorio-core.js';
 import {prepararNotificacoesPublicacaoPostgres} from './postgres-notificacoes-publicacoes.js';
 import {ErroCadastro} from './cadastros.js';
 
-const Schema=z.object({cliente_id:z.number().int().positive(),base:z.string().trim().min(1).max(100)}).strict();
+const Schema=z.object({cliente_id:z.number().int().positive(),base:z.string().trim().min(1).max(100),versao_interpretacao:z.string().min(1).max(100).optional()}).strict();
 export type PublicationEvent={ip?:string;user_agent?:string;request_id?:string};
 export type PortalContext={escritorio_id:number;cliente_id:number};
 type Options={pdf?:(report:Awaited<ReturnType<typeof prepararRelatorioPublicacaoPostgres>>['relatorio'],client:{razao_social:string;cnpj:string})=>Promise<Buffer>};
@@ -19,6 +19,7 @@ export async function listarPublicacoesPostgres(pool:Pool,officeId:number){
 
 export async function publicarDocumentoPostgres(pool:Pool,officeId:number,actorId:number,raw:unknown,event:PublicationEvent={},options:Options={}){
   const data=Schema.parse(raw),prepared=await prepararRelatorioPublicacaoPostgres(pool,officeId,data.cliente_id,data.base);
+  if(data.versao_interpretacao&&data.versao_interpretacao!==prepared.versao_interpretacao)throw new ErroCadastro('A versão conferida mudou. Atualize antes de publicar.',409);
   const pdf=await (options.pdf??gerarPdfRelatorio)(prepared.relatorio,prepared.cliente);
   if(!Buffer.isBuffer(pdf)||pdf.subarray(0,4).toString('latin1')!=='%PDF')throw new ErroCadastro('A geração do relatório não produziu um PDF válido.',500);
   const current=await prepararRelatorioPublicacaoPostgres(pool,officeId,data.cliente_id,data.base);

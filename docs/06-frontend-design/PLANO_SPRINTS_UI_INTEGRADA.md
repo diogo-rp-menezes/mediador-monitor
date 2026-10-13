@@ -1,6 +1,6 @@
 # Plano de sprints — Vue operacional com o visual aprovado
 
-Data-base: 11/10/2026. Atualizado em 12/10/2026: Sprints 00 e 01 e S02-T01 concluídas tecnicamente; demais tarefas pendentes.
+Data-base: 11/10/2026. Atualizado em 12/10/2026: Sprints 00, 01, 02, 03, 04 e 05 concluídas tecnicamente; S06-T01, S06-T02 e S06-T03 concluídas e Sprint 06 em andamento.
 
 ## 1. Objetivo e fontes de verdade
 
@@ -66,7 +66,7 @@ T e V acompanham tasks de código frontend. U/E/P/X são exigidos onde constam n
 
 ## 3. Backlog por sprint
 
-S00-T01, S00-T02, S00-T03, S01-T01–T04 e S02-T01 estão **CONCLUÍDAS**; demais tasks estão **PENDENTES**. A coluna Dep. contém IDs exatos; além dela, a sprint anterior deve estar encerrada, salvo antecipação expressa.
+S00-T01, S00-T02, S00-T03, S01-T01–T04, S02-T01–T04 e S03-T01–T04 estão **CONCLUÍDAS**; demais tasks estão **PENDENTES**. A coluna Dep. contém IDs exatos; além dela, a sprint anterior deve estar encerrada, salvo antecipação expressa.
 
 ### Sprint 00 — Base rastreável e ambiente de validação
 
@@ -252,6 +252,46 @@ Preencher uma linha por execução. O status de uma task não muda por mera exis
 
 | Execução 08 — 12/10/2026 | S02-T01 | CONCLUÍDA | [Listas e ficha](ENTREGA_S02_T01.md): cabeçalhos/ação principal, contagem, limpeza de filtros, busca CNPJ e identidade da ficha | T/E/P/V e build aprovados; CRUD de contato com recarga, cliente inativado/restaurado, exclusão com histórico recusada, suporte somente leitura e isolamento; 28 capturas | Próxima: S02-T02 |
 
+| Execução 09 — 12/10/2026 | S02-T02 | CONCLUÍDA | [Editor e consulta CNPJ](ENTREGA_S02_T02.md): campos responsivos, bloqueio durante salvamento e confirmação da consulta | T/U/E/P/V e build aprovados; 44 testes, resposta antiga/divergente descartada, erro preserva rascunho, campos/metadados e CNPJ numérico/alfanumérico persistidos com recarga; 32 capturas | Próxima: S02-T03 |
+
+| Execução 10 — 12/10/2026 | S02-T03 | CONCLUÍDA | [Vínculos de cliente](ENTREGA_S02_T03.md): identificação, orientação, contagem e campos de vínculo refinados | T/U/E/P/V e build aprovados; 50 testes, IDs/preferências/enquadramento persistidos, único principal, edição independente e desvinculação; 40 capturas | Próxima: S02-T04 |
+
+| Execução 11 — 12/10/2026 | S02-T04 | CONCLUÍDA | [Consultas sindicais](ENTREGA_S02_T04.md): escopo privado, ação principal, busca, contagem e estados | T/U/E/P/V e build aprovados; 23 testes, filtros/tipos/inativação persistidos, exclusão com vínculo recusada, isolamento A/B e catálogo inalterado; 48 capturas | Sprint 02 encerrada tecnicamente; próxima: S03-T01 |
+
+| Execução 12 — 12/10/2026 | S03-T01 | CONCLUÍDA | [Catálogo e originais](ENTREGA_S03_T01.md): filtros por cliente/original, contagem, limpeza, estados e invalidação de download | Typecheck, build, E2E Vue e PostgreSQL/HTTPS aprovados; original autenticado íntegro, erros visíveis, isolamento e respostas atrasadas descartadas; 56 capturas | Próxima: S03-T02 |
+
+| Execução 13 — 12/10/2026 | S03-T02 | CONCLUÍDA | [Análise e evidências](ENTREGA_S03_T02.md): ausências, tópicos antigos/aditivos, citações e navegação autorizada à Plataforma | T/U/E/P/V e build aprovados; 10 testes, cinco formatos conferidos, dados/citações PostgreSQL preservados; 64 capturas | Próxima: S03-T03 |
+
+| Execução 14 — 12/10/2026 | S03-T03 | CONCLUÍDA | [Decisões de aditivos](ENTREGA_S03_T03.md): decisão registrada/proposta, revisão e atualização após conflito sem perder rascunho | T/U/E/P/V e build aprovados; sete testes, vínculo/remoção/reabertura e 409 reais, tipos/escopo/papéis conferidos; 72 capturas | Próxima: S03-T04 |
+
+| Execução 15 — 12/10/2026 | S03-T04 | CONCLUÍDA | [Consolidação e revisão](ENTREGA_S03_T04.md): regras anterior/atual/extraída, decisões e bloqueio de versão antiga | T/U/E/P/V e build aprovados; quatro testes, decisões reais manter/aplicar/manual, pendências 3→2→1→0, quatro versões, recarga e conflito sem sobrescrita; 84 capturas | Próxima: S03-T05, incluindo contrato PDF interno D01 |
+
+| Execução 16 — 12/10/2026 | S03-T05 | CONCLUÍDA | [Relatórios, publicações e auditoria](ENTREGA_S03_T05.md): PDF interno D01, versão conferida e revogação | T/U/E/P/V e build aprovados; oito testes, PDF/MD reais, criação/revogação Vue, bloqueios 409, snapshot imutável e auditoria/CSV isolados; 96 capturas | Próxima: S04-T01 |
+
+| Execução 17 — 12/10/2026 | S04-T01 | CONCLUÍDA | [Documentos do cliente](ENTREGA_S04_T01.md): lista contextual, aplicabilidade, motivos, versão e originais | T/U/E/P/V e build aprovados; sete testes, estados/filtros, integridade/ausência, desatualização, falha/retry, recarga/reabertura e isolamento reais; 104 capturas | Próxima: S04-T02 |
+
+| Execução 18 — 12/10/2026 | S04-T02 | CONCLUÍDA | [Decisão de aplicabilidade](ENTREGA_S04_T02.md): modal, justificativa e responsável autenticado, conflito com nova conferência | T/U/E/P/V e build aprovados; sete testes, confirmar/rejeitar reais, auditoria/ator, cancelamento, 409 sem sobrescrita, atualização falha/retry, recarga e suporte sem escrita; 112 capturas | Próxima: S04-T03, incluindo contrato D03 |
+
+| Execução 19 — 12/10/2026 | S04-T03 | CONCLUÍDA | [Inclusão histórica e participação](ENTREGA_S04_T03.md): D03 resolvida, contrato independente versionado/auditado, inclusão/exclusão explícitas | T/U/E/P/V e build aprovados; sete testes, Vue/HTTPS reais, histórico/recarga, 409, recálculo preserva exclusão e fila inalterada; regressão PostgreSQL/SMTP TLS local aprovada; 120 capturas | Próxima: S04-T04 |
+
+| Execução 20 — 12/10/2026 | S04-T04 | CONCLUÍDA | [Preparo pela ficha do cliente](ENTREGA_S04_T04.md): confirmação, resultado real e consulta contextual à fila | T/U/E/P/X/V e build aprovados; 13 testes, candidato/exclusão, contatos/tipos, revisão no modo automático, retry, repetição sem duplicação, fila persistida e isolamento; PostgreSQL/SMTP TLS local aprovado; 128 capturas | Próxima: S05-T01 |
+
+| Execução 21 — 12/10/2026 | S05-T01 | CONCLUÍDA | [Execuções de monitoramento](ENTREGA_S05_T01.md): lista, detalhe e atualização cancelável | T/U/P/V e build aprovados; sete testes, ciclos/reconexão/abort/respostas atrasadas, cinco estados reais, recarga e isolamento A/B; 136 capturas | Próxima: S05-T02 |
+
+| Execução 22 — 12/10/2026 | S05-T02 | CONCLUÍDA | [Solicitação de coleta](ENTREGA_S05_T02.md): consulta, filtros, confirmação e criação auditada | T/U/P/X/V e build aprovados; 39 testes, três perfis autorizados/suporte 403, 202/ator/auditoria, duplicação/inativa/isolamento, worker com resultado vazio persistido sem novos instrumentos; 140 capturas | Próxima: S05-T03 |
+
+| Execução 23 — 12/10/2026 | S05-T03 | CONCLUÍDA | [Agendas de coleta](ENTREGA_S05_T03.md): intervalo/semanal, dias, horário, fuso e previsão de calendário | T/U/P/V e build aprovados; 25 testes, persistência/reabertura/recarga, retry, papéis, scheduler real nos dois modos sem duplicação, inativação e isolamento; 148 capturas | Próxima: S05-T04 |
+
+| Execução 24 — 12/10/2026 | S05-T04 | CONCLUÍDA | [Limites e cancelamento](ENTREGA_S05_T04.md): configuração/herança/teto/efetivo e pedido autorizado | T/U/P/X/V e build aprovados; 29 testes, persistência/recarga, RBAC, retry, reserva real com limites, cancelamento em fila e durante execução, conflito/isolamento/auditoria; 140 capturas | Próxima: S05-T05 |
+
+| Execução 25 — 12/10/2026 | S05-T05 | CONCLUÍDA | [Recuperação de execuções](ENTREGA_S05_T05.md): justificativa, confirmação de consumidor encerrado e reserva invalidada | T/U/P/X/V e build aprovados; 33 testes, formulário/CSRF/busy/resposta antiga, exclusividade real, token invalidado, auditoria, conflito/isolamento e ausência de duplicação; 148 capturas | Sprint 05 encerrada tecnicamente; próxima: S06-T01 |
+
+| Execução 26 — 12/10/2026 | S06-T01 | CONCLUÍDA | [Fila operacional de envios](ENTREGA_S06_T01.md): resumo, tabela, estados e filtros contextuais | T/U/P/V e build aprovados; fila limitada pelo backend a 500 itens, nove estados, retry com dados preservados, recarga e isolamento A/B comprovados para administrador, operador, suporte e plataforma; 4 capturas novas | Próxima: S06-T02 |
+
+| Execução 27 — 12/10/2026 | S06-T02 | CONCLUÍDA | [Detalhe, prévia e anexos](ENTREGA_S06_T02.md): snapshot sanitizado, indicação de versão e download autenticado | T/U/P/V e build aprovados; prévia ausente e divergente sinalizadas, anexo baixado por rota contextual, recusa em outro escritório, recarga e quatro papéis comprovados; 4 capturas novas | Próxima: S06-T03 |
+
+| Execução 28 — 12/10/2026 | S06-T03 | CONCLUÍDA | [Aprovação e cancelamento](ENTREGA_S06_T03.md): confirmação explícita por estado e papel | T/U/P/V e build aprovados; hash da prévia, CSRF, estado, confirmação, botão ocupado, fila contextual e isolamento nos quatro papéis validados; autorização definitiva permanece no backend | Próxima: S06-T04 |
+
 Modelo de evidência: comandos com resultado, cenário testado, URL local, caminho de captura/relatório quando gerado e limitações. Não incluir segredos ou dados pessoais reais.
 
 ### Pedido sugerido para executar uma task
@@ -272,4 +312,4 @@ Uma sprint termina quando todas as suas tasks e derivadas estão concluídas tec
 
 ## Lacunas confirmadas na S00-T01
 
-O [baseline funcional](BASELINE_UI_INTEGRADA.md) registra D01–D10. S03-T05 (PDF interno), S04-T03 (inclusão histórica independente), S06-T04 (histórico detalhado), S07-T03 (convites), S07-T04 (teste SMTP) e S08-T05 (operação global) exigem resolver contratos ausentes antes de concluir seus aceites. Dividir backend e UI em tasks derivadas quando necessário; não tratar essas entregas como migração apenas visual. A recuperação de envios tem payload distinto da recuperação de monitoramento (D05).
+O [baseline funcional](BASELINE_UI_INTEGRADA.md) registra D01–D10. D01/PDF interno foi resolvida na S03-T05. D03/inclusão histórica independente foi resolvida na S04-T03. S06-T04 (histórico detalhado), S07-T03 (convites), S07-T04 (teste SMTP) e S08-T05 (operação global) exigem resolver contratos ausentes antes de concluir seus aceites. Dividir backend e UI em tasks derivadas quando necessário; não tratar essas entregas como migração apenas visual. A recuperação de envios tem payload distinto da recuperação de monitoramento (D05).

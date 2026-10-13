@@ -25,17 +25,17 @@ async function contextHash(db:{query:PoolClient['query']},clientId:number,number
 }
 
 async function listDocs(db:{query:PoolClient['query']},officeId:number,clientId:number){
-  const client=await db.query('SELECT id FROM clientes WHERE id=$1 AND escritorio_id=$2',[clientId,officeId]);
+  const client=await db.query('SELECT id,criado_em FROM clientes WHERE id=$1 AND escritorio_id=$2',[clientId,officeId]);
   if(!client.rowCount)throw new ErroCadastro('Cliente não encontrado.',404);
   const result=await db.query(`SELECT d.cliente_id,d.numero_registro,d.status,d.motivo,d.contexto_hash,d.origem,d.responsavel,d.justificativa,
-    d.atualizado_em,d.incluir_envio,r.tipo,r.vigencia,(r.arquivo_path IS NOT NULL) AS arquivo_disponivel
+    d.atualizado_em,d.incluir_envio,r.primeira_vez,r.tipo,r.vigencia,(r.arquivo_path IS NOT NULL) AS arquivo_disponivel
     FROM clientes_documentos d JOIN registros r ON r.numero_registro=d.numero_registro
     WHERE d.cliente_id=$1 AND d.escritorio_id=$2 ORDER BY r.primeira_vez DESC,d.numero_registro`,[clientId,officeId]);
   const rows=[];
   for(const row of result.rows){
     const current=await contextHash(db,clientId,String(row.numero_registro)),stale=current!==row.contexto_hash;
     const version=digest({row,atual:current});
-    rows.push({...row,incluir_envio:undefined,arquivo_disponivel:Boolean(row.arquivo_disponivel),desatualizado:stale,versao:version,
+    rows.push({...row,incluir_envio:Boolean(row.incluir_envio),historico:new Date(row.primeira_vez).getTime()<new Date(client.rows[0].criado_em).getTime(),arquivo_disponivel:Boolean(row.arquivo_disponivel),desatualizado:stale,versao:version,
       status:stale?'candidato':row.status,origem:stale?'regra':row.origem,
       motivo:stale?'Documento ou vínculos alterados. Atualize e confira a aplicabilidade.':row.motivo,
       responsavel:stale?null:row.responsavel,justificativa:stale?null:row.justificativa});
@@ -103,7 +103,7 @@ export async function atualizarDocumentosClientePostgres(pool:Pool,officeId:numb
             normalizarTexto(meta.categoria)===category&&meta.abrangencia.split(/[,;]/).some(item=>item.trim().replace(/[.]$/,'')===`${city}/${state.toLowerCase()}`);
         }));
       const reason=confirmed?'CNPJ e escopo documental conferidos por regras determinísticas.':'Confira categoria, município/UF, vigência e partes do documento antes de liberar o envio.';
-      const include=Boolean(previous.rows[0]?.incluir_envio)||new Date(doc.primeira_vez).getTime()>=new Date(customer.criado_em).getTime();
+      const include=previous.rowCount?Boolean(previous.rows[0].incluir_envio):new Date(doc.primeira_vez).getTime()>=new Date(customer.criado_em).getTime();
       await client.query(`INSERT INTO clientes_documentos(cliente_id,numero_registro,escritorio_id,status,motivo,contexto_hash,incluir_envio)
         VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(cliente_id,numero_registro) DO UPDATE SET status=excluded.status,motivo=excluded.motivo,
         contexto_hash=excluded.contexto_hash,origem='regra',responsavel=NULL,justificativa=NULL,incluir_envio=excluded.incluir_envio,atualizado_em=now()`,
@@ -124,7 +124,7 @@ export async function decidirDocumentoClientePostgres(pool:Pool,officeId:number,
     if(row.desatualizado||row.versao!==data.versao)throw new ErroCadastro('Documento, vínculos ou decisão alterados. Atualize a lista e confira novamente.',409);
     const original=data.status==='confirmado'?await validarOriginalWithin(client,officeId,clientId,number):null;
     const before=await client.query('SELECT * FROM clientes_documentos WHERE cliente_id=$1 AND numero_registro=$2',[clientId,number]);
-    await client.query(`UPDATE clientes_documentos SET status=$1,origem='manual',responsavel=$2,justificativa=$3,incluir_envio=true,atualizado_em=now()
+    await client.query(`UPDATE clientes_documentos SET status=$1,origem='manual',responsavel=$2,justificativa=$3,atualizado_em=now()
       WHERE cliente_id=$4 AND numero_registro=$5 AND escritorio_id=$6`,[data.status,data.responsavel.trim().slice(0,250),data.justificativa.trim().slice(0,2000),clientId,number,officeId]);
     await client.query(`INSERT INTO auditoria_clientes(escritorio_id,entidade,entidade_id,acao,detalhes_json)
       VALUES($1,'documento_cliente',$2,$3,$4::jsonb)`,[officeId,`${clientId}:${number}`,data.status,
@@ -169,3 +169,22 @@ async function atualizarDocumentosClientePostgresWithin(client:PoolClient,office
 }
 
 
+
+/** Changes only future delivery participation; does not decide applicability or prepare/approve mail. */
+export async function alterarParticipacaoDocumentoPostgres(pool:Pool,officeId:number,clientId:number,number:string,
+  data:{incluir_envio:boolean;justificativa:string;versao:string},actorId:number){
+  return withPostgresOfficeTransaction(pool,officeId,async client=>{
+    const customer=await client.query('SELECT ativo FROM clientes WHERE id=$1 AND escritorio_id=$2 FOR UPDATE',[clientId,officeId]);
+    if(!customer.rowCount)throw new ErroCadastro('Cliente não encontrado.',404);
+    const view=await listDocs(client,officeId,clientId),row=view.find(item=>item.numero_registro===number);
+    if(!row)throw new ErroCadastro('Documento não relacionado ao cliente.',404);
+    if(row.desatualizado||row.versao!==data.versao)throw new ErroCadastro('Documento, vínculos ou participação alterados. Atualize e confira novamente.',409);
+    if(data.incluir_envio&&!customer.rows[0].ativo)throw new ErroCadastro('Ative o cliente antes de incluir documentos na preparação.',409);
+    const changed=await client.query(`UPDATE clientes_documentos SET incluir_envio=$1,atualizado_em=now()
+      WHERE escritorio_id=$2 AND cliente_id=$3 AND numero_registro=$4`,[data.incluir_envio,officeId,clientId,number]);
+    if(!changed.rowCount)throw new ErroCadastro('Documento não relacionado ao cliente.',404);
+    await client.query(`INSERT INTO auditoria_clientes(escritorio_id,entidade,entidade_id,acao,detalhes_json)
+      VALUES($1,'documento_cliente',$2,'participacao_envio',$3::jsonb)`,[officeId,`${clientId}:${number}`,
+      JSON.stringify({antes:row.incluir_envio,depois:data.incluir_envio,versao_conferida:data.versao,justificativa:data.justificativa,ator_id:actorId})]);
+  });
+}

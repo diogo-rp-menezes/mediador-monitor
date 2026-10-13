@@ -4,7 +4,7 @@ import AppDialog from './AppDialog.vue';
 import UnionPanel from './UnionPanel.vue';
 import ClientEditor from './ClientEditor.vue';
 import ClientSheet from './ClientSheet.vue';
-const props=defineProps<{contextKey:string;canEdit:boolean;request:<T>(path:string,method?:string,body?:unknown)=>Promise<T>}>();
+const props=defineProps<{contextKey:string;canEdit:boolean;request:<T>(path:string,method?:string,body?:unknown)=>Promise<T>;download:(path:string)=>Promise<{blob:Blob;type:string}>}>();
 const emit=defineEmits<{success:[message:string]}>();
 type Row={id:number;nome?:string;razao_social?:string;nome_fantasia?:string;cnpj?:string;email?:string;telefone?:string;cargo?:string;uf?:string;municipio?:string;sindicato_nome?:string;ativo:boolean};
 const editing=ref(false),editedId=ref<number|null>(null),deleting=ref<Row|null>(null),saving=ref(false),formError=ref('');
@@ -37,7 +37,7 @@ onBeforeUnmount(()=>{generation++;});
   <template v-else>
   <header class="registry-heading"><div><h2>{{ active==='clientes'?'Clientes do escritório':'Contatos do escritório' }}</h2><p>{{ active==='clientes'?'Consulte empresas, confira a ficha e mantenha os dados cadastrais.':'Consulte as pessoas de contato e seus dados de comunicação.' }}</p></div><button v-if="canEdit" type="button" class="primary" @click="active==='clientes'?editClient():editContact()">{{ active==='clientes'?'Novo cliente':'Novo contato' }}</button></header>
   <ClientEditor v-if="clientEditing" :id="clientId" :request="request" @close="clientEditing=false" @saved="clientSaved" />
-  <ClientSheet v-if="sheetId" :id="sheetId" :can-edit="canEdit" :request="request" @close="sheetId=null" @edit="clientId=sheetId;sheetId=null;clientEditing=true" />
+  <ClientSheet v-if="sheetId" :id="sheetId" :download="download" :can-edit="canEdit" :request="request" @close="sheetId=null" @edit="clientId=sheetId;sheetId=null;clientEditing=true" />
   <AppDialog v-if="clientDeleting" title="Excluir cliente" :busy="saving" @close="clientDeleting=null"><p>Excluir {{ clientDeleting.razao_social }}? Clientes com vínculos ou histórico devem ser inativados.</p><p v-if="formError" role="alert">{{ formError }}</p><footer><button class="secondary" type="button" autofocus :disabled="saving" @click="clientDeleting=null">Cancelar</button><button class="danger-button" type="button" :disabled="saving" @click="deleteClient">Excluir cliente</button></footer></AppDialog>
   <div class="registry-controls"><label>Buscar cadastro<input v-model="query" type="search" placeholder="Nome, CNPJ, e-mail ou localização"></label><label>Situação<select v-model="status"><option value="todos">Todas</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label><button type="button" class="secondary" :disabled="loading" @click="load">Atualizar lista</button></div>
   <div v-if="!loading&&!error" class="registry-results"><p role="status">{{ filtered.length }} de {{ rows.length }} {{ active==='clientes'?'clientes':'contatos' }}</p><button v-if="query||status!=='todos'" type="button" class="secondary" @click="clearFilters">Limpar filtros</button></div>

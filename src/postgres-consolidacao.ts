@@ -171,7 +171,7 @@ export async function exportarMarkdownInterpretacaoPostgres(pool:Pool,office:num
 }
 
 /** Builds a tenant/client-scoped PDF input and an immutable fingerprint for publication revalidation. */
-export async function prepararRelatorioPublicacaoPostgres(pool:Pool,office:number,clientId:number,base:string):Promise<{relatorio:Relatorio;cliente:{razao_social:string;cnpj:string};fingerprint:string}>{
+export async function prepararRelatorioPublicacaoPostgres(pool:Pool,office:number,clientId:number,base:string):Promise<{relatorio:Relatorio;cliente:{razao_social:string;cnpj:string};fingerprint:string;versao_interpretacao:string|null}>{
   return withPostgresOfficeTransaction(pool,office,async client=>{
   const customer=await client.query<{razao_social:string;cnpj:string}&QueryResultRow>('SELECT razao_social,cnpj FROM clientes WHERE id=$1 AND escritorio_id=$2 AND ativo=true',[clientId,office]);
   const cliente=customer.rows[0];if(!cliente)throw new ErroCadastro('Cliente não encontrado ou inativo neste escritório.',404);
@@ -198,7 +198,7 @@ export async function prepararRelatorioPublicacaoPostgres(pool:Pool,office:numbe
   const relatorio:Relatorio={numero:base,base,tipo:originalDoc.tipo,vigencia:originalDoc.vigencia??'',versao:version,analise:{...analysis,padrao:pattern} as unknown as Extracao,
     consolidado:consolidated,analisado_em:originalDoc.analise_concluida_em??'',arquivos:sourceDocs.map((document,index)=>({numero:document.numero_registro,path:files[index].path,
       nome:document.numero_registro.replace(/[^A-Z0-9_-]/gi,'_')+'_original'+(['.pdf','.doc'].includes(extname(files[index].path).toLowerCase())?extname(files[index].path).toLowerCase():files[index].bytes.subarray(0,4).toString('latin1')==='%PDF'?'.pdf':'.doc'),hash:files[index].hash,bytes:files[index].bytes.length}))};
-  return {relatorio,cliente,fingerprint:version};
+  return {relatorio,cliente,fingerprint:version,versao_interpretacao:interpretation?.versao??null};
   });
 }
 

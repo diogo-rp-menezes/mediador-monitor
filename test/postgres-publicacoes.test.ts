@@ -45,3 +45,10 @@ it('revoga somente publicação do escritório e cancela avisos ainda pendentes'
   await expect(revogarPublicacaoPostgres(pool,3,44,7,{ip:'127.0.0.1'})).resolves.toEqual({ok:true});
   expect(client.query).toHaveBeenCalledWith(expect.stringContaining("estado='cancelado'"),[44,3]);expect(client.query).toHaveBeenCalledWith('COMMIT');
 });
+
+ it('recusa a versão conferida antiga antes de gerar PDF',async()=>{
+  prep.mockReset().mockResolvedValue({...view,versao_interpretacao:'atual'});
+  const pool={connect:vi.fn()} as unknown as Pool,pdf=vi.fn();
+  await expect(publicarDocumentoPostgres(pool,3,7,{cliente_id:9,base:'DF000001/2026',versao_interpretacao:'antiga'},{},{pdf})).rejects.toMatchObject({status:409});
+  expect(pdf).not.toHaveBeenCalled();expect(pool.connect).not.toHaveBeenCalled();
+ });

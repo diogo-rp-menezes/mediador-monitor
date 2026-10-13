@@ -16,10 +16,10 @@ Esta entrega identifica implementação e lacunas; não certifica comportamento 
 | Clientes e contatos | `RegistryPanel.vue`, `ClientEditor.vue`, `ClientSheet.vue` | `/api/contexto/clientes`, `/contatos`; `postgres-organizacoes.ts`, schemas em `cadastros.ts` | `clientes.ler/gerenciar`; refinamento Sprint 02 |
 | Vínculos | Editor mantém IDs e atributos completos | Cliente: contatos com função/recebimento/tipos; sindicatos com categoria/localidade/principal/confirmação | Mesmas permissões de clientes; preservar dados na Sprint 02 |
 | Consultas sindicais privadas | `UnionPanel.vue` implementado | `/api/contexto/monitoramentos`; `MonitoramentoSchema` em `monitoramentos-escritorio.ts` | `monitoramentos.ler/gerenciar`; catálogo contextual é somente leitura |
-| Documentos do cliente | Ficha indica seção pendente | GET documentos/original, POST atualizar/decidir sob `/api/contexto/clientes/:id`; `postgres-documentos.ts` | Leitura interna/revisão; Sprint 04, lacuna D03 |
+| Documentos do cliente | Ficha com lista, decisão e participação em modais | GET documentos/original, POST atualizar/decidir/participacao sob `/api/contexto/clientes/:id`; `postgres-documentos.ts` | Sprint 04 concluída; D03 resolvida; preparação com confirmação/resultado e consulta à fila pela ficha, operação completa da fila na Sprint 06 |
 | Instrumentos e análise | `DocumentsPanel.vue`, `DocumentAnalysis.vue`, `AnalysisValue.vue` | `/api/contexto/interpretacoes`; `postgres-interpretacoes.ts` | `documentos.ler_internos`; refinamento Sprint 03 |
 | Aditivos e consolidação | `AmendmentLinks.vue`, `ConsolidationPanel.vue` | `/api/contexto/vinculos`, `/revisoes`, `/interpretacoes/consolidar`; schemas versionados em `postgres-interpretacoes.ts` e `postgres-consolidacao.ts` | `documentos.revisar`; conservar justificativa/conflitos |
-| Relatório interno | Botões PDF e MD presentes | GET `/api/contexto/relatorio`; handler aceita somente MD | Leitura interna; incompatibilidade D01, S03-T05 |
+| Relatório interno | Botões PDF e MD presentes | GET `/api/contexto/relatorio`; handler aceita PDF e MD | Leitura interna; D01 resolvida na S03-T05 |
 | Publicações e auditoria | `PublicationsPanel.vue` implementado | `/api/contexto/publicacoes`, `/:id/revogar`, `/auditoria?formato=csv` | Publicar: `documentos.publicar`; auditoria: `auditoria.ler`; S03-T05 |
 | Portal | `ClientPortal.vue` implementado | `/api/portal/documentos`, `/:id`, `/:id/ciencia` | Contexto de cliente e leitura publicada; ciência `{confirmo:true}`; preservar isolamento |
 | Monitoramento | `PendingPanel.vue` | `/api/contexto/execucoes`, `/agendas`, `/limites-monitoramento`; router PostgreSQL | Ler/gerenciar monitoramento; agendas/limites e recuperação exigem gestão do escritório; Sprint 05 |
@@ -65,13 +65,13 @@ Listagens atuais têm limites: envios até 500 e execuções até 100. Filtros l
 
 ## Divergências e decisões de integração
 
-As lacunas abaixo são trabalho pendente, não endpoints implicitamente aprovados ou implementados. Antes da task indicada, definir o contrato e dividir backend/UI em tasks derivadas quando necessário; preservar os aceites existentes e registrar qualquer redução de escopo explicitamente.
+As lacunas abaixo registram a inspeção inicial e seu encaminhamento; D01 foi resolvida na S03-T05 e D03 na S04-T03. As demais não são endpoints implicitamente aprovados ou implementados. Antes da task indicada, definir o contrato e dividir backend/UI em tasks derivadas quando necessário; preservar os aceites existentes e registrar qualquer redução de escopo explicitamente.
 
 | ID | Evidência estática | Impacto e encaminhamento |
 | --- | --- | --- |
-| D01 | `ConsolidationPanel.vue` oferece PDF; `/api/contexto/relatorio` valida `z.enum(['md'])` | S03-T05 precisa resolver exportação PDF interna. PDF publicado/portal é outro fluxo e não comprova esse contrato |
+| D01 | `ConsolidationPanel.vue` oferece PDF; `/api/contexto/relatorio` valida `z.enum(['md'])` | Resolvida na S03-T05: contrato PDF/MD interno, escopo por cliente, versão atual sem pendências, revalidação após geração e auditoria; downloads reais conferidos. PDF publicado/portal permanece outro fluxo |
 | D02 | Papéis do backend não incluem leitor | S00-T03/S02-T01 usam suporte autorizado para cenário de leitura interna |
-| D03 | GET de documentos omite `incluir_envio`; decisão o define internamente; não há atualização independente desse campo | S04-T03 requer contrato explícito para controle histórico independente, ou revisão documentada do aceite. Não enviar campo extra ao schema estrito |
+| D03 | GET de documentos omite `incluir_envio`; decisão o define internamente; não há atualização independente desse campo | Resolvida na S04-T03: GET expõe participação/histórico; POST participacao recebe numero/boolean/justificativa/versao, audita ator e antes/depois. Decidir/recalcular preservam participação existente; inclusão não prepara/aprova envio |
 | D04 | Envios expõe lista, anexos e ações; lista inclui contagem de tentativas/erro, sem endpoint de histórico detalhado | S06-T04 requer exposição HTTP do histórico antes de construir detalhe completo |
 | D05 | Recuperar envios aceita idade; monitoramento exige justificativa e consumidor encerrado | S06-T05 deve respeitar diferença; não afirmar que confirmação é campo universal |
 | D06 | Router de usuários oferece cadastro/vínculo/edição, sem token, validade ou resgate de convite | S07-T03 depende de novo contrato de convites. Gestão de membros existente não conclui esse item |

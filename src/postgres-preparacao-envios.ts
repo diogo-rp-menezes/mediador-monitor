@@ -1,3 +1,4 @@
+import {listarDocumentosClientePostgres} from './postgres-documentos.js';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -42,6 +43,8 @@ export async function prepararEnviosPostgres(pool:Pool,officeId:number,clienteId
     signal.throwIfAborted();
     let reservaId:number|null=null;
     try{
+      const applicability=(await listarDocumentosClientePostgres(pool,officeId,pair.cliente_id)).find(row=>row.numero_registro===pair.numero_registro);
+      if(!applicability||applicability.desatualizado||applicability.status!=='confirmado'||!applicability.incluir_envio)throw new ErroCadastro('Confira a aplicabilidade e participação atuais antes de preparar.',409);
       const prepared=await prepararRelatorioPublicacaoPostgres(pool,officeId,pair.cliente_id,pair.numero_registro);
       validarTipoDestinatario(pair.tipos_json,prepared.relatorio.tipo);
       const reserved=await withPostgresOfficeTransaction(pool,officeId,async client=>{
@@ -70,6 +73,8 @@ export async function prepararEnviosPostgres(pool:Pool,officeId:number,clienteId
       const current=await prepararRelatorioPublicacaoPostgres(pool,officeId,pair.cliente_id,pair.numero_registro);
       signal.throwIfAborted();
       if(current.fingerprint!==prepared.fingerprint)throw new ErroCadastro('Conteúdo alterado durante a preparação. Prepare novamente.',409);
+      const latestApplicability=(await listarDocumentosClientePostgres(pool,officeId,pair.cliente_id)).find(row=>row.numero_registro===pair.numero_registro);
+      if(!latestApplicability||latestApplicability.versao!==applicability.versao)throw new ErroCadastro('Aplicabilidade alterada durante a preparação. Prepare novamente.',409);
       const saved=await withPostgresOfficeTransaction(pool,officeId,async client=>{
         const result=await client.query(`UPDATE envios_clientes SET snapshot_json=$1::jsonb,status='revisao',motivo=NULL,erro=NULL,aprovado_por=NULL,aprovado_em=NULL,contexto_aprovacao=NULL,atualizado_em=now()
         WHERE id=$2 AND escritorio_id=$3 AND status='preparando' AND EXISTS (

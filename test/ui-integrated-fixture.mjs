@@ -1,9 +1,23 @@
+import {validarLimitesCancelamento} from './limits-cancellation-integrated-checks.mjs';
+import {validarRecuperacaoMonitoramento} from './monitoring-recovery-integrated-checks.mjs';
+import {validarFilaEnvios} from './deliveries-integrated-checks.mjs';
+import {validarAgendas} from './agendas-integrated-checks.mjs';
+import {validarSolicitacaoColeta} from './collection-integrated-checks.mjs';
+import {validarMonitoramento} from './monitoring-integrated-checks.mjs';
+import {validarPreparoCliente} from './client-preparation-integrated-checks.mjs';
+import {validarDocumentosCliente} from './client-documents-integrated-checks.mjs';
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
 import {criarHashSenha} from '../dist/auth-core.js';
 import {capturarUiIntegrada,capturarMinhaConta} from './ui-visual-capture.mjs';
 import {validarEstruturaWorkspace,validarNavegacaoAreas} from './workspace-shell-checks.mjs';
-import {validarListasCadastros} from './registry-integrated-checks.mjs';
+import {validarListasCadastros,validarEditorCliente} from './registry-integrated-checks.mjs';
+import {validarVinculosCliente} from './client-links-integrated.mjs';
+import {validarConsultasSindicais} from './union-integrated-checks.mjs';
+import {validarOriginaisIntegrados} from './instrument-integrated-checks.mjs';
+import {validarAnalisesIntegradas} from './analysis-integrated-checks.mjs';
+import {validarAditivosIntegrados,validarPapelAditivos} from './amendment-integrated-checks.mjs';
+import {validarConsolidacaoIntegrada} from './consolidation-integrated-checks.mjs';
 
 /** Shared synthetic identities. Refuses every database outside the HTTPS test namespace. */
 export async function prepararFixtureUiIntegrada(setup){
@@ -90,14 +104,20 @@ export async function validarFixtureUiIntegrada(browser,origin,fixture,setup){
         await page.getByRole('button',{name:'Ver ficha de Empresa HTTPS A',exact:true}).click();
         const sheet=page.getByRole('dialog',{name:'Ficha do cliente',exact:true});
         await sheet.getByRole('heading',{name:'Dados e envio',exact:true}).waitFor();
-        assert.equal(await sheet.getByRole('button',{name:'Editar cliente',exact:true}).count(),0);
+        assert.equal(await sheet.getByRole('button',{name:'Editar cliente',exact:true}).count(),0);await sheet.getByRole('table').waitFor();assert.equal(await sheet.getByRole('button',{name:/^Decidir aplicabilidade de /}).count(),0);assert.equal(await sheet.getByRole('button',{name:/^Alterar participação de /}).count(),0);assert.equal(await sheet.getByRole('button',{name:'Preparar envios do cliente',exact:true}).count(),0);
         await sheet.getByRole('button',{name:'Fechar modal',exact:true}).click();
         await page.getByRole('button',{name:'Contatos',exact:true}).click();
         assert.equal(await page.getByRole('button',{name:'Novo contato',exact:true}).count(),0);
         await page.getByRole('button',{name:'Clientes',exact:true}).click();
       }
       await validarNavegacaoAreas(page,{restricted:['operator','support'].includes(key)});
-      if(key==='admin'){await validarListasCadastros(page);await validarEstruturaWorkspace(page);await capturarUiIntegrada(page);}
+      await validarPapelAditivos(page,key,office);
+      await validarSolicitacaoColeta(page,setup,fixture,key);
+      await validarAgendas(page,setup,fixture,key);
+      await validarLimitesCancelamento(page,setup,fixture,key);
+      await validarRecuperacaoMonitoramento(page,setup,fixture,key);
+      await validarFilaEnvios(page,setup,fixture,key);
+      if(key==='admin'){await validarListasCadastros(page);await validarEditorCliente(page);await validarVinculosCliente(page,setup,fixture);await validarConsultasSindicais(page,setup,fixture);await validarOriginaisIntegrados(page,setup,fixture);await validarAnalisesIntegradas(page,setup);await validarAditivosIntegrados(page,setup,fixture);await validarConsolidacaoIntegrada(page,setup,fixture);await validarDocumentosCliente(page,setup,fixture);await validarPreparoCliente(page,setup,fixture);await validarMonitoramento(page,setup,fixture);await validarEstruturaWorkspace(page);await capturarUiIntegrada(page);}
       if(key!=='operator'){
         await page.getByLabel('Buscar cadastro',{exact:true}).fill('Empresa HTTPS A');
         await selector.selectOption({label:'Escritório · Escritório HTTPS B'});

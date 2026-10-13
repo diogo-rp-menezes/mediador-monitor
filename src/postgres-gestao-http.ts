@@ -10,10 +10,10 @@ import {consultarCnpj} from './consulta-cnpj.js';
 import { exigirPermissao,type Permissao } from './autorizacao.js';
 import { buscarUsuarioPorEmailPostgres,excluirMonitoramentoPostgres,listarCatalogoSindicatosPostgres,listarClientesPostgres,listarContatosPostgres,listarEscritoriosPostgres,listarMonitoramentosPostgres,listarUsuariosDoEscritorioPostgres,obterClientePostgres,obterContatoPostgres,obterEscritorioPostgres,obterMonitoramentoPostgres,protegerUltimoAdministradorEscritorioPostgres,revogarVinculoPostgres,salvarClientePostgres,salvarContatoPostgres,salvarEscritorioPostgres,salvarMonitoramentoPostgres,salvarUsuarioPostgres,vincularUsuarioClientePostgres,vincularUsuarioEscritorioPostgres } from './postgres-organizacoes.js';
 import { withPostgresGlobalTransaction, withPostgresOfficeTransaction } from './postgres-transaction.js';
-import { atualizarDocumentosClientePostgres,decidirDocumentoClientePostgres,listarDocumentosClientePostgres,originalDocumentoClientePostgres } from './postgres-documentos.js';
+import { alterarParticipacaoDocumentoPostgres,atualizarDocumentosClientePostgres,decidirDocumentoClientePostgres,listarDocumentosClientePostgres,originalDocumentoClientePostgres } from './postgres-documentos.js';
 import { detalheInstrumentoPostgres,listarCatalogoInterpretacoesPostgres,salvarVinculoContextoPostgres } from './postgres-interpretacoes.js';
-import { consolidarInterpretacaoPostgres,exportarMarkdownInterpretacaoPostgres,revisarInterpretacaoPostgres,vistaInterpretacaoPostgres } from './postgres-consolidacao.js';
-import { hashBytes } from './relatorio-core.js';
+import { prepararRelatorioPublicacaoPostgres,consolidarInterpretacaoPostgres,exportarMarkdownInterpretacaoPostgres,revisarInterpretacaoPostgres,vistaInterpretacaoPostgres } from './postgres-consolidacao.js';
+import { gerarPdfRelatorio,hashBytes } from './relatorio-core.js';
 import { obterSmtpPostgres,salvarSmtpPostgres } from './postgres-smtp.js';
 import { abrirPortalDocumentoPostgres,confirmarCienciaPortalPostgres,listarPortalDocumentosPostgres,listarPublicacoesPostgres,publicarDocumentoPostgres,revogarPublicacaoPostgres } from './postgres-publicacoes.js';
 import { anexoEnvioPostgres,aprovarEnvioPostgres,cancelarEnvioPostgres,listarEnviosPostgres,processarFilaPostgres,recuperarEnviosPresosPostgres,reprepararEnvioPostgres } from './postgres-fila-envios.js';
@@ -61,7 +61,7 @@ export async function tratarGestaoPostgres(req:IncomingMessage,res:ServerRespons
   const global=url.pathname.match(/^\/api\/plataforma\/escritorios(?:\/([1-9]\d*))?$/);
   const local=url.pathname.match(/^\/api\/contexto\/(escritorio|usuarios|clientes|contatos|sindicatos|monitoramentos)(?:\/([1-9]\d*))?$/);
   const cnpjLookup=url.pathname.match(/^\/api\/contexto\/clientes\/consulta-cnpj\/([^/]+)$/);
-  const documents=url.pathname.match(/^\/api\/contexto\/clientes\/([1-9]\d*)\/documentos(?:\/(atualizar|decidir|original))?$/);
+  const documents=url.pathname.match(/^\/api\/contexto\/clientes\/([1-9]\d*)\/documentos(?:\/(atualizar|decidir|original|participacao))?$/);
   const interpretation=url.pathname.match(/^\/api\/contexto\/(interpretacoes|vinculos|revisoes)(?:\/(consolidar))?$/);
   const report=url.pathname==='/api/contexto/relatorio';
   const smtp=url.pathname==='/api/contexto/smtp';
@@ -308,6 +308,7 @@ export async function tratarGestaoPostgres(req:IncomingMessage,res:ServerRespons
     if(req.method==='GET'&&!deliveries[1]&&!deliveries[2])return send(res,200,await listarEnviosPostgres(pool,officeId));
     if(req.method==='POST'&&deliveries[1]==='preparar'){
       const data=z.object({cliente_id:z.number().int().positive().optional()}).strict().parse(await body(req));current=await authorize();
+      if(data.cliente_id){const exists=await withPostgresOfficeTransaction(pool,officeId,client=>client.query('SELECT 1 FROM clientes WHERE id=$1 AND escritorio_id=$2',[data.cliente_id,officeId]));if(!exists.rowCount)throw new ErroCadastro('Cliente não encontrado neste escritório.',404);}
       const outcome=await prepararEnviosPostgres(pool,officeId,data.cliente_id,undefined,{origem:{tipo:'usuario',usuario_id:current.identity.usuario_id},evento:access.event(req)});
       await withPostgresOfficeTransaction(pool,officeId,client=>audit(client,'ENVIOS_ESCRITORIO_PREPARADOS',data.cliente_id?{...outcome,cliente_id:data.cliente_id}:outcome,officeId,data.cliente_id??null));
       return send(res,200,outcome);
@@ -355,14 +356,17 @@ export async function tratarGestaoPostgres(req:IncomingMessage,res:ServerRespons
     if(req.method!=='GET')throw new ErroCadastro('Método não permitido.',405);
     const clientId=z.coerce.number().int().positive().safe().parse(url.searchParams.get('cliente'));
     const base=z.string().trim().min(1).max(100).parse(url.searchParams.get('base'));
-    const format=z.enum(['md']).parse(url.searchParams.get('formato'));
+    const format=z.enum(['md','pdf']).parse(url.searchParams.get('formato'));
     const first=await exportarMarkdownInterpretacaoPostgres(pool,officeId,clientId,base);
+    const prepared=format==='pdf'?await prepararRelatorioPublicacaoPostgres(pool,officeId,clientId,base):null;
+    const bytes=prepared?await gerarPdfRelatorio(prepared.relatorio,prepared.cliente):first.bytes;
     current=await authorize();
     const second=await exportarMarkdownInterpretacaoPostgres(pool,officeId,clientId,base);
     if(first.versao!==second.versao||!first.bytes.equals(second.bytes))throw new ErroCadastro('Relatório alterado durante a exportação. Atualize.',409);
-    await withPostgresOfficeTransaction(pool,officeId,client=>audit(client,'RELATORIO_INTERNO_EXPORTADO',{cliente_id:clientId,base,versao:first.versao,formato:format,hash:hashBytes(first.bytes)},officeId,clientId));
-    res.writeHead(200,{'content-type':'text/markdown; charset=utf-8','cache-control':'no-store',
-      'content-disposition':`attachment; filename="${first.nome}"`,'x-content-type-options':'nosniff'});res.end(first.bytes);return true;
+    if(prepared){const latest=await prepararRelatorioPublicacaoPostgres(pool,officeId,clientId,base);if(latest.fingerprint!==prepared.fingerprint)throw new ErroCadastro('Relatório alterado durante a exportação. Atualize.',409);}
+    await withPostgresOfficeTransaction(pool,officeId,client=>audit(client,'RELATORIO_INTERNO_EXPORTADO',{cliente_id:clientId,base,versao:first.versao,versao_relatorio:prepared?.relatorio.versao??first.versao,formato:format,hash:hashBytes(bytes)},officeId,clientId));
+    res.writeHead(200,{'content-type':format==='pdf'?'application/pdf':'text/markdown; charset=utf-8','cache-control':'no-store',
+      'content-disposition':`attachment; filename="${first.nome.replace(/\.md$/,'.'+format)}"`,'x-content-type-options':'nosniff'});res.end(bytes);return true;
   }
   if(interpretation){
     if(req.method==='GET'&&interpretation[1]==='interpretacoes'){
@@ -406,6 +410,12 @@ export async function tratarGestaoPostgres(req:IncomingMessage,res:ServerRespons
       z.object({}).strict().parse(await body(req));current=await authorize();
       const total=await atualizarDocumentosClientePostgres(pool,officeId,clientId);
       await withPostgresOfficeTransaction(pool,officeId,client=>audit(client,'DOCUMENTOS_CLIENTE_ATUALIZADOS',{total,cliente_id:clientId},officeId));
+      return send(res,200,await listarDocumentosClientePostgres(pool,officeId,clientId));
+    }
+    if(req.method==='POST'&&action==='participacao'){
+      const data=z.object({numero:z.string().min(1).max(100),incluir_envio:z.boolean(),justificativa:z.string().trim().min(1).max(2000),versao:z.string().regex(/^[a-f0-9]{64}$/)}).strict().parse(await body(req));
+      current=await authorize();
+      await alterarParticipacaoDocumentoPostgres(pool,officeId,clientId,data.numero,data,current.identity.usuario_id);
       return send(res,200,await listarDocumentosClientePostgres(pool,officeId,clientId));
     }
     if(req.method==='POST'&&action==='decidir'){
