@@ -14,6 +14,7 @@ import {arquivoPermitido,hashBytes} from './relatorio-core.js';
 
 export type EnvioReservado={id:number;escritorio_id:number;cliente_id:number;contato_id:number;numero_registro:string;versao:string;snapshot_json:unknown;tentativas:number};
 export interface EnvioPostgresVista {id:number;cliente_id:number;contato_id:number;numero_registro:string;versao:string;status:string;motivo:string|null;tentativas:number;erro:string|null;criado_em:Date;atualizado_em:Date;enviado_em:Date|null;cliente:string;contato:string;razao_social:string;nome:string;email:string;aplicabilidade:string;tem_previa:boolean;snapshot_json?:unknown;}
+export interface TentativaEnvioPostgresVista {id:number;resultado:string;erro:string|null;criado_em:Date;}
 const snapshotSchema=z.object({para:z.string().email(),contato:z.string().min(1),cliente:z.string().min(1),cnpj:z.string().min(1),assunto:z.string().min(1),texto:z.string(),html:z.string(),versao:z.string().min(1),anexos:z.array(z.object({nome:z.string().min(1).max(255),path:z.string().min(1),hash:z.string().regex(/^[a-f0-9]{64}$/),bytes:z.number().int().nonnegative()})).min(1)}).passthrough();
 type MailInfo={accepted?:unknown[];messageId?:string;response?:string};
 type WorkerOptions={sendMail?:(message:Record<string,unknown>,smtp:{host:string;porta:number;secure:boolean;usuario:string;senha:string;remetente:string})=>Promise<MailInfo>;limite?:number;maxTentativas?:number;maxAnexoMb?:number};
@@ -41,6 +42,15 @@ export async function listarEnviosPostgres(pool:Pool,escritorioId:number):Promis
       }:null;
       return {...row,snapshot:safeSnapshot,previsualizacao_hash:preview};
     });
+  });
+}
+
+export async function listarTentativasEnvioPostgres(pool:Pool,escritorioId:number,envioId:number):Promise<TentativaEnvioPostgresVista[]>{
+  if(!Number.isSafeInteger(envioId)||envioId<1)throw new ErroCadastro('Envio inválido.',400);
+  return withPostgresOfficeTransaction(pool,escritorioId,async client=>{
+    const owner=await client.query('SELECT 1 FROM envios_clientes WHERE id=$1 AND escritorio_id=$2',[envioId,escritorioId]);
+    if(!owner.rowCount)throw new ErroCadastro('Envio não encontrado.',404);
+    return (await client.query<TentativaEnvioPostgresVista&QueryResultRow>('SELECT id,resultado,erro,criado_em FROM tentativas_envio WHERE envio_id=$1 AND escritorio_id=$2 ORDER BY id DESC LIMIT 100',[envioId,escritorioId])).rows;
   });
 }
 

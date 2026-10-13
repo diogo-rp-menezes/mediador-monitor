@@ -16,7 +16,7 @@ import { prepararRelatorioPublicacaoPostgres,consolidarInterpretacaoPostgres,exp
 import { gerarPdfRelatorio,hashBytes } from './relatorio-core.js';
 import { obterSmtpPostgres,salvarSmtpPostgres } from './postgres-smtp.js';
 import { abrirPortalDocumentoPostgres,confirmarCienciaPortalPostgres,listarPortalDocumentosPostgres,listarPublicacoesPostgres,publicarDocumentoPostgres,revogarPublicacaoPostgres } from './postgres-publicacoes.js';
-import { anexoEnvioPostgres,aprovarEnvioPostgres,cancelarEnvioPostgres,listarEnviosPostgres,processarFilaPostgres,recuperarEnviosPresosPostgres,reprepararEnvioPostgres } from './postgres-fila-envios.js';
+import { anexoEnvioPostgres,aprovarEnvioPostgres,cancelarEnvioPostgres,listarEnviosPostgres,listarTentativasEnvioPostgres,processarFilaPostgres,recuperarEnviosPresosPostgres,reprepararEnvioPostgres } from './postgres-fila-envios.js';
 import { prepararEnviosPostgres } from './postgres-preparacao-envios.js';
 import type { criarAcessoHttpPostgres } from './postgres-auth-http.js';
 import {solicitarMonitoramentoPostgres,listarSolicitacoesMonitoramentoPostgres,cancelarSolicitacaoMonitoramentoPostgres} from './postgres-monitoring-requests.js';
@@ -67,7 +67,7 @@ export async function tratarGestaoPostgres(req:IncomingMessage,res:ServerRespons
   const smtp=url.pathname==='/api/contexto/smtp';
   const publication=url.pathname==='/api/contexto/publicacoes',publicationRevoke=url.pathname.match(/^\/api\/contexto\/publicacoes\/([1-9]\d*)\/revogar$/);
   const portal=url.pathname.match(/^\/api\/portal\/documentos(?:\/([1-9]\d*)(?:\/(ciencia))?)?$/);
-  const deliveries=url.pathname.match(/^\/api\/contexto\/envios(?:\/(preparar|recuperar|processar)|\/([1-9]\d*)\/(aprovar|cancelar|repreparar|anexos\/(\d+)))?$/);
+  const deliveries=url.pathname.match(/^\/api\/contexto\/envios(?:\/(preparar|recuperar|processar)|\/([1-9]\d*)\/(aprovar|cancelar|repreparar|tentativas|anexos\/(\d+)))?$/);
   const executions=url.pathname.match(/^\/api\/contexto\/execucoes(?:\/([1-9]\d*)\/(cancelar|recuperar))?$/);
   const agendas=url.pathname.match(/^\/api\/contexto\/agendas(?:\/([1-9]\d*))?$/);
   const monitorLimits=url.pathname==='/api/contexto/limites-monitoramento';
@@ -306,6 +306,7 @@ export async function tratarGestaoPostgres(req:IncomingMessage,res:ServerRespons
     const context=current.context;if(!context||context.tipo!=='escritorio')throw new ErroCadastro('Selecione um escritório.',403);
     const officeId=context.escritorio_id;
     if(req.method==='GET'&&!deliveries[1]&&!deliveries[2])return send(res,200,await listarEnviosPostgres(pool,officeId));
+    if(req.method==='GET'&&deliveries[3]==='tentativas'&&deliveries[2])return send(res,200,await listarTentativasEnvioPostgres(pool,officeId,Number(deliveries[2])));
     if(req.method==='POST'&&deliveries[1]==='preparar'){
       const data=z.object({cliente_id:z.number().int().positive().optional()}).strict().parse(await body(req));current=await authorize();
       if(data.cliente_id){const exists=await withPostgresOfficeTransaction(pool,officeId,client=>client.query('SELECT 1 FROM clientes WHERE id=$1 AND escritorio_id=$2',[data.cliente_id,officeId]));if(!exists.rowCount)throw new ErroCadastro('Cliente não encontrado neste escritório.',404);}

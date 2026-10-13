@@ -1,6 +1,6 @@
 # Plano de sprints — Vue operacional com o visual aprovado
 
-Data-base: 11/10/2026. Atualizado em 12/10/2026: Sprints 00, 01, 02, 03, 04 e 05 concluídas tecnicamente; S06-T01, S06-T02 e S06-T03 concluídas e Sprint 06 em andamento.
+Data-base: 11/10/2026. Atualizado em 13/10/2026: Sprints 00, 01, 02, 03, 04 e 05 concluídas tecnicamente; S06-T01, S06-T02, S06-T03, S06-T04 e S06-T05 concluídas e Sprint 06 em andamento.
 
 ## 1. Objetivo e fontes de verdade
 
@@ -145,7 +145,7 @@ Resultado: fila real por destinatário/documento, com revisão verificável e re
 | S06-T02 | Implementar detalhe de envio, prévia e anexos autenticados. | Conteúdo vem do snapshot do backend; anexos corretos por contexto; expiração/versão antiga indicadas; sem edição livre de conteúdo não suportada pela API. T/U/P/V. | S06-T01 |
 | S06-T03 | Implementar aprovação e cancelamento por estado/papel. | Aprovação usa hash da prévia; mudança de contato/aplicabilidade recusa prévia antiga; cancelamento respeita processamento em curso; segunda submissão não duplica. T/U/P/V. | S06-T02 |
 | S06-T04 | Implementar histórico de tentativas e repreparação. | Erro/data/resultado exibidos; repreparar limpa aprovação conforme backend; entrega incerta exige conferência e confirmação do risco. T/U/P/X/V. | S06-T03 |
-| S06-T05 | Implementar recuperação/processamento autorizados e validar o ciclo de entrega. | Respeitar contratos e confirmação de consumidor encerrado; SMTP somente local de teste; anexos íntegros, uma entrega e segundo ciclo sem reenvio. T/U/P/X/V. | S06-T04 |
+| S06-T05 | Implementar recuperação/processamento autorizados e validar o ciclo de entrega. | Contratos distintos respeitados: recuperação de envios recebe idade e marca `incerto`; processamento usa fila aprovada; SMTP somente local de teste; anexos íntegros, uma entrega e segundo ciclo sem reenvio. T/U/P/X/V. | S06-T04 |
 
 ### Sprint 07 — Escritório, equipe e canais
 
@@ -291,6 +291,10 @@ Preencher uma linha por execução. O status de uma task não muda por mera exis
 | Execução 27 — 12/10/2026 | S06-T02 | CONCLUÍDA | [Detalhe, prévia e anexos](ENTREGA_S06_T02.md): snapshot sanitizado, indicação de versão e download autenticado | T/U/P/V e build aprovados; prévia ausente e divergente sinalizadas, anexo baixado por rota contextual, recusa em outro escritório, recarga e quatro papéis comprovados; 4 capturas novas | Próxima: S06-T03 |
 
 | Execução 28 — 12/10/2026 | S06-T03 | CONCLUÍDA | [Aprovação e cancelamento](ENTREGA_S06_T03.md): confirmação explícita por estado e papel | T/U/P/V e build aprovados; hash da prévia, CSRF, estado, confirmação, botão ocupado, fila contextual e isolamento nos quatro papéis validados; autorização definitiva permanece no backend | Próxima: S06-T04 |
+
+| Execução 29 — 13/10/2026 | S06-T04 | CONCLUÍDA | [Histórico e repreparação](ENTREGA_S06_T04.md): tentativas imutáveis, erro/data/resultado e confirmação de risco | T/U/P/X/V e build aprovados; endpoint contextual de tentativas, repreparação com aprovação limpa, confirmação de entrega incerta, atualização após resposta e isolamento/regressões PostgreSQL/HTTPS | Próxima: S06-T05 |
+
+| Execução 30 — 13/10/2026 | S06-T05 | CONCLUÍDA | [Recuperação e processamento da fila](ENTREGA_S06_T05.md): operações autorizadas, janela de recuperação e ciclo único de entrega | T/U/P/X/V e build aprovados; confirmação/modal, payloads `{}` e `mais_antigo_que_segundos`, recuperação sem reenvio, SMTP local, anexos íntegros, processamento idempotente na segunda execução e isolamento dos papéis | Próxima: S07-T01 |
 
 Modelo de evidência: comandos com resultado, cenário testado, URL local, caminho de captura/relatório quando gerado e limitações. Não incluir segredos ou dados pessoais reais.
 

@@ -4,11 +4,24 @@ import type {Pool,PoolClient} from 'pg';
 import {createHash} from 'node:crypto';
 import {mkdtempSync,rmSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
-import {concluirEnvioPostgres,falharEnvioPostgres,fingerprintContextoEnvioPostgres,processarFilaPostgres,reservarEnviosPostgres,recuperarEnviosPresosPostgres} from '../src/postgres-fila-envios.js';
+import {concluirEnvioPostgres,falharEnvioPostgres,fingerprintContextoEnvioPostgres,listarTentativasEnvioPostgres,processarFilaPostgres,reservarEnviosPostgres,recuperarEnviosPresosPostgres} from '../src/postgres-fila-envios.js';
 import {hashBytes} from '../src/relatorios.js';
 import {prepararRelatorioPublicacaoPostgres} from '../src/postgres-consolidacao.js';
 import {reprepararEnvioPostgres} from '../src/postgres-fila-envios.js';
 vi.mock('../src/postgres-consolidacao.js',()=>({prepararRelatorioPublicacaoPostgres:vi.fn()}));
+
+it('lista apenas o histórico imutável do envio no escritório selecionado',async()=>{
+  const createdAt=new Date('2026-10-12T10:02:00.000Z');
+  const client={query:vi.fn(async(sql:string)=>{
+    if(sql.startsWith('SELECT 1 FROM envios_clientes'))return {rows:[{ok:1}],rowCount:1};
+    if(sql.startsWith('SELECT id,resultado,erro,criado_em FROM tentativas_envio'))return {rows:[{id:18,resultado:'incerto',erro:'Worker interrompido; entrega SMTP pode ter ocorrido.',criado_em:createdAt}],rowCount:1};
+    return {rows:[],rowCount:0};
+  }),release:vi.fn()};
+  const pool={connect:vi.fn().mockResolvedValue(client)} as unknown as Pool;
+  await expect(listarTentativasEnvioPostgres(pool,3,19)).resolves.toEqual([{id:18,resultado:'incerto',erro:'Worker interrompido; entrega SMTP pode ter ocorrido.',criado_em:createdAt}]);
+  expect(client.query).toHaveBeenCalledWith(expect.stringContaining('SELECT 1 FROM envios_clientes'),[19,3]);
+  expect(client.query).toHaveBeenCalledWith(expect.stringContaining('SELECT id,resultado,erro,criado_em FROM tentativas_envio'),[19,3]);
+});
 
 it('repreparação devolve somente o destinatário e documento selecionados',async()=>{
   const client={query:vi.fn(async(sql:string)=>sql.startsWith('SELECT status,')?{rows:[{status:'falhou',cliente_id:7,contato_id:8,numero_registro:'DOC-1'}],rowCount:1}:{rows:[],rowCount:1}),release:vi.fn()};

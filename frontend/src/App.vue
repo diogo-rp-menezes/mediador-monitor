@@ -8,6 +8,7 @@ import PendingPanel from './components/PendingPanel.vue';
 import ClientPortal from './components/ClientPortal.vue';
 import AccountPanel from './components/AccountPanel.vue';
 import DeliveriesPanel from './components/DeliveriesPanel.vue';
+import OfficePanel from './components/OfficePanel.vue';
 import {pending} from './pending';
 import {createApiTransport} from './services/api';
 
@@ -59,6 +60,7 @@ async function contextRequest<T>(path:string,method='GET',body?:unknown,signal?:
 const transport=createApiTransport({csrf:()=>session.value?.csrf||'',unauthorized:()=>{sessionStorage.removeItem('mediador_contexto');location.assign('/login');}});
 async function api<T>(path:string,method='GET',body?:unknown,headers:Record<string,string>={}){return transport.json<T>(path,method,body,headers);}
 async function saveProfile(nome:string){session.value=await api<Session>('/api/auth/perfil','PUT',{nome});}
+function officeSaved(saved:{id:number;nome:string}){if(context.value?.tipo==='escritorio'&&context.value.id===saved.id)context.value={...context.value,nome:saved.nome};if(session.value)session.value={...session.value,contextos:{...session.value.contextos,escritorios:session.value.contextos.escritorios.map(item=>item.id===saved.id?{...item,nome:saved.nome}:item)}};notify('Dados do escritório salvos.');}
 async function contextDownload(path:string){const current=resolved.value;if(!current)throw new Error('Selecione um escritório.');const file=await transport.file(path,contextHeaders(current));if(resolved.value!==current)throw new Error('O contexto mudou. Abra o documento novamente.');return file;}
 async function chooseContext(value:string){
   if(switching.value||booting.value||loggingOut.value)return;
@@ -112,6 +114,7 @@ onBeforeUnmount(()=>{clearTimeout(noticeTimer);window.removeEventListener('hashc
       <RegistryPanel v-else-if="active==='cadastros'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :download="contextDownload" :context-key="String(resolved.escritorio_id)" :can-edit="['administrador','operador'].includes(resolved.papel)" :request="contextRequest" @success="notify" />
       <MonitoringPanel :can-manage="resolved?.papel==='administrador'" v-else-if="active==='monitoramento'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :can-edit="['administrador','operador'].includes(resolved.papel)" :request="contextRequest" />
       <DeliveriesPanel v-else-if="active==='envios'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :request="contextRequest" :download="contextDownload" :can-manage="resolved.papel==='administrador'" />
+      <OfficePanel v-else-if="active==='gestao'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :request="contextRequest" @saved="officeSaved" />
       <DocumentsPanel v-else-if="active==='documentos'&&resolved?.tipo==='escritorio'" :key="resolved.escritorio_id" :can-edit="['administrador','operador'].includes(resolved.papel)" :can-publish="resolved.papel==='administrador'" :can-manage-analysis="session?.usuario.papel_plataforma==='administrador_plataforma'" @platform="navigate('plataforma')" :request="contextRequest" :download="contextDownload" @success="notify" />
       <ClientPortal v-else-if="active==='documentos'&&resolved?.tipo==='cliente'" :key="'cliente-'+resolved.cliente_id" :request="contextRequest" :download="contextDownload" @success="notify" />
       <AccountPanel v-else-if="active==='perfil'&&session" :user="session.usuario" :role="globalRoleLabel" :save="saveProfile" />
