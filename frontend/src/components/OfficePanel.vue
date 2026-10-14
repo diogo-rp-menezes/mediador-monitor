@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {onBeforeUnmount,onMounted,ref} from 'vue';
 import AppDialog from './AppDialog.vue';
+import TeamPanel from './TeamPanel.vue';
+import SmtpPanel from './SmtpPanel.vue';
 
 type Office={id:number;nome:string;cnpj:string|null;email:string;telefone:string;ativo:boolean;criado_em?:string;atualizado_em?:string};
 const props=defineProps<{request:<T>(path:string,method?:string,body?:unknown,signal?:AbortSignal)=>Promise<T>}>();
@@ -24,6 +26,8 @@ onBeforeUnmount(()=>{alive=false;});
     <p v-if="loading" role="status">Consultando os dados do escritório…</p>
     <div v-if="error" role="alert" class="office-error"><p>{{ error }}</p><p>{{ loaded?'Os dados exibidos são da última consulta bem-sucedida.':'Nenhuma consulta concluída.' }}</p><button type="button" class="secondary" :disabled="loading" @click="load">Tentar novamente</button></div>
     <article v-if="office" class="office-card"><div class="office-card-heading"><div><span class="eyebrow">Escritório atual</span><h3>{{ office.nome }}</h3><p>{{ office.ativo?'Cadastro ativo':'Cadastro inativo' }}</p></div><button type="button" class="primary" :disabled="loading||saving" @click="openEditor">Editar dados do escritório</button></div><dl class="office-details"><div><dt>Nome público</dt><dd>{{ office.nome }}</dd></div><div><dt>CNPJ</dt><dd>{{ office.cnpj||'Não informado' }}</dd></div><div><dt>E-mail de atendimento</dt><dd>{{ office.email||'Não informado' }}</dd></div><div><dt>Telefone de atendimento</dt><dd>{{ office.telefone||'Não informado' }}</dd></div><div><dt>Última atualização</dt><dd>{{ date(office.atualizado_em) }}</dd></div></dl><p v-if="updated" class="office-updated">Última consulta: {{ updated }}.</p></article>
+    <TeamPanel :request="props.request" />
+    <SmtpPanel :request="props.request" />
     <AppDialog v-if="editing" title="Dados do escritório" :busy="saving" @close="closeEditor"><form class="vue-form office-form" :aria-busy="saving" @submit.prevent="save"><p>O nome público aparece no seletor de espaços e na identificação desta área.</p><label>Nome público do escritório<input v-model="nome" type="text" autocomplete="organization" minlength="2" maxlength="250" required :disabled="saving"></label><label>E-mail de atendimento<input v-model="email" type="email" autocomplete="email" maxlength="254" :disabled="saving"></label><label>Telefone de atendimento<input v-model="telefone" type="tel" maxlength="500" :disabled="saving"></label><p v-if="saveError" role="alert">{{ saveError }}</p><footer><button type="button" class="secondary" :disabled="saving" @click="closeEditor">Cancelar</button><button type="submit" class="primary" :disabled="saving">{{ saving?'Salvando…':'Salvar dados do escritório' }}</button></footer></form></AppDialog>
   </section>
 </template>

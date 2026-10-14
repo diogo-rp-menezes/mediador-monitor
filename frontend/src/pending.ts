@@ -9,11 +9,7 @@ export const pending:Record<string,Array<{title:string;behavior:string;implement
     {title:'Fila de envios',behavior:'Filtrar destinatários, empresas e situações; conferir pendências antes do envio.',implementation:'Migrar contratos de envios em gestao-ui.js para componente tipado, tabela e resumo; a API continua responsável pelas transições de estado.'},
     {title:'Preparação e tentativas',behavior:'Preparar documentos aplicáveis, aprovar quando necessário e consultar falhas e tentativas.',implementation:'Integrar preparação por cliente/documento e detalhe da fila; recuperação exige as confirmações do backend, sem disparar SMTP no navegador.'}
   ],
-  gestao:[
-    {title:'Dados do escritório',behavior:'Consultar e editar informações cadastrais do escritório atual.',implementation:'Usar contratos de gestão PostgreSQL, formulário em modal, campos e permissões conferidos contra os schemas.'},
-    {title:'Equipe e acessos',behavior:'Administrar membros, papéis e convites do escritório.',implementation:'Migrar endpoints de membros e convites; ações com confirmação e atualização após persistência. O servidor mantém RBAC e auditoria.'},
-    {title:'Canais e configurações',behavior:'Configurar notificações e conexão de e-mail do escritório.',implementation:'Separar configurações contextuais das globais; campos de segredo sem exibição do valor salvo; teste de conexão somente por API autorizada.'}
-  ],
+  gestao:[],
   plataforma:[
     {title:'Escritórios e catálogo',behavior:'Gerenciar escritórios e catálogo compartilhado de sindicatos.',implementation:'CRUDs /api/plataforma com formulários tipados; atualizar contextos disponíveis após salvar escritório. Exclusões respeitam restrições do servidor.'},
     {title:'Inteligência artificial',behavior:'Configurar provedor/modelo, testar conexão e solicitar análise ou reanálise.',implementation:'Migrar /api/plataforma/ia, testar, solicitacoes e tentativas. Segredos ficam no servidor; revisão otimista das configurações preservada.'},

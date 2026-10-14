@@ -1,6 +1,6 @@
 # Plano de sprints — Vue operacional com o visual aprovado
 
-Data-base: 11/10/2026. Atualizado em 13/10/2026: Sprints 00, 01, 02, 03, 04 e 05 concluídas tecnicamente; S06-T01, S06-T02, S06-T03, S06-T04 e S06-T05 concluídas e Sprint 06 em andamento.
+Data-base: 11/10/2026. Atualizado em 14/10/2026: Sprints 00, 01, 02, 03, 04, 05 e 06 concluídas tecnicamente; S06-T01–T05, S07-T01, S07-T02 e S07-T04 concluídas; S07-T03 auditada e bloqueada por D06; Sprint 07 em andamento.
 
 ## 1. Objetivo e fontes de verdade
 
@@ -153,10 +153,10 @@ Resultado: gestão contextual completa, com segredos mantidos no servidor.
 
 | ID | Entrega da execução | Aceite e verificação | Dep. |
 | --- | --- | --- | --- |
-| S07-T01 | Implementar dados cadastrais do escritório com formulário próprio. | Campos do schema vigente; nome persistido atualiza seletor/identificação; recusa de usuário sem permissão. T/U/P/V. | S06-T05 |
-| S07-T02 | Implementar equipe, papéis e revogação de vínculos. | Listar/vincular/alterar/remover conforme API; proteger último administrador; acesso revogado deixa de autorizar novas requisições. T/U/P/V. | S07-T01 |
+| S07-T01 | Implementar dados cadastrais do escritório com formulário próprio. | Campos do contrato vigente exibidos; nome persistido atualiza seletor/identificação; CNPJ somente leitura conforme a rota contextual; recusa de usuário sem permissão. T/U/P/V. | S06-T05 |
+| S07-T02 | Implementar equipe, papéis e revogação de vínculos. | Listar funcionários e representantes; cadastrar ou vincular sem inventar convite; alterar papel/ativo; tratar conflito de último administrador e refletir vínculo revogado. T/U/P/V. | S07-T01 |
 | S07-T03 | Implementar convites e acessos disponíveis no contrato vigente. | Criar/listar/revogar/redeem conforme capacidades reais; validade e escopo explícitos; entrega de convite em serviço local controlado, sem envio externo. Lacuna de endpoint registrada como bloqueio, não simulada. T/U/P/X/V. | S07-T02 |
-| S07-T04 | Implementar SMTP/canais e testes de conexão existentes. | Segredo salvo nunca reexibido; omitir campo preserva segredo quando previsto; distinguir teste de conexão de envio; alteração exige papel autorizado. T/U/P/X/V. | S07-T01 |
+| S07-T04 | Implementar SMTP/canais e testes de conexão existentes. | Configuração SMTP contextual persistida; segredo nunca reexibido; omitir campo preserva segredo; teste de conexão só é exposto quando houver endpoint autorizado, sem simulação. T/U/P/X/V. | S07-T01 |
 
 ### Sprint 08 — Administração da plataforma
 
@@ -295,6 +295,10 @@ Preencher uma linha por execução. O status de uma task não muda por mera exis
 | Execução 29 — 13/10/2026 | S06-T04 | CONCLUÍDA | [Histórico e repreparação](ENTREGA_S06_T04.md): tentativas imutáveis, erro/data/resultado e confirmação de risco | T/U/P/X/V e build aprovados; endpoint contextual de tentativas, repreparação com aprovação limpa, confirmação de entrega incerta, atualização após resposta e isolamento/regressões PostgreSQL/HTTPS | Próxima: S06-T05 |
 
 | Execução 30 — 13/10/2026 | S06-T05 | CONCLUÍDA | [Recuperação e processamento da fila](ENTREGA_S06_T05.md): operações autorizadas, janela de recuperação e ciclo único de entrega | T/U/P/X/V e build aprovados; confirmação/modal, payloads `{}` e `mais_antigo_que_segundos`, recuperação sem reenvio, SMTP local, anexos íntegros, processamento idempotente na segunda execução e isolamento dos papéis | Próxima: S07-T01 |
+| Execução 31 — 13/10/2026 | S07-T01 | CONCLUÍDA | [Dados cadastrais do escritório](ENTREGA_S07_T01.md): formulário contextual, persistência e atualização do seletor | T/U/P/V e build aprovados; GET/PUT contextual, CSRF, retry/rascunho, nome refletido no seletor após salvar e recarga, CNPJ somente leitura e área restrita ao administrador | Próxima: S07-T02 |
+| Execução 32 — 13/10/2026 | S07-T02 | CONCLUÍDA | [Equipe, papéis e vínculos](ENTREGA_S07_T02.md): lista, cadastro/vínculo, alteração de papel e revogação | Typecheck, build, E2E Vue e PostgreSQL/HTTPS aprovados; resposta agrupada normalizada, CSRF, papel/ativo, representantes, erro de último administrador e recarga sem convite fictício | Próxima: S07-T03 |
+| Execução 33 — 14/10/2026 | S07-T03 | BLOQUEADA | [Convites e acessos](ENTREGA_S07_T03.md): auditoria do contrato e registro da lacuna D06 | Não há endpoint/schema de convite, token, validade ou resgate; cadastro/vínculo de usuários não é convite. Nenhuma UI ou simulação foi criada | Próxima: S07-T04; contrato de convites derivado antes de reabrir S07-T03 |
+| Execução 34 — 14/10/2026 | S07-T04 | CONCLUÍDA | [SMTP e canais](ENTREGA_S07_T04.md): configuração contextual, segredo preservado e limitação D07 explícita | Typecheck, build e E2E Vue aprovados; GET/PUT contextual, CSRF, senha não reexibida, omissão preserva credencial e troca de contexto isolada; teste de conexão não simulado | Próxima: S08-T01; D06 permanece bloqueio de convites |
 
 Modelo de evidência: comandos com resultado, cenário testado, URL local, caminho de captura/relatório quando gerado e limitações. Não incluir segredos ou dados pessoais reais.
 
@@ -316,4 +320,4 @@ Uma sprint termina quando todas as suas tasks e derivadas estão concluídas tec
 
 ## Lacunas confirmadas na S00-T01
 
-O [baseline funcional](BASELINE_UI_INTEGRADA.md) registra D01–D10. D01/PDF interno foi resolvida na S03-T05. D03/inclusão histórica independente foi resolvida na S04-T03. S06-T04 (histórico detalhado), S07-T03 (convites), S07-T04 (teste SMTP) e S08-T05 (operação global) exigem resolver contratos ausentes antes de concluir seus aceites. Dividir backend e UI em tasks derivadas quando necessário; não tratar essas entregas como migração apenas visual. A recuperação de envios tem payload distinto da recuperação de monitoramento (D05).
+O [baseline funcional](BASELINE_UI_INTEGRADA.md) registra D01–D10. D01/PDF interno foi resolvida na S03-T05. D03/inclusão histórica independente foi resolvida na S04-T03. S07-T03 (convites) permanece bloqueada por D06; S07-T04 entregou a configuração SMTP disponível e mantém o teste de conexão pendente de D07; S06-T04 (histórico detalhado) e S08-T05 (operação global) exigem resolver seus contratos ausentes antes de concluir os aceites. Dividir backend e UI em tasks derivadas quando necessário; não tratar essas entregas como migração apenas visual. A recuperação de envios tem payload distinto da recuperação de monitoramento (D05).

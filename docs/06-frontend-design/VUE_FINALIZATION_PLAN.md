@@ -2,7 +2,7 @@
 
 Planejamento das próximas execuções: [Plano de sprints da UI integrada](PLANO_SPRINTS_UI_INTEGRADA.md), aprovado em 11/10/2026. Ele detalha tarefas unitárias, dependências e aceite para aplicar o visual de referência ao Vue operacional e completar os itens abaixo, preservando os estados/evidências já registrados.
 
-Atualizado em 11/10/2026. Cada tarefa entrega uma tela ou comportamento verificável; estruturas incompletas são sinalizadas. Referência funcional: [UI_FUNCTIONAL_PARITY.md](UI_FUNCTIONAL_PARITY.md).
+Atualizado em 14/10/2026. Cada tarefa entrega uma tela ou comportamento verificável; estruturas incompletas são sinalizadas. Referência funcional: [UI_FUNCTIONAL_PARITY.md](UI_FUNCTIONAL_PARITY.md).
 
 | Ordem | Tarefa atômica / aceite | Estado |
 | --- | --- | --- |
@@ -18,8 +18,8 @@ Atualizado em 11/10/2026. Cada tarefa entrega uma tela ou comportamento verific�
 | F10 | Limites, cancelamento e recuperação de execução | Pendente |
 | F11 | Envios: resumo, tabela e filtros | Pendente |
 | F12 | Envios: ações por estado, tentativas e recuperação | Pendente |
-| F13 | Escritório: cadastro e equipe/papéis | Pendente |
-| F14 | Escritório: convites e configurações de canais | Pendente |
+| F13 | Escritório: cadastro e equipe/papéis | Implementada em S07-T01/S07-T02; canais e convites permanecem em F14 |
+| F14 | Escritório: convites e configurações de canais | Canais SMTP implementados em S07-T04; convites bloqueados por D06 ([S07-T03](ENTREGA_S07_T03.md)); teste de conexão aguarda D07 |
 | F15 | Plataforma: escritórios e catálogo sindical | Pendente |
 | F16 | Plataforma: configuração/teste IA e filas/recuperação | Pendente |
 | F17 | Perfil e visão geral com dados reais contextuais | Parcial: perfil concluído em S01-T04 com persistência PostgreSQL; visão geral contextual permanece pendente em S09-T01 |

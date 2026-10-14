@@ -24,7 +24,7 @@ Esta entrega identifica implementação e lacunas; não certifica comportamento 
 | Portal | `ClientPortal.vue` implementado | `/api/portal/documentos`, `/:id`, `/:id/ciencia` | Contexto de cliente e leitura publicada; ciência `{confirmo:true}`; preservar isolamento |
 | Monitoramento | `PendingPanel.vue` | `/api/contexto/execucoes`, `/agendas`, `/limites-monitoramento`; router PostgreSQL | Ler/gerenciar monitoramento; agendas/limites e recuperação exigem gestão do escritório; Sprint 05 |
 | Envios | `PendingPanel.vue` | `/api/contexto/envios` e ações no router PostgreSQL | Ler internos, revisar para preparar, aprovar para demais ações; Sprint 06 |
-| Gestão do escritório | `PendingPanel.vue` | `/api/contexto/escritorio`, `/usuarios`, `/smtp` | `escritorio.gerenciar`, `usuarios.gerenciar`; Sprint 07 |
+| Gestão do escritório | `OfficePanel.vue` + `TeamPanel.vue` + `SmtpPanel.vue` + pendência de convites | `/api/contexto/escritorio`, `/usuarios`, `/smtp` | `escritorio.gerenciar`, `usuarios.gerenciar`; S07-T01 conclui dados cadastrais, S07-T02 equipe/papéis e S07-T04 SMTP; convites bloqueados por D06 |
 | Plataforma | `PendingPanel.vue` | `/api/plataforma/escritorios`, `/sindicatos`, `/coleta`, `/ia` e subrotas | `plataforma.gerenciar`; Sprint 08 |
 | Perfil | `PendingPanel.vue` | PUT `/api/auth/perfil`, schema estrito `{nome}` | Usuário autenticado; S09, sem edição de e-mail nesse contrato |
 
@@ -74,8 +74,8 @@ As lacunas abaixo registram a inspeção inicial e seu encaminhamento; D01 foi r
 | D03 | GET de documentos omite `incluir_envio`; decisão o define internamente; não há atualização independente desse campo | Resolvida na S04-T03: GET expõe participação/histórico; POST participacao recebe numero/boolean/justificativa/versao, audita ator e antes/depois. Decidir/recalcular preservam participação existente; inclusão não prepara/aprova envio |
 | D04 | Envios expõe lista, anexos e ações; lista inclui contagem de tentativas/erro, sem endpoint de histórico detalhado | S06-T04 requer exposição HTTP do histórico antes de construir detalhe completo |
 | D05 | Recuperar envios aceita idade; monitoramento exige justificativa e consumidor encerrado | Resolvida na S06-T05: recuperação de envios envia somente `mais_antigo_que_segundos` e marca `incerto`; confirmação de consumidor encerrado permanece exclusiva do contrato de monitoramento |
-| D06 | Router de usuários oferece cadastro/vínculo/edição, sem token, validade ou resgate de convite | S07-T03 depende de novo contrato de convites. Gestão de membros existente não conclui esse item |
-| D07 | SMTP tem configuração, sem endpoint de teste | S07-T04 pode integrar configuração; aceite de teste exige contrato adicional, sem simular sucesso |
+| D06 | Router de usuários oferece cadastro/vínculo/edição, sem token, validade ou resgate de convite | S07-T03 auditada em [ENTREGA_S07_T03](ENTREGA_S07_T03.md) e bloqueada até existir contrato de criação, revogação, resgate, escopo, validade e entrega local de convites. Gestão de membros existente não conclui esse item |
+| D07 | SMTP tem configuração, sem endpoint de teste | S07-T04 integrou a configuração contextual e registrou a ausência de teste; aceite de conexão exige contrato adicional, sem simular sucesso ([ENTREGA_S07_T04](ENTREGA_S07_T04.md)) |
 | D08 | `/api/plataforma/coleta` é GET de configuração do processo; não há comando global nesse endpoint | S08-T05 deve separar leitura disponível de operação/fila ainda sem contrato |
 | D09 | `/api/contexto/resumo` retorna contadores de clientes, consultas e envios | S09-T01 não pode derivar séries temporais fictícias; últimas atividades precisam de fonte própria |
 | D10 | Perfil altera somente nome; catálogo global não expõe DELETE | Respeitar limites nas Sprints 08/09, sem copiar ações fictícias do protótipo |
